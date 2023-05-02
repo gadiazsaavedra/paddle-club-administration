@@ -67,7 +67,7 @@ The member charge will be identified by an id, and will be effective on the last
 </p>
 
   <h2>UML</h2>
-  <img></img>
+  <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
   <h2>Technologies</h2>
   <p>
     <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="50" height="70" alt="Django" /></a>
