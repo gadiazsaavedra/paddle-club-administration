@@ -32,7 +32,9 @@ Para hacerse socio deberá indicarse un número de cuenta bancaria (IBAN).
 El cobro de socio estará identificado por un id, y se hará efectivo el último día de cada mes, fecha que se guardará en la base de datos.
   </p>
   <h2>UML</h2>
-  <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+  <p align="center">
+    <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+  </p>
   <h2>Technologías</h2>
   <p>
     <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="50" height="70" alt="Django" /></a>
@@ -67,7 +69,9 @@ The member charge will be identified by an id, and will be effective on the last
 </p>
 
   <h2>UML</h2>
-  <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+    <p align="center">
+      <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+    </p>
   <h2>Technologies</h2>
   <p>
     <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="50" height="70" alt="Django" /></a>
