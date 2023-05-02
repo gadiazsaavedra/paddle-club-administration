@@ -1,4 +1,4 @@
-<h1 align='center'>Paddle Club addministration</h1>
+<h1 align='center'>Paddle Club administration</h1>
   <h3 align='center'>Web service for a Paddle club administration</h3>
    <p align="center">
     <img src="https://img.shields.io/badge/STATUS-DEVELOPING-green">
