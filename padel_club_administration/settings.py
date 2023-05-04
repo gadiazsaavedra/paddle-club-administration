@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'padel_admin.apps.PadelAdminConfig'
 ]
 
 MIDDLEWARE = [
@@ -75,9 +76,14 @@ WSGI_APPLICATION = 'padel_club_administration.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+            'ENGINE': 'django.db.backends.postgresql',
+            'OPTIONS': {             'options': '-c search_path=practica'         },
+            'NAME': 'est_e7194279',
+            'USER': 'est_e7194279',
+            'PASSWORD': 'dB.e7194279',
+            'HOST': 'ubiwan.epsevg.upc.edu',
+            'PORT': '5432',
+        }
 }
 
 
