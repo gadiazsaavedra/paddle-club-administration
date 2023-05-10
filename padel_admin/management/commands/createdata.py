@@ -10,6 +10,7 @@ JUGADORES = 300
 PISTES = 50
 RECEPCIONISTES = 25
 RESERVAS = 5 #reservas per jugador
+PRECIO_BASE = 10 # preu base per jugar 1 hora
 
 letras = 'TRWAGMYFPDXBNJZSQVHLCKE'
 
@@ -19,7 +20,7 @@ class Command(BaseCommand):
   def handle(self, *args, **kwargs):
     fake = Faker('es_ES')
     
-    print("adding jugadors")
+    print("Adding jugadors...")
     # jugadors creation
     for i in range(JUGADORES):
        id_jugador = fake.unique.random_number(digits=5)
@@ -40,7 +41,7 @@ class Command(BaseCommand):
     jugadors = Jugadors.objects.all()
     print(jugadors.count(), "jugadors added.")
 
-    print("adding socis")
+    print("Adding socis...")
     # socis creation
     for i in range(JUGADORES):
        id_jugador = fake.unique.random_number(digits=5)
@@ -63,7 +64,7 @@ class Command(BaseCommand):
     socis = Soci.objects.all()
     print(socis.count(), "socis added.")
 
-    print("adding conbrament_socis")
+    print("Adding cobrament_socis...")
     # cobrament_socis creation
     socis_list = Soci.objects.all()
     for soci in socis_list:
@@ -78,7 +79,7 @@ class Command(BaseCommand):
     cobrasocis = CobramentSoci.objects.all()
     print(cobrasocis.count(), "cobrament_socis added.")
 
-    print("adding pistes")
+    print("Adding pistes...")
     # pistes creation
     for i in range(PISTES):
        numero = i
@@ -89,7 +90,7 @@ class Command(BaseCommand):
     pistes = Pistes.objects.all()
     print(pistes.count(), "pistes added.")
 
-    print("adding recepcionistes")
+    print("Adding recepcionistes...")
     # recepcionistes creation
     for i in range(RECEPCIONISTES):
        id = random.randint(10000000,99999999)
@@ -109,13 +110,16 @@ class Command(BaseCommand):
     recepcionistes = Recepcionista.objects.all()
     print(recepcionistes.count(), "recepcionistes added.")
 
-    print("adding reserves")
+    print("Adding reserves...")
     # reserves creation
     jugadors_list = Jugadors.objects.all()
     for i in range(RESERVAS):
-       for j in jugadors_list:
-          jugador = j
+       for jug in jugadors_list:
+          jugador = jug
           data = fake.date_between(start_date=date(2022, 1, 1), end_date=date.today())
+          exist_reserva = Reserva.objects.filter(data=data, jugador=jug)
+          if (exist_reserva):
+             continue
           pista = random.choice(pistes)
           # ----------- hores -----------
           hora_min = time(hour=9, minute=0, second=0)
@@ -131,34 +135,63 @@ class Command(BaseCommand):
              horaFinalitzacio = hora_max
           # -----------------------------
           recepcionista = random.choice(recepcionistes)
-       Reserva.objects.create(
-        jugador=jugador,
-        data=data,
-        pista=pista,
-        horaInici=horaInici,
-        horaFinalitzacio=horaFinalitzacio,
-        recepcionista=recepcionista)
+          Reserva.objects.create(
+             jugador=jugador,
+             data=data,
+             pista=pista,
+             horaInici=horaInici,
+             horaFinalitzacio=horaFinalitzacio,
+             recepcionista=recepcionista)
     reserves = Reserva.objects.all()
     print(reserves.count(), "reserves added.")
 
-    print("adding cobrament")
-    # recepcionistes creation
-    for i in range(RECEPCIONISTES):
-       id = random.randint(10000000,99999999)
-       id = str(id) + random.choice(letras)
-       nom = fake.first_name()
-       cognom = fake.last_name()
-       email = fake.unique.email()
-       contrasenya = fake.password(length=8, upper_case=False, digits=False, special_chars=False)
-       telefon = fake.phone_number()
-       Recepcionista.objects.create(
-        DNI=id,
-        nom=nom,
-        cognom=cognom,
-        telefon=telefon,
-        email=email,
-        contrasenya=contrasenya)
-    recepcionistes = Recepcionista.objects.all()
-    print(recepcionistes.count(), "recepcionistes added.")
+    print("Adding cobraments...")
+    # cobraments creation
+    for res in reserves:
+       jugen = [2,4]
+       for i in range(random.choice(jugen)):
+          reserva = res
+          cobraments_totals = Cobrament.objects.filter(reserva=res)
+          if (cobraments_totals.count() >= 4):
+             continue
+          quiReserva = Cobrament.objects.filter(jugador=res.jugador, reserva=res)
+          if (quiReserva):
+             jugador = random.choice(jugadors)
+             # comprovem que aquest jugador no esta associat a una reserva a la mateixa data
+             existeix = Cobrament.objects.filter(jugador=jugador, data=res.data)
+             while existeix:
+                jugador = random.choice(jugadors)
+                existeix = Cobrament.objects.filter(jugador=jugador, data=res.data) 
+          else:
+             jugador = res.jugador
+          data = res.data
+          # ---- calcul preu ----------------------------------           
+          hora_inicio = datetime.strptime(res.horaInici.strftime("%H:%M:%S"), "%H:%M:%S")
+          hora_final = datetime.strptime(res.horaFinalitzacio.strftime("%H:%M:%S"), "%H:%M:%S")
+
+          es_soci = Soci.objects.filter(id_jugador=res.jugador.id_jugador)
+          # comprovem que si es soci, i la reserva es abans de les 13 i es entre dilluns i divendres
+          if es_soci and hora_inicio.hour < 13 and (res.data.weekday() >= 0 and res.data.weekday() <= 4):
+            importe = 0
+          else:
+            diferencia_tiempo = hora_final - hora_inicio
+            diferencia_horas = int(diferencia_tiempo.total_seconds() / 3600)
+            diferencia_minutos = int((diferencia_tiempo.total_seconds() % 3600) / 60)
+            diferencia_horas += round(diferencia_minutos / 60, 2)
+            if es_soci:
+               importe = (PRECIO_BASE*diferencia_horas)/2
+            else:
+               importe = PRECIO_BASE*diferencia_horas
+          
+          recepcionista = random.choice(recepcionistes)
+          Cobrament.objects.create(
+             reserva=reserva,
+             jugador=jugador,
+             data=data,
+             importe=importe,
+             recepcionista=recepcionista)
+    cobraments = Cobrament.objects.all()
+    print(cobraments.count(), "cobraments added.")
+
 
     print("FAKE DATA CREATED")
