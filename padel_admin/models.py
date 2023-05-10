@@ -7,7 +7,7 @@ class Jugadors(models.Model):
     nom = models.CharField(max_length=30)
     cognom = models.CharField(max_length=30)
     nivell = models.IntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(6)])
-    telefon = models.CharField(max_length=16)
+    telefon = models.CharField(max_length=13)
     email = models.EmailField(max_length=50)
     contrasenya = models.CharField(max_length=30)
     
@@ -41,7 +41,7 @@ class Recepcionista(models.Model):
     cognom = models.CharField(max_length=30)
     email = models.EmailField(max_length=50)
     contrasenya = models.CharField(max_length=30)
-    telefon = models.CharField(max_length=16)
+    telefon = models.CharField(max_length=13)
 
     def __str__(self):
         return '{} , {} , {} , {} , {}, {}'.format(self.DNI, self.nom, self.cognom, self.email, self.contrasenya, self.telefon)
