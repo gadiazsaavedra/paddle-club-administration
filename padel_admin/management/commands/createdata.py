@@ -7,10 +7,10 @@ from django.core.management.base import BaseCommand
 from dateutil.relativedelta import relativedelta
 from padel_admin.models import Jugadors, Soci, CobramentSoci, Pistes, Reserva, Cobrament, Recepcionista
 
-JUGADORES = 300
+JUGADORES = 500
 PISTES = 50
 RECEPCIONISTES = 25
-RESERVAS = 5 #reservas per jugador
+RESERVAS = 10 #reservas per jugador
 PRECIO_BASE = 10 # preu base per jugar 1 hora
 
 letras = 'TRWAGMYFPDXBNJZSQVHLCKE'
