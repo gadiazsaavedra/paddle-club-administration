@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamerinha Padel Club</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+</head>
+<body class="bg-gray-100">
+    <header>
+        <nav class="bg-gray-300">
+            <div class="mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                  <a href="#"><img src="{% static 'logo2.png' %}"></a>
+                </div>
+                <div class="flex items-center">
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-base font-medium">Reserves</a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-base font-medium">Jugadors</a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-base font-medium">Cobraments</a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 ">Sign out<i class="ml-2 fas fa-sign-out-alt"></i></a>
+                </div>
+              </div>
+            </div>
+          </nav>          
+    </header>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-4">Llista de jugadors</h1>
+        <!--LISTA DE JUGADORES-->
+    </div>
+</body>
+</html>
