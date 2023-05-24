@@ -1,65 +1,97 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamerinha Padel Club</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-    <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
-<body class="bg-gray-100">
-    <header>
-        <nav class="bg-gray-300">
-            <div class="mx-auto px-4 sm:px-6 lg:px-8">
-              <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                  <a href="#"><img src="{% static 'logo2.png' %}"></a>
-                </div>
-                <div class="flex items-center">
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Cobraments</a>
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Gamerinha Padel Club</title>
+      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+      <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+  <body class="bg-gray-100">
+      <header>
+          <nav class="bg-gray-300">
+              <div class="mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                  <div class="flex items-center">
+                    <img src="{% static 'logo2.png' %}">
+                  </div>
+                  <div class="flex items-center">
+                    <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
+                    <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
+                    <a href="/cobraments" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Cobraments</a>
+                    <a href="/" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
+                  </div>
                 </div>
               </div>
+            </nav>          
+      </header>
+      <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold">Jugadors</h1>
+        
+        <div class="flex items-center mb-10">
+          <a href="" class="ui primary button"><span class="inline-flex items-center">Afegir<i class="ml-2 fas fa-user-plus"></i></span></a>
+          <!-- BUSCADOR -->
+          <form method="GET" action="{% url 'lista_jugadors' %}" style="width: 100%;">
+            <div class="ui fluid action input">
+              <input type="text" name="search" placeholder="Search..." value="{% if search_query %}{{ search_query }}{% endif %}">
+              <button type="submit" class="ui button"><i class="fas fa-search"></i></button>
             </div>
-          </nav>          
-    </header>
-    <div class="container mx-auto px-4 py-8">
-      <h1 class="text-2xl font-bold">Jugadors</h1>
-
-      <div class="ui fluid action input mb-10">
-        <input type="text" placeholder="Search...">
-        <div class="ui button"><i class="fas fa-search"></i></div>
-      </div>
-
-      <!--LISTA DE JUGADORES-->
-      <div class="ui two column grid mt-10">
-        {% for jugador in jugadors %}
-        <div class="column">
-          <div class="ui middle aligned divided list">
-            <div class="item">
-              <div class="right floated content">
-                <div class="ui button">Edit<i class="ml-2 fas fa-edit"></i></div>
-              </div>
-              <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
-              <div class="content">
-                {{ jugador.nom }}
-                {{ jugador.cognom }}
-              </div>
-              <div class="content">
-                {{ jugador.email }}
+          </form>
+        </div>
+        
+        
+        <!-- LISTA DE JUGADORES -->
+        <div class="ui two column grid mt-10">
+          {% for jugador in page_obj %}
+          <div class="column">
+            <div class="ui middle aligned divided list">
+              <div class="item">
+                <div class="right floated content">
+                  <div class="ui button"><i class="fas fa-edit"></i></div>
+                  <div class="ui button"><i class="fas fa-trash"></i></div>
+                </div>
+                <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
+                <div class="content" style="font-size: 1.25rem !important;">
+                  <a>{{ jugador.nom }} {{ jugador.cognom }}</a>
+                </div>
+                <div class="content">
+                  {{ jugador.email }}
+                </div>
               </div>
             </div>
           </div>
+          {% empty %}
+          <div class="column">
+            <p>No se encontraron jugadores.</p>
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
+
+        <!-- PAGINACION -->
+        {% if page_obj.paginator.num_pages > 1 %}
+          <div class="ui pagination menu" style="margin-top: 2.5rem !important;display: flex; justify-content: center;">
+            {% if page_obj.has_previous %}
+            <a class="item" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+              <a class="active item" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+              {% else %}
+              <a class="item" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a class="item" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+            {% endif %}
+          </div>
+        {% endif %}
+
       </div>
-      
-      
-    </div>
-</body>
+  </body>
+  
 </html>

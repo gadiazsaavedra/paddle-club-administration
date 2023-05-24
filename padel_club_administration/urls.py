@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.landing, name='landing'),
     path('reserves/', views.lista_reserves, name='lista_reserves'),
-    path('jugadors/', views.lista_jugadors, name='lista_jugadors')
+    path('jugadors/', views.lista_jugadors, name='lista_jugadors'),
+    path('cobraments/', views.lista_cobraments, name='lista_cobraments')
 ]
