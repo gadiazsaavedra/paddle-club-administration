@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
     <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body class="bg-gray-100">
     <header>
@@ -18,18 +19,47 @@
                   <a href="#"><img src="{% static 'logo2.png' %}"></a>
                 </div>
                 <div class="flex items-center">
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-base font-medium">Reserves</a>
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-base font-medium">Jugadors</a>
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-base font-medium">Cobraments</a>
-                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 ">Sign out<i class="ml-2 fas fa-sign-out-alt"></i></a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Cobraments</a>
+                  <a href="#" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
                 </div>
               </div>
             </div>
           </nav>          
     </header>
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-4">Llista de jugadors</h1>
-        <!--LISTA DE JUGADORES-->
+      <h1 class="text-2xl font-bold">Jugadors</h1>
+
+      <div class="ui fluid action input mb-10">
+        <input type="text" placeholder="Search...">
+        <div class="ui button"><i class="fas fa-search"></i></div>
+      </div>
+
+      <!--LISTA DE JUGADORES-->
+      <div class="ui two column grid mt-10">
+        {% for jugador in jugadors %}
+        <div class="column">
+          <div class="ui middle aligned divided list">
+            <div class="item">
+              <div class="right floated content">
+                <div class="ui button">Edit<i class="ml-2 fas fa-edit"></i></div>
+              </div>
+              <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
+              <div class="content">
+                {{ jugador.nom }}
+                {{ jugador.cognom }}
+              </div>
+              <div class="content">
+                {{ jugador.email }}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      
     </div>
 </body>
 </html>
