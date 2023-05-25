@@ -18,6 +18,22 @@ def lista_reserves(request):
 def lista_jugadors(request):
     search_query = request.GET.get('search')
     
+    if request.method == 'POST':
+        # Procesar los datos del formulario
+        nom = request.POST.get('nom')
+        cognom = request.POST.get('cognom')
+        email = request.POST.get('email')
+        telefon = request.POST.get('telefon')
+        nivell = request.POST.get('nivell')
+        contrasenya = request.POST.get('contrasenya')
+
+        # Realizar acciones con los datos del formulario
+        # Por ejemplo, crear un nuevo jugador en la base de datos
+        jugador = Jugadors.objects.create(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
+        jugador.save()
+
+        # Redireccionar o realizar otras acciones después de procesar el formulario
+
     jugadors_list = Jugadors.objects.all()
     
     if search_query:
@@ -33,6 +49,7 @@ def lista_jugadors(request):
     }
     
     return render(request, 'lista_jugadors.html', context)
+
 
 def lista_cobraments(request):
     cobraments = Cobrament.objects.all()
