@@ -9,7 +9,7 @@
       <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  </head>
+    </head>
   <body class="bg-gray-100">
       <header>
           <nav class="bg-gray-300">
@@ -36,7 +36,7 @@
           <!-- BUSCADOR -->
           <form method="GET" action="{% url 'lista_jugadors' %}" style="width: 100%;">
             <div class="ui fluid action input">
-              <input type="text" name="search" placeholder="Search..." value="{% if search_query %}{{ search_query }}{% endif %}">
+              <input type="text" name="search" placeholder="Buscar..." value="{% if search_query %}{{ search_query }}{% endif %}">
               <button type="submit" class="ui button"><i class="fas fa-search"></i></button>
             </div>
           </form>
@@ -54,9 +54,20 @@
                   <div class="ui button"><i class="fas fa-trash"></i></div>
                 </div>
                 <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
-                <div class="content" style="font-size: 1.25rem !important;">
+                <div class="content popup" style="font-size: 1.25rem !important;">
                   <a>{{ jugador.nom }} {{ jugador.cognom }}</a>
                 </div>
+                <!-- Popup con la información del jugador -->
+                <div class="ui popup">
+                  <div class="header text-center">Informació</div>
+                  <div class="content mt-3">
+                    <p><i class="fas fa-user mr-4"></i>{{ jugador.nom }} {{ jugador.cognom }}</p>
+                    <p><i class="fas fa-envelope mr-4"></i>{{ jugador.email }}</p>
+                    <p><i class="fas fa-phone mr-4"></i>{{ jugador.telefon }}</p>
+                    <p><i class="mr-4">Lvl</i>Nivell {{ jugador.nivell }}</p>
+                  </div>
+                </div>
+
                 <div class="content">
                   {{ jugador.email }}
                 </div>
@@ -65,7 +76,7 @@
           </div>
           {% empty %}
           <div class="column">
-            <p>No se encontraron jugadores.</p>
+            <p>No s'han trobat coincidències.</p>
           </div>
           {% endfor %}
         </div>
@@ -92,6 +103,14 @@
         {% endif %}
 
       </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.popup').popup();
+      });
+    </script>
+
   </body>
-  
 </html>
