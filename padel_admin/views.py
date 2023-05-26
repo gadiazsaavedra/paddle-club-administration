@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.shortcuts import render
 from django.core.paginator import Paginator
-from .models import Jugadors, Reserva, Cobrament, CobramentSoci
+from .models import Jugadors, Reserva, Cobrament
 
 def landing(request):
     return render(request, 'landing.html')
@@ -25,14 +25,26 @@ def lista_jugadors(request):
         email = request.POST.get('email')
         telefon = request.POST.get('telefon')
         nivell = request.POST.get('nivell')
-        contrasenya = request.POST.get('contrasenya')
+        contrasenya = 'a'
 
-        # Realizar acciones con los datos del formulario
-        # Por ejemplo, crear un nuevo jugador en la base de datos
-        jugador = Jugadors.objects.create(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
+        jugador = Jugadors(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
         jugador.save()
 
-        # Redireccionar o realizar otras acciones después de procesar el formulario
+    '''if request.method == 'PUT':
+        # Procesar los datos del formulario
+        nom = request.PUT.get('nom')
+        cognom = request.PUT.get('cognom')
+        email = request.PUT.get('email')
+        telefon = request.PUT.get('telefon')
+        nivell = request.PUT.get('nivell')
+        contrasenya = 'a'
+
+        jugador = Jugadors(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
+        jugador.save()'''
+    
+    if request.method == 'DELETE':
+        jugador = Jugadors.objects.get(id=request.DELETE.get('jugador_id'))
+        jugador.delete()
 
     jugadors_list = Jugadors.objects.all()
     

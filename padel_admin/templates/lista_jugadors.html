@@ -47,7 +47,7 @@
       </form>
     </div>
 
-    <!-- LISTA DE JUGADORES -->
+    <!-- LLISTA DE JUGADORS -->
     <div class="ui two column grid mt-10">
       {% for jugador in page_obj %}
       <div class="column">
@@ -55,7 +55,7 @@
           <div class="item">
             <div class="right floated content">
               <div class="ui button"><i class="fas fa-edit"></i></div>
-              <div class="ui button"><i class="fas fa-trash"></i></div>
+              <a class="ui button eliminar-jugador"><i class="fas fa-trash"></i></a>
             </div>
             <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
             <div class="content popup" style="font-size: 1.25rem !important;">
@@ -107,14 +107,15 @@
     {% endif %}
   </div>
 
-  <!-- FORMULARIO EMERGENTE -->
+  <!-- FORMULARI AFEGIR -->
   <div id="formulario-popup" class="ui modal">
     <i class="close icon"></i>
     <div class="header">
       Afegir Jugador
     </div>
     <div class="content">
-      <form class="ui form">
+      <form method="POST" class="ui form">
+        {% csrf_token %}
         <div class="field">
           <label>Nom</label>
           <input type="text" name="nom" placeholder="Nom">
@@ -135,13 +136,32 @@
           <label>Nivell</label>
           <input type="text" name="nivell" placeholder="Nivell">
         </div>
-        <div class="field">
-          <label>Contrasenya</label>
-          <input type="text" name="contrasenya" placeholder="Contrasenya">
-        </div>
         <button class="ui primary button" type="submit">Afegir</button>
       </form>
     </div>
+  </div>
+
+  <!-- AVÍS ELIMINACIÓ DE JUGADOR -->
+  <div class="ui basic modal eliminar-jugador-popup">
+    <div class="ui icon header">
+      <i class="trash alternate outline icon"></i>
+      Avís d'eliminació
+    </div>
+    <div class="flex justify-between items-center mt-5">
+      <div class="content">
+        <p class="text-lg">¿Estàs segur de què desitges eliminar al jugador?</p>
+      </div>
+      <div class="actions">
+        <div class="ui red cancel inverted button">
+          <i class="remove icon"></i>
+          Cancelar
+        </div>
+        <div class="ui green ok inverted button">
+          <i class="checkmark icon"></i>
+          Acceptar
+        </div>
+      </div>
+    </div>    
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -151,6 +171,15 @@
       $('.popup').popup();
       $('#abrir-ventana').on('click', function() {
         $('#formulario-popup').modal('show');
+      });
+    });
+  </script>
+  <script>
+    $(document).ready(function() {
+      $('.popup').popup();
+      
+      $('.eliminar-jugador').on('click', function() {
+        $('.eliminar-jugador-popup').modal('show');
       });
     });
   </script>
