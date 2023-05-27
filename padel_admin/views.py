@@ -1,5 +1,5 @@
 from datetime import datetime
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from .models import Jugadors, Reserva, Cobrament
 
@@ -19,33 +19,23 @@ def lista_jugadors(request):
     search_query = request.GET.get('search')
     
     if request.method == 'POST':
+        if request.POST.get('_method') == 'DELETE':
+            jugador_id = request.POST.get('jugador_id')
+            jugador = Jugadors.objects.filter(id_jugador=jugador_id)
+            jugador.delete()
+            return redirect('lista_jugadors')
+        
         # Procesar los datos del formulario
         nom = request.POST.get('nom')
         cognom = request.POST.get('cognom')
         email = request.POST.get('email')
         telefon = request.POST.get('telefon')
         nivell = request.POST.get('nivell')
-        contrasenya = 'a'
+        contrasenya = str(nom)
 
         jugador = Jugadors(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
         jugador.save()
-
-    '''if request.method == 'PUT':
-        # Procesar los datos del formulario
-        nom = request.PUT.get('nom')
-        cognom = request.PUT.get('cognom')
-        email = request.PUT.get('email')
-        telefon = request.PUT.get('telefon')
-        nivell = request.PUT.get('nivell')
-        contrasenya = 'a'
-
-        jugador = Jugadors(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
-        jugador.save()'''
     
-    if request.method == 'DELETE':
-        jugador = Jugadors.objects.get(id=request.DELETE.get('jugador_id'))
-        jugador.delete()
-
     jugadors_list = Jugadors.objects.all()
     
     if search_query:
@@ -61,7 +51,6 @@ def lista_jugadors(request):
     }
     
     return render(request, 'lista_jugadors.html', context)
-
 
 def lista_cobraments(request):
     cobraments = Cobrament.objects.all()

@@ -2,3 +2,7 @@ img {
     width: 120px;
     height: 70px;
 }
+
+.mr-left {
+    margin-left: 10rem;
+}

@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from padel_admin import views
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.landing, name='landing'),

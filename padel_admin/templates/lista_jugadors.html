@@ -55,7 +55,7 @@
           <div class="item">
             <div class="right floated content">
               <div class="ui button"><i class="fas fa-edit"></i></div>
-              <a class="ui button eliminar-jugador"><i class="fas fa-trash"></i></a>
+              <a class="ui button eliminar-jugador" data-info="{{ jugador.id_jugador }}"><i class="fas fa-trash"></i></a>
             </div>
             <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
             <div class="content popup" style="font-size: 1.25rem !important;">
@@ -140,28 +140,33 @@
       </form>
     </div>
   </div>
-
+  
   <!-- AVÍS ELIMINACIÓ DE JUGADOR -->
   <div class="ui basic modal eliminar-jugador-popup">
     <div class="ui icon header">
       <i class="trash alternate outline icon"></i>
       Avís d'eliminació
     </div>
-    <div class="flex justify-between items-center mt-5">
+    <div class="flex justify-center items-center mt-5">
       <div class="content">
         <p class="text-lg">¿Estàs segur de què desitges eliminar al jugador?</p>
       </div>
-      <div class="actions">
-        <div class="ui red cancel inverted button">
+      <div class="actions ml-5">
+        <div class="ui red cancel button">
           <i class="remove icon"></i>
           Cancelar
         </div>
-        <div class="ui green ok inverted button">
+      </div>
+      <form id="eliminar-jugador-form" method="POST" action="{% url 'lista_jugadors' %}">
+        {% csrf_token %}
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="hidden" name="jugador_id" value="">
+        <button type="submit" class="ui green ok button">
           <i class="checkmark icon"></i>
           Acceptar
-        </div>
-      </div>
-    </div>    
+        </button>
+      </form>
+    </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -179,6 +184,8 @@
       $('.popup').popup();
       
       $('.eliminar-jugador').on('click', function() {
+        var jugadorId = $(this).data('info');
+        $('#eliminar-jugador-form input[name="jugador_id"]').val(jugadorId);
         $('.eliminar-jugador-popup').modal('show');
       });
     });
