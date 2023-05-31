@@ -7,23 +7,31 @@
     <title>Gamerinha Padel Club</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui/dist/semantic.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
     <link href="{% static 'landing_styles.css' %}" rel="stylesheet">
 </head>
 <body class="flex items-center justify-center bg-gray-100">
     <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
         <img src="{% static 'logo.png' %}">
         <h1 class="text-2xl mb-4 font-bold ml-2">Login</h1>
-        <form class="ui form">
+        <form class="ui form" method="POST" action="{% url 'landing' %}">
+            {% csrf_token %}
             <div class="field">
-                <input type="text" class="ui input" placeholder="DNI">
+                <input type="text" class="ui input" placeholder="DNI" name="dni">
             </div>
             <div class="field">
-                <input type="password" class="ui input" placeholder="Contrasenya">
+                <input type="password" class="ui input" placeholder="Contrasenya" name="contrasenya">
             </div>
             <div class="flex justify-center">
                 <button type="submit" class="ui primary button">Iniciar sesión</button>
             </div>              
         </form>
+        
+        {% if mensaje %}
+            <div class="ui message error">
+                <i class="fas fa-exclamation-triangle mr-2"></i>{{ mensaje }}
+            </div>
+        {% endif %}        
     </div>
 </body>
 </html>
