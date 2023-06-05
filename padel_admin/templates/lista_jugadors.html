@@ -89,7 +89,7 @@
     {% if page_obj.paginator.num_pages > 1 %}
     <div class="ui pagination menu" style="margin-top: 2.5rem !important;display: flex; justify-content: center;">
       {% if page_obj.has_previous %}
-      <a class="item" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+      <a class="item" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><i class="fas fa-caret-left"></i></a>
       {% endif %}
 
       {% for num in page_obj.paginator.page_range %}
@@ -101,7 +101,7 @@
       {% endfor %}
 
       {% if page_obj.has_next %}
-      <a class="item" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+      <a class="item" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><i class="fas fa-caret-right"></i></a>
       {% endif %}
     </div>
     {% endif %}

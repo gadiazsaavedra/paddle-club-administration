@@ -21,8 +21,6 @@ def landing(request):
 def lista_reserves(request):
     fecha = request.GET.get('fecha')
     search_query = request.GET.get('search')
-    if search_query:
-        reserves = Reserva.objects.filter(jugador=search_query).order_by('horaInici', 'horaFinalitzacio','pista')
     if fecha:
         fecha = datetime.strptime(fecha, '%Y-%m-%d').date()
         reserves = Reserva.objects.filter(data=fecha).order_by('horaInici', 'horaFinalitzacio','pista')
