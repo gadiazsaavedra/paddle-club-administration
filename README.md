@@ -11,69 +11,68 @@
   <h2 id="spain">Descripción</h2>
   <p>
 Un emprendedor quiere fundar su propio club de pádel en las afueras de Vilanova y la Geltrú.
+Para poder gestionar el club de manera correcta necesitan una base de datos con determinadas necesidades.
+El club estará abierto de lunes a domingo, de 9 a 21.
 
-El club estará abierto de lunes a domingo, de 9 a 21 horas.
+El club de pádel estará formado por jugadores. Los jugadores estarán identificados por un id. También queremos saber su nombre, apellido, nivel de juego, número de teléfono, dirección de correo electrónico y contraseña. El nivel de juego será un número entre 1 y 6 que indicará como de bien juegan (cuánto más alto mejor jugador).
+Los jugadores juegan a pádel a las pistas de pádel. Como que no tendremos un gran número de pistas, estas estarán identificadas por un número (Pista 1, Pista 2, Pista 3...). Las pistas pueden ser del tipo Outdoor o Indoor. En una misma pista pueden jugar mínimo 2 jugadores y máximo 4.
 
-El club de pádel estará formado por jugadores. Los jugadores estarán identificados por su DNI. También queremos saber su nombre, apellido, número de teléfono y dirección de correo electrónico.
+Para que los jugadores puedan jugar a la pista, al menos uno habrá tenido que hacer una reserva previamente. Para cada reserva, hay que registrar la fecha, la hora de inicio de la reserva y la hora de finalización. La reserva se identificará dado una fecha y el jugador que ha hecho la reserva. Las horas de reserva disponibles son cada media hora, es decir, de 9:00-9:30,10:00... así hasta las 21:00. Una reserva tiene una duración mínima de 30 minutos y máxima de 1 hora y 30 minutos.
 
-Los jugadores juegan a pádel en las pistas de pádel. Como no tendremos un gran número de pistas, éstas estarán identificadas por un número (Pista 1, Pista 2, Pista 3...). Las pistas pueden ser del tipo Outdoor o Indoor. En una misma pista pueden jugar mínimo 2 jugadores y máximo 4.
+Por cada reserva también tendremos que saber la pista reservada y los jugadores que participan en el juego. Un jugador solo podrá hacer una reserva por día, y no podrá estar asignado a dos reservas a la vegada si estas dos coinciden en horas.
 
-Para que los jugadores puedan jugar en pista, al menos uno habrá tenido que hacer una reserva previamente. Para cada reserva, es necesario registrar la fecha, la hora de inicio de la reserva y la hora de finalización. La reserva se identificará dada una fecha y el jugador que ha realizado la reserva. Las horas de reserva disponibles son cada media hora, es decir, de 9:00 a 9:30,10:00... así hasta las 21:00. Una reserva tiene una duración mínima de 30 minutos y máxima de 1 hora y 30 minutos.
-Por cada reserva también deberemos saber la pista reservada y los jugadores que participan en el juego.
-Un jugador sólo podrá realizar una reserva por día, y no podrá estar asignado a dos reservas a la vez si estas dos coinciden en horas.
+Antes de entrar a pista para jugar, cada jugador asociado a la reserva de la pista habrá tenido que hacer un pago, que para el club será un cobro. Un cobro contendrá la fecha del cobro, importe abonado y el jugador que ha efectuado el cobro por la reserva.
 
-Para que todos los jugadores que quieran reservar puedan visualizar todas las reservas realizadas, deberemos tener un horario de reservas que, dada una fecha, se muestre las reservas asociadas a cada pista durante esta fecha.
+Para disfrutar de ciertas ventajas, los jugadores pueden hacerse socios del club. Ser miembro del club costará 35 euros en el mes, pago que se efectuará mediante un cargo a un IBAN.
 
-Antes de entrar en pista para jugar, cada jugador asociado a la reserva de la pista habrá tenido que realizar un pago, que para el club será un cobro. Un cobro contendrá la fecha del cobro, importe abonado y el jugador que ha efectuado el cobro por la reserva.
+Los socios podrán jugar gratis en las pistas de 9.00 a 13.00 de lunes a viernes y tendrán un descuento del 50% en las otras horas.
 
-Para disfrutar de ciertas ventajas, los jugadores pueden hacerse socios del club. Ser miembro del club costará 35 euros al mes, pago que se efectuará mediante cargo a un IBAN.
-Los socios podrán jugar gratis en las pistas de 9:00 a 13:00 de lunes a viernes y tendrán un descuento del 50% en las otras horas.
-Para hacerse socio deberá indicarse un número de cuenta bancaria (IBAN).
-El cobro de socio estará identificado por un id, y se hará efectivo el último día de cada mes, fecha que se guardará en la base de datos.
+Para hacerse socio se tendrá que indicar un número de cuenta bancario (IBAN).
+
+El cobro de socio estará identificado por un íd, y se hará efectivo el último día de cada mes, fecha que se guardará a la base de datos.
+
+Al club de pádel tendremos unos recepcionistas. Estas personas tendrán acceso total a la base de datos. Podrán añadir/eliminar jugadores a las reservas, crear reservas y serán las únicas personas que podrán eliminar reservas (junto con el jugador creador de la reserva). También se encargarán de realizar los cobros de los jugadores antes de entrar a jugar a la pista. A pesar de que todos tienen acceso total, a la base de datos solo guardaremos el/la recepcionista que ha gestionado la reserva y qué recepcionista ha realizado el cobro. El recepcionistas se identificarán con su DNI y también querremos saber su nombre, apellido, email, contraseña y un teléfono.
+
   </p>
-  <h2>UML</h2>
-  <p align="center">
-    <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
-  </p>
-  <h2>Technologías</h2>
-  <p>
-    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="50" height="70" alt="Django" /></a>
-    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="70" height="70" alt="PostgreSQL" /></a>
-  </p>
-
-
-
-<br><br>
+  <br>
 <h2 id="uk">Description</h2>
 <p>
 An entrepreneur wants to found his own paddle tennis club on the outskirts of Vilanova y la Geltrú.
 
-The club will be open from Monday to Sunday, from 9 a.m. to 9 p.m.
+To be able to manage the club correctly, they need a database with certain needs.
+The club will be open from Monday to Sunday, from 9 to 21.
 
-The paddle club will be made up of players. Players will be identified by their ID. We also want to know your first name, last name, phone number, and email address.
+The paddle club will consist of players. Players will be identified by an id. We also want to know his name, surname, game level, phone number, email address and password. The game level will be a number between 1 and 6 indicating how well they play (how much higher the player is).
+Players play paddle on the paddle courts. Since we will not have a large number of ourts, these will be identified by a number (court 1, court 2, court 3...). The courts may be of the Outdoor or Indoor type. At least 2 players and maximum 4 can play on the same court.
 
-The players play paddle on the paddle courts. As we will not have a large number of courts, they will be identified by a number (Court 1, Court 2, Court 3...). The Court can be of the Outdoor or Indoor type. A minimum of 2 players and a maximum of 4 can play on the same court.
+In order for players to play on the court, at least one has had to make a reservation. For each reservation, the date, start time of the reservation and end time must be recorded. The reserve will be identified by a date and the player who made the reserve. The available reserve hours are every half hour, i.e. 9:00-9:30.10:00... So until 9 p.m. A reservation has a minimum duration of 30 minutes and a maximum of 1 hour and 30 minutes.
 
-For the players to be able to play on the court, at least one will have had to make a reservation in advance. For each reservation, it is necessary to register the date, the reservation start time and the end time. The reservation will be identified given a date and the player who made the reservation. The available reservation hours are every half hour, that is, from 9:00 a.m. to 9:30 a.m., 10:00 p.m.... and until 9:00 p.m. A reservation has a minimum duration of 30 minutes and a maximum of 1 hour and 30 minutes.
-For each reservation we must also know the reserved track and the players participating in the game.
-A player may only make one reservation per day, and may not be assigned to two reservations at the same time if these two coincide in hours.
+For each reserve we will also need to know the reserved court and the players involved in the game. A player will only be able to book one reserve per day, and will not be assigned to two reserves at once if these two match in hours.
 
-So that all players who want to reserve can see all the reservations made, we must have a reservation schedule that, given a date, shows the reservations associated with each track during this date.
+Before entering the court to play, each player associated with the reserve of the track has had to make a payment, which for the club will be a fee. A charge will contain the date of the charge, amount paid and the player who has made the recovery by the reserve.
 
-Before entering the pitch to play, each player associated with the pitch reservation will have had to make a payment, which will be a charge for the club. A charge will contain the date of charge, amount paid and the player who has made the charge for the reservation.
+To enjoy certain advantages, players can become members of the club. A member of the club will cost EUR 35 per month, payment that will be made through an IBAN charge.
 
-To enjoy certain benefits, players can become members of the club. Being a member of the club will cost 35 euros per month, payment to be made by debiting an IBAN.
-Members will be able to play for free on the courts from 9:00 a.m. to 1:00 p.m. Monday through Friday and will have a 50% discount at other times.
-To become a member, a bank account number (IBAN) must be indicated.
-The member charge will be identified by an id, and will be effective on the last day of each month, date that will be saved in the database.
+Members will be able to play free on tracks from 9 a.m. to 13 a.m. from Monday to Friday and will have a 50% discount in the other hours.
+
+To become a member, a bank account number (IBAN) must be specified.
+
+Membership collection will be identified by an ID, and will be effective on the last day of each month, the date that will be stored in the database.
+
+At the paddle club we'll have some recepcionists. These people will have full access to the database. They will be able to add/remove players to the reserves, create reserves and be the only people who will be able to remove reserves (along with the player who created the reserve). They will also charge for collecting players before entering the court. Although everyone has full access, we will only save the receptionist who managed the reserve and which receptionist made the recovery in the database. Recepcionists will identify with their DNI and we will also want to know their name, surname, email, password and phone.
 </p>
-
+  
+  <br>
   <h2>UML</h2>
-    <p align="center">
-      <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
-    </p>
-  <h2>Technologies</h2>
+  <p align="center">
+    <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+  </p>
+  <br>
+  <h2>Tech Stack</h2>
   <p>
-    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="50" height="70" alt="Django" /></a>
-    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="70" height="70" alt="PostgreSQL" /></a>
+    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="30" height="40" alt="Django" /></a>
+    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" height="40" alt="PostgreSQL" /></a>
+    <a href="https://en.wikipedia.org/wiki/JavaScript" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="40" height="40" alt="JavaScript" /></a>
+    <a href="https://developer.mozilla.org/en-US/docs/Glossary/HTML5" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/html5-colored.svg" width="40" height="40" alt="HTML5" /></a>
+    <a href="https://www.w3.org/TR/CSS/#css" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/css3-colored.svg" width="40" height="40" alt="CSS3" /></a>
   </p>
