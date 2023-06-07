@@ -30,20 +30,19 @@
       </header>
       <div class="container mx-auto px-4 py-8">
         <h1 class="text-4xl font-bold mb-4">Reserves</h1>
-        
+
+        <div class="mt-5 mb-3">
+          <a class="ui primary button" id="abrir-ventana">
+            <span class="inline-flex items-center">Afegir<i class="fas fa-plus-circle ml-2"></i></span>
+          </a>
+        </div>
+
         <div class="flex items-center mb-10">
           <!-- FILTRO DE DATA -->
-          <form class="mb-4">
+          <form>
             <label for="fecha" class="mr-2">Data:</label>
             <input type="date" id="fecha" name="fecha" required class="border border-gray-300 rounded px-2 py-1 mr-2" value="{{ day }}">
             <button type="submit" class="ui primary button">Filtrar</button>
-          </form>
-          <!-- FILTRO DE JUGADOR -->
-          <form method="GET" action="{% url 'lista_reserves' %}" class="mb-4 ml-5" style="width: 30vw;">
-            <div class="ui fluid action input">
-              <input type="text" name="search" placeholder="Buscar per jugador..." value="{% if search_query %}{{ search_query }}{% endif %}">
-              <button type="submit" class="ui button"><i class="fas fa-search"></i></button>
-            </div>
           </form>
         </div>
     
@@ -71,7 +70,7 @@
                 <td>{{ reserva.horaFinalitzacio }}</td>
                 <td>{{ reserva.jugador.nom }} {{ reserva.jugador.cognom }}</td>
                 <td><a class="ui button"><i class="fas fa-dollar-sign"></i></a></td>
-                <td><a class="ui button eliminar-jugador"><i class="fas fa-trash"></i></a></td>
+                <td><a class="ui button eliminar-reserva" data-info="{{ reserva.jugador.id_jugador }}"><i class="fas fa-trash"></i></a></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -80,6 +79,97 @@
         {% else %}
         <p>No hay reservas disponibles.</p>
         {% endif %}
-      </div>  
+      </div>
+
+      <!-- FORMULARI AFEGIR -->
+      <div id="formulario-popup" class="ui modal">
+        <i class="close icon"></i>
+        <div class="header">
+          Afegir Jugador
+        </div>
+        <div class="content">
+          <form method="POST" class="ui form">
+            {% csrf_token %}
+            <div class="field">
+              <label>Nom</label>
+              <input type="text" name="nom" placeholder="Nom">
+            </div>
+            <div class="field">
+              <label>Cognom</label>
+              <input type="text" name="cognom" placeholder="Cognom">
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" name="email" placeholder="Email">
+            </div>
+            <div class="field">
+              <label>Telèfon</label>
+              <input type="text" name="telefon" placeholder="Telèfon">
+            </div>
+            <div class="field">
+              <label>Nivell</label>
+              <input type="text" name="nivell" placeholder="Nivell">
+            </div>
+            <button class="ui primary button" type="submit">Afegir</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- AVÍS ELIMINACIÓ DE RESERVA -->
+      <div class="ui basic modal eliminar-reserva-popup">
+        <div class="ui icon header">
+          <i class="trash alternate outline icon"></i>
+          Avís d'eliminació
+        </div>
+        <div class="flex justify-center items-center mt-5">
+          <div class="content">
+            <p class="text-lg">¿Estàs segur de què desitges eliminar la reserva?</p>
+          </div>
+          <div class="actions ml-5">
+            <div class="ui red cancel button">
+              <i class="remove icon"></i>
+              Cancelar
+            </div>
+          </div>
+          <form id="eliminar-reserva-form" method="POST" action="{% url 'lista_reserves' %}">
+            {% csrf_token %}
+            <input type="hidden" name="_method" value="DELETE">
+            <input type="hidden" name="jugador_id" value="">
+            <input type="hidden" name="data" value="">
+            <button type="submit" class="ui green ok button">
+              <i class="checkmark icon"></i>
+              Acceptar
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.js"></script>
+      <script>
+        var fechaGlobal = document.getElementById('fecha').value;
+        document.getElementById('fecha').addEventListener('change', function() {
+          fechaGlobal = this.value;
+        });
+
+        $(document).ready(function() {
+          $('.popup').popup();
+          $('.eliminar-reserva').on('click', function() {
+            var jugadorId = $(this).data('info');
+            $('#eliminar-reserva-form input[name="jugador_id"]').val(jugadorId);
+            $('#eliminar-reserva-form input[name="data"]').val(fechaGlobal);
+            $('.eliminar-reserva-popup').modal('show');
+          });
+        });
+      </script>
+      <script>
+        $(document).ready(function() {
+          $('.popup').popup();
+          $('#abrir-ventana').on('click', function() {
+            $('#formulario-popup').modal('show');
+          });
+        });
+      </script>
+
   </body>
 </html>

@@ -19,8 +19,19 @@ def landing(request):
         return render(request, 'landing.html')
 
 def lista_reserves(request):
+    if request.method == 'POST':
+        if request.POST.get('_method') == 'DELETE':
+            jugador_id = request.POST.get('jugador_id')
+            data = request.POST.get('data')
+            jugador = Jugadors.objects.get(id_jugador=jugador_id)
+            reserva = Reserva.objects.get(jugador=jugador, data=data)
+            reserva.delete()
+            reserves = Reserva.objects.filter(data=data).order_by('horaInici', 'horaFinalitzacio','pista')
+            fecha = datetime.strptime(data, '%Y-%m-%d').date()
+            day = fecha.strftime('%Y-%m-%d')
+            return render(request, 'lista_reserves.html', {'reserves': reserves, 'day': day})
+
     fecha = request.GET.get('fecha')
-    search_query = request.GET.get('search')
     if fecha:
         fecha = datetime.strptime(fecha, '%Y-%m-%d').date()
         reserves = Reserva.objects.filter(data=fecha).order_by('horaInici', 'horaFinalitzacio','pista')

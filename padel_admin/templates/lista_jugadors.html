@@ -1,195 +1,194 @@
 <!DOCTYPE html>
 {% load static %}
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gamerinha Padel Club</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-  <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-</head>
-<body class="bg-gray-100">
-  <header>
-    <nav class="bg-gray-300">
-      <div class="mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <img src="{% static 'logo2.png' %}">
-          </div>
-          <div class="flex items-center">
-            <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
-            <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
-            <a href="/cobraments" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Cobraments</a>
-            <a href="/" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamerinha Padel Club</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+  <body class="bg-gray-100">
+    <header>
+      <nav class="bg-gray-300">
+        <div class="mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex items-center">
+              <img src="{% static 'logo2.png' %}">
+            </div>
+            <div class="flex items-center">
+              <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
+              <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
+              <a href="/cobraments" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Cobraments</a>
+              <a href="/" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
           </div>
         </div>
+      </nav>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+      <h1 class="text-4xl font-bold">Jugadors</h1>
+
+      <div class="flex items-center mb-10">
+        <!-- AFEGIR JUGADOR -->
+        <a class="ui primary button" id="abrir-ventana">
+          <span class="inline-flex items-center">Afegir<i class="ml-2 fas fa-user-plus"></i></span>
+        </a>
+
+        <!-- BUSCADOR -->
+        <form method="GET" action="{% url 'lista_jugadors' %}" style="width: 100%;">
+          <div class="ui fluid action input">
+            <input type="text" name="search" placeholder="Buscar..." value="{% if search_query %}{{ search_query }}{% endif %}">
+            <button type="submit" class="ui button"><i class="fas fa-search"></i></button>
+          </div>
+        </form>
       </div>
-    </nav>
-  </header>
 
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold">Jugadors</h1>
+      <!-- LLISTA DE JUGADORS -->
+      <div class="ui two column grid mt-10">
+        {% for jugador in page_obj %}
+        <div class="column">
+          <div class="ui middle aligned divided list">
+            <div class="item">
+              <div class="right floated content">
+                <div class="ui button"><i class="fas fa-edit"></i></div>
+                <a class="ui button eliminar-jugador" data-info="{{ jugador.id_jugador }}"><i class="fas fa-trash"></i></a>
+              </div>
+              <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
+              <div class="content popup" style="font-size: 1.25rem !important;">
+                <a>{{ jugador.nom }} {{ jugador.cognom }}</a>
+              </div>
+              <!--INFO JUGADOR POPUP -->
+              <div class="ui popup">
+                <div class="header text-center">Informació</div>
+                <div class="content mt-3">
+                  <p><i class="fas fa-user mr-4"></i>{{ jugador.nom }} {{ jugador.cognom }}</p>
+                  <p><i class="fas fa-envelope mr-4"></i>{{ jugador.email }}</p>
+                  <p><i class="fas fa-phone mr-4"></i>{{ jugador.telefon }}</p>
+                  <p><i class="mr-4">Lvl</i>Nivell {{ jugador.nivell }}</p>
+                </div>
+              </div>
 
-    <div class="flex items-center mb-10">
-      <!-- AFEGIR JUGADOR -->
-      <a class="ui primary button" id="abrir-ventana">
-        <span class="inline-flex items-center">Afegir<i class="ml-2 fas fa-user-plus"></i></span>
-      </a>
-
-      <!-- BUSCADOR -->
-      <form method="GET" action="{% url 'lista_jugadors' %}" style="width: 100%;">
-        <div class="ui fluid action input">
-          <input type="text" name="search" placeholder="Buscar..." value="{% if search_query %}{{ search_query }}{% endif %}">
-          <button type="submit" class="ui button"><i class="fas fa-search"></i></button>
-        </div>
-      </form>
-    </div>
-
-    <!-- LLISTA DE JUGADORS -->
-    <div class="ui two column grid mt-10">
-      {% for jugador in page_obj %}
-      <div class="column">
-        <div class="ui middle aligned divided list">
-          <div class="item">
-            <div class="right floated content">
-              <div class="ui button"><i class="fas fa-edit"></i></div>
-              <a class="ui button eliminar-jugador" data-info="{{ jugador.id_jugador }}"><i class="fas fa-trash"></i></a>
-            </div>
-            <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
-            <div class="content popup" style="font-size: 1.25rem !important;">
-              <a>{{ jugador.nom }} {{ jugador.cognom }}</a>
-            </div>
-            <!--INFO JUGADOR POPUP -->
-            <div class="ui popup">
-              <div class="header text-center">Informació</div>
-              <div class="content mt-3">
-                <p><i class="fas fa-user mr-4"></i>{{ jugador.nom }} {{ jugador.cognom }}</p>
-                <p><i class="fas fa-envelope mr-4"></i>{{ jugador.email }}</p>
-                <p><i class="fas fa-phone mr-4"></i>{{ jugador.telefon }}</p>
-                <p><i class="mr-4">Lvl</i>Nivell {{ jugador.nivell }}</p>
+              <div class="content">
+                {{ jugador.email }}
               </div>
             </div>
-
-            <div class="content">
-              {{ jugador.email }}
-            </div>
           </div>
         </div>
+        {% empty %}
+        <div class="column">
+          <p>No s'han trobat coincidències.</p>
+        </div>
+        {% endfor %}
       </div>
-      {% empty %}
-      <div class="column">
-        <p>No s'han trobat coincidències.</p>
+
+      <!-- PAGINACION -->
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="ui pagination menu" style="margin-top: 2.5rem !important;display: flex; justify-content: center;">
+        {% if page_obj.has_previous %}
+        <a class="item" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><i class="fas fa-caret-left"></i></a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <a class="active item" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+        {% else %}
+        <a class="item" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a class="item" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><i class="fas fa-caret-right"></i></a>
+        {% endif %}
       </div>
-      {% endfor %}
-    </div>
-
-    <!-- PAGINACION -->
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="ui pagination menu" style="margin-top: 2.5rem !important;display: flex; justify-content: center;">
-      {% if page_obj.has_previous %}
-      <a class="item" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><i class="fas fa-caret-left"></i></a>
-      {% endif %}
-
-      {% for num in page_obj.paginator.page_range %}
-      {% if num == page_obj.number %}
-      <a class="active item" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
-      {% else %}
-      <a class="item" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
-      {% endif %}
-      {% endfor %}
-
-      {% if page_obj.has_next %}
-      <a class="item" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}"><i class="fas fa-caret-right"></i></a>
       {% endif %}
     </div>
-    {% endif %}
-  </div>
 
-  <!-- FORMULARI AFEGIR -->
-  <div id="formulario-popup" class="ui modal">
-    <i class="close icon"></i>
-    <div class="header">
-      Afegir Jugador
-    </div>
-    <div class="content">
-      <form method="POST" class="ui form">
-        {% csrf_token %}
-        <div class="field">
-          <label>Nom</label>
-          <input type="text" name="nom" placeholder="Nom">
-        </div>
-        <div class="field">
-          <label>Cognom</label>
-          <input type="text" name="cognom" placeholder="Cognom">
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input type="email" name="email" placeholder="Email">
-        </div>
-        <div class="field">
-          <label>Telèfon</label>
-          <input type="text" name="telefon" placeholder="Telèfon">
-        </div>
-        <div class="field">
-          <label>Nivell</label>
-          <input type="text" name="nivell" placeholder="Nivell">
-        </div>
-        <button class="ui primary button" type="submit">Afegir</button>
-      </form>
-    </div>
-  </div>
-  
-  <!-- AVÍS ELIMINACIÓ DE JUGADOR -->
-  <div class="ui basic modal eliminar-jugador-popup">
-    <div class="ui icon header">
-      <i class="trash alternate outline icon"></i>
-      Avís d'eliminació
-    </div>
-    <div class="flex justify-center items-center mt-5">
+    <!-- FORMULARI AFEGIR -->
+    <div id="formulario-popup" class="ui modal">
+      <i class="close icon"></i>
+      <div class="header">
+        Afegir Jugador
+      </div>
       <div class="content">
-        <p class="text-lg">¿Estàs segur de què desitges eliminar al jugador?</p>
+        <form method="POST" class="ui form">
+          {% csrf_token %}
+          <div class="field">
+            <label>Nom</label>
+            <input type="text" name="nom" placeholder="Nom">
+          </div>
+          <div class="field">
+            <label>Cognom</label>
+            <input type="text" name="cognom" placeholder="Cognom">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Email">
+          </div>
+          <div class="field">
+            <label>Telèfon</label>
+            <input type="text" name="telefon" placeholder="Telèfon">
+          </div>
+          <div class="field">
+            <label>Nivell</label>
+            <input type="text" name="nivell" placeholder="Nivell">
+          </div>
+          <button class="ui primary button" type="submit">Afegir</button>
+        </form>
       </div>
-      <div class="actions ml-5">
-        <div class="ui red cancel button">
-          <i class="remove icon"></i>
-          Cancelar
-        </div>
-      </div>
-      <form id="eliminar-jugador-form" method="POST" action="{% url 'lista_jugadors' %}">
-        {% csrf_token %}
-        <input type="hidden" name="_method" value="DELETE">
-        <input type="hidden" name="jugador_id" value="">
-        <button type="submit" class="ui green ok button">
-          <i class="checkmark icon"></i>
-          Acceptar
-        </button>
-      </form>
     </div>
-  </div>
+    
+    <!-- AVÍS ELIMINACIÓ DE JUGADOR -->
+    <div class="ui basic modal eliminar-jugador-popup">
+      <div class="ui icon header">
+        <i class="trash alternate outline icon"></i>
+        Avís d'eliminació
+      </div>
+      <div class="flex justify-center items-center mt-5">
+        <div class="content">
+          <p class="text-lg">¿Estàs segur de què desitges eliminar al jugador?</p>
+        </div>
+        <div class="actions ml-5">
+          <div class="ui red cancel button">
+            <i class="remove icon"></i>
+            Cancelar
+          </div>
+        </div>
+        <form id="eliminar-jugador-form" method="POST" action="{% url 'lista_jugadors' %}">
+          {% csrf_token %}
+          <input type="hidden" name="_method" value="DELETE">
+          <input type="hidden" name="jugador_id" value="">
+          <button type="submit" class="ui green ok button">
+            <i class="checkmark icon"></i>
+            Acceptar
+          </button>
+        </form>
+      </div>
+    </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.js"></script>
-  <script>
-    $(document).ready(function() {
-      $('.popup').popup();
-      $('#abrir-ventana').on('click', function() {
-        $('#formulario-popup').modal('show');
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.popup').popup();
+        $('#abrir-ventana').on('click', function() {
+          $('#formulario-popup').modal('show');
+        });
       });
-    });
-  </script>
-  <script>
-    $(document).ready(function() {
-      $('.popup').popup();
-      
-      $('.eliminar-jugador').on('click', function() {
-        var jugadorId = $(this).data('info');
-        $('#eliminar-jugador-form input[name="jugador_id"]').val(jugadorId);
-        $('.eliminar-jugador-popup').modal('show');
+    </script>
+    <script>
+      $(document).ready(function() {
+        $('.popup').popup();
+        
+        $('.eliminar-jugador').on('click', function() {
+          var jugadorId = $(this).data('info');
+          $('#eliminar-jugador-form input[name="jugador_id"]').val(jugadorId);
+          $('.eliminar-jugador-popup').modal('show');
+        });
       });
-    });
-  </script>
-
-</body>
+    </script>
+  </body>
 </html>
