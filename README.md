@@ -34,22 +34,7 @@ El cobro de socio estará identificado por un íd, y se hará efectivo el últim
 Al club de pádel tendremos unos recepcionistas. Estas personas tendrán acceso total a la base de datos. Podrán añadir/eliminar jugadores a las reservas, crear reservas y serán las únicas personas que podrán eliminar reservas (junto con el jugador creador de la reserva). También se encargarán de realizar los cobros de los jugadores antes de entrar a jugar a la pista. A pesar de que todos tienen acceso total, a la base de datos solo guardaremos el/la recepcionista que ha gestionado la reserva y qué recepcionista ha realizado el cobro. El recepcionistas se identificarán con su DNI y también querremos saber su nombre, apellido, email, contraseña y un teléfono.
 
   </p>
-  <h2>UML</h2>
-  <p align="center">
-    <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
-  </p>
-  <h2>Technologías</h2>
-  <p>
-    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="20" height="40" alt="Django" /></a>
-    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" height="40" alt="PostgreSQL" /></a>
-    <a href="https://en.wikipedia.org/wiki/JavaScript" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="40" height="40" alt="JavaScript" /></a>
-    <a href="https://developer.mozilla.org/en-US/docs/Glossary/HTML5" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/html5-colored.svg" width="40" height="40" alt="HTML5" /></a>
-    <a href="https://www.w3.org/TR/CSS/#css" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/css3-colored.svg" width="40" height="40" alt="CSS3" /></a>
-  </p>
-
-
-
-<br><br>
+  <br>
 <h2 id="uk">Description</h2>
 <p>
 An entrepreneur wants to found his own paddle tennis club on the outskirts of Vilanova y la Geltrú.
@@ -76,13 +61,18 @@ Membership collection will be identified by an ID, and will be effective on the 
 
 At the paddle club we'll have some recepcionists. These people will have full access to the database. They will be able to add/remove players to the reserves, create reserves and be the only people who will be able to remove reserves (along with the player who created the reserve). They will also charge for collecting players before entering the court. Although everyone has full access, we will only save the receptionist who managed the reserve and which receptionist made the recovery in the database. Recepcionists will identify with their DNI and we will also want to know their name, surname, email, password and phone.
 </p>
-
+  
+  <br>
   <h2>UML</h2>
-    <p align="center">
-      <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
-    </p>
-  <h2>Technologies</h2>
+  <p align="center">
+    <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+  </p>
+  <br>
+  <h2>Tech Stack</h2>
   <p>
-    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="50" height="70" alt="Django" /></a>
-    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="70" height="70" alt="PostgreSQL" /></a>
+    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="30" height="40" alt="Django" /></a>
+    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" height="40" alt="PostgreSQL" /></a>
+    <a href="https://en.wikipedia.org/wiki/JavaScript" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="40" height="40" alt="JavaScript" /></a>
+    <a href="https://developer.mozilla.org/en-US/docs/Glossary/HTML5" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/html5-colored.svg" width="40" height="40" alt="HTML5" /></a>
+    <a href="https://www.w3.org/TR/CSS/#css" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/css3-colored.svg" width="40" height="40" alt="CSS3" /></a>
   </p>
