@@ -66,13 +66,20 @@ At the paddle club we'll have some recepcionists. These people will have full ac
   <h2>UML</h2>
   <p align="center">
     <img src="https://github.com/raulgamero/paddle-club-administration/blob/master/uml.png"></img>
+    <ul>
+      <li>RS1 - Entre la hora de inicio y finalización de una reserva hay un intervalo de mínimo 30 minutos y máximo 1 hora 30 minutos</li>
+      <li>RS2 - Dada una reserva r1 asociada a una pista p1, no puede exisitr otra reserva r2 también asociada a p1 que contenga r1.hora_inicio <= r2.hora_inicio <= r1.hora_finalización o r1.hora_inicio <= r2.hora_finalización <= r1.hora_finalización</li>
+      <li>RS3 - Dado un jugador j1, una reserva r1 asociada a una pista p1 y una reserva r2 asociada a p2, j1 no podra estar asociado a r2 si ya está asociado a r1 y r1.hora_inicio <= r2.hora_inicio <= r1.hora_finalización o r1.hora_inicio <= r2.hora_finalización <= r1.hora_finalización</li>
+      <li>RS4 - Dado un jugador j1 que ha realizado una reserva r1 (quiReserva) tendrá que existir un cobro(j1, r1).</li>
+    </ul>
   </p>
   <br>
   <h2>Tech Stack</h2>
   <p>
-    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="30" height="40" alt="Django" /></a>
-    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="40" height="40" alt="PostgreSQL" /></a>
-    <a href="https://en.wikipedia.org/wiki/JavaScript" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="40" height="40" alt="JavaScript" /></a>
-    <a href="https://developer.mozilla.org/en-US/docs/Glossary/HTML5" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/html5-colored.svg" width="40" height="40" alt="HTML5" /></a>
-    <a href="https://www.w3.org/TR/CSS/#css" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/css3-colored.svg" width="40" height="40" alt="CSS3" /></a>
+    <a href="https://www.djangoproject.com/" target="_blank"><img src="https://brandslogos.com/wp-content/uploads/images/large/django-logo.png" width="40" height="50" alt="Django" /></a>
+    <a href="https://www.postgresql.org/" target="_blank"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" width="50" height="50" alt="PostgreSQL" /></a>
+    <a href="https://en.wikipedia.org/wiki/JavaScript" target="_blank" rel="noreferrer"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="50" height="50" alt="JavaScript" /></a>
+    <a href="https://developer.mozilla.org/en-US/docs/Glossary/HTML5" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/html5-colored.svg" width="50" height="50" alt="HTML5" /></a>
+    <a href="https://www.w3.org/TR/CSS/#css" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/css3-colored.svg" width="50" height="50" alt="CSS3" /></a>
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" width="50" height="50" alt="Tailwind" /
   </p>
