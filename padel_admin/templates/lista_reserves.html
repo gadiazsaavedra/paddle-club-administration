@@ -22,7 +22,7 @@
                     <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
                     <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
                     <a href="/cobraments" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Cobraments</a>
-                    <a href="/" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
+                    <a href="/logout" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
                   </div>
                 </div>
               </div>
@@ -85,33 +85,50 @@
       <div id="formulario-popup" class="ui modal">
         <i class="close icon"></i>
         <div class="header">
-          Afegir Jugador
+          Afegir Reserva
         </div>
         <div class="content">
           <form method="POST" class="ui form">
             {% csrf_token %}
             <div class="field">
-              <label>Nom</label>
-              <input type="text" name="nom" placeholder="Nom">
+              <div class="mb-4">
+                <label for="fecha-2">Data</label>
+                <input type="date" id="fecha-2" name="fecha-2" required class="border border-gray-300 rounded px-2 py-1" value="{{ day }}">      
+              </div>
+              <label>Hora inici</label>
+              <select name="horaInici" class="mb-4">
+                <option value="">Selecciona la hora d'inici</option>
+                {% for hour in hours %}
+                  <option value="{{ hour }}">{{ hour }}</option>
+                {% endfor %}
+              </select>
+              <label>Duració</label>
+              <select name="horaFinalitzacio">
+                <option value="">Selecciona la duració de la reserva</option>
+                <option value="30">30 minuts</option>
+                <option value="60">1 hora</option>
+                <option value="90">1 hora i 30 minuts</option>
+              </select>
+              <div class="mt-4">
+                <label>Pista</label>
+                <select name="Pista">
+                  <option value="">Selecciona tipus de pista</option>
+                  <option value="indoor">indoor</option>
+                  <option value="outdoor">outdoor</option>
+                </select>
+              </div>
+              <div class="mt-4">
+                <label >Nom jugador</label>
+                <input type="text" placeholder="Nom jugador que fa reserva" name="jugador_nom">      
+              </div>
+              <div class="mt-4">
+                <label >Cognom jugador</label>
+                <input type="text" placeholder="Cognom jugador que fa reserva" name="jugador_cognom">      
+              </div>
             </div>
-            <div class="field">
-              <label>Cognom</label>
-              <input type="text" name="cognom" placeholder="Cognom">
-            </div>
-            <div class="field">
-              <label>Email</label>
-              <input type="email" name="email" placeholder="Email">
-            </div>
-            <div class="field">
-              <label>Telèfon</label>
-              <input type="text" name="telefon" placeholder="Telèfon">
-            </div>
-            <div class="field">
-              <label>Nivell</label>
-              <input type="text" name="nivell" placeholder="Nivell">
-            </div>
-            <button class="ui primary button" type="submit">Afegir</button>
-          </form>
+            <button class="ui primary button" type="submit">Buscar</button>
+          </form>          
+          
         </div>
       </div>
 
@@ -170,6 +187,5 @@
           });
         });
       </script>
-
   </body>
 </html>
