@@ -24,6 +24,5 @@ urlpatterns = [
     path('', views.landing, name='landing'),
     path('reserves/', views.lista_reserves, name='lista_reserves'),
     path('jugadors/', views.lista_jugadors, name='lista_jugadors'),
-    path('logout/', views.logout, name='logout'),
-    path('cobraments/', views.lista_cobraments, name='lista_cobraments')
+    path('logout/', views.logout, name='logout')
 ]
