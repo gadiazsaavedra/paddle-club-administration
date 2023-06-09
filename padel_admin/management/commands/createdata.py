@@ -120,7 +120,7 @@ class Command(BaseCommand):
       for i in range(RESERVAS):
          for jug in jugadors_list:
             jugador = jug
-            data = fake.date_between(start_date=date(2022, 1, 1), end_date=date.today())
+            data = fake.date_between(start_date=date(2023, 1, 1), end_date=date(2023, 12, 12))
             exist_reserva = Reserva.objects.filter(data=data, jugador=jug)
             if (exist_reserva):
                continue
@@ -153,7 +153,7 @@ class Command(BaseCommand):
       reserves = Reserva.objects.all()
       print(reserves.count(), "reserves added.")
 
-      print("Adding cobraments...")
+      '''print("Adding cobraments...")
       # cobraments creation
       for res in reserves:
          jugen = [2,4]
@@ -209,7 +209,7 @@ class Command(BaseCommand):
                importe=importe,
                recepcionista=recepcionista)
       cobraments = Cobrament.objects.all()
-      print(cobraments.count(), "cobraments added.")
+      print(cobraments.count(), "cobraments added.")'''
 
 
       print("FAKE DATA CREATED")

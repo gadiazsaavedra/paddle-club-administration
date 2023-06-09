@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gamerinha Padel Club</title>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+        <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    </head>
+<body class="bg-gray-100">
+    <header>
+        <nav class="bg-gray-300">
+            <div class="mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                  <img src="{% static 'logo2.png' %}">
+                </div>
+                <div class="flex items-center">
+                  <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
+                  <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
+                  <a href="/" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
+                </div>
+              </div>
+            </div>
+          </nav>          
+    </header>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold mb-10">Cobraments</h1>
+        <form class="ui form" method="GET" action="/cobraments">
+            <div class="field">
+                <label for="jugador">Nom del jugador</label>
+                <input type="text" id="jugador-nom" name="jugador" placeholder="Nom del jugador">
+            </div>
+            <div class="field">
+                <label for="jugador">Cognom del jugador</label>
+                <input type="text" id="jugador-cognom" name="jugador" placeholder="Cognom del jugador">
+            </div>
+            <button class="ui primary button" type="submit">Cercar</button>
+        </form>
+    </div>
+</body>
+</html>

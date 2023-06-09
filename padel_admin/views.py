@@ -1,4 +1,5 @@
 from datetime import datetime, date, time, timedelta
+from enum import unique
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 import random
@@ -12,7 +13,7 @@ def landing(request):
         recepcionista = Recepcionista.objects.get(DNI=dni, contrasenya=contrasenya)
 
         if recepcionista:
-            response = redirect('lista_jugadors')
+            response = redirect('lista_reserves')
             response.set_cookie('acceso', str(recepcionista.DNI))  # Establecer cookie de acceso
             return response
         else:
@@ -117,16 +118,38 @@ def lista_reserves(request):
 def lista_jugadors(request):
     acceso = request.COOKIES.get('acceso')
     if acceso:
-        print(acceso)
         search_query = request.GET.get('search')
-        
+
         if request.method == 'POST':
+            
             if request.POST.get('_method') == 'DELETE':
                 jugador_id = request.POST.get('jugador_id')
                 jugador = Jugadors.objects.filter(id_jugador=jugador_id)
                 jugador.delete()
                 return redirect('lista_jugadors')
             
+            if request.POST.get('_method') == 'PATCH':
+                jugador_id = request.POST.get('id_jugador')
+                nom = request.POST.get('nom')
+                cognom = request.POST.get('cognom')
+                email = request.POST.get('email')
+                telefon = request.POST.get('telefon')
+                nivell = request.POST.get('nivell')
+
+                jugador = Jugadors.objects.get(id_jugador=jugador_id)
+                # actualitzem valors necessaris
+                if nom:
+                    jugador.nom = nom
+                if cognom:
+                    jugador.cognom = cognom
+                if email:
+                    jugador.email = email
+                if telefon:
+                    jugador.telefon = telefon
+                if nivell:
+                    jugador.nivell = nivell
+                jugador.save()
+                
             # Procesar los datos del formulario
             nom = request.POST.get('nom')
             cognom = request.POST.get('cognom')
@@ -135,8 +158,17 @@ def lista_jugadors(request):
             nivell = request.POST.get('nivell')
             contrasenya = str(nom)
 
-            jugador = Jugadors(nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
-            jugador.save()
+            # ens assegurem que id es unic i guardem jugador
+            id_jugador = random.randrange(10000, 100000)
+            try:
+                player = Jugadors.objects.get(id_jugador=id_jugador)
+                print(player)
+                id_jugador = random.randrange(10000, 100000)
+                jugador = Jugadors(id_jugador=id_jugador, nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
+                jugador.save()
+            except:
+                jugador = Jugadors(id_jugador=id_jugador, nom=nom, cognom=cognom, email=email, telefon=telefon, nivell=nivell, contrasenya=contrasenya)
+                jugador.save()
         
         jugadors_list = Jugadors.objects.all()
         
@@ -157,9 +189,24 @@ def lista_jugadors(request):
         mensaje = 'Accés denegat'
         return render(request, 'landing.html', {'mensaje': mensaje})
 
-def lista_cobraments(request):
-    cobraments = Cobrament.objects.all()
-    return render(request, 'lista_cobraments.html', {'cobraments': cobraments})
+def lista_cobraments(request, data, id_jugador):
+    # identificar reserva
+    jugador = Jugadors.objects.get(id_jugador=id_jugador)
+    reserva = Reserva.objects.get(data=data, jugador=jugador)
+
+    totals = Cobrament.objects.filter(reserva=reserva)
+
+    '''if request.method == 'GET':
+        if totals.count() != 4:
+            jugador_nom = request.GET.get('jugador-nom')
+            jugador_cognom = request.GET.get('jugador-cognom')
+            jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
+            cobrament = Cobrament(jugador=jugador, reserva=reserva)
+            cobrament.save()
+        else:
+            mensaje = 'Limit de 4 persones a la pista.'
+            return render(request, 'lista_cobraments.html', {'mensaje': mensaje})'''
+    return render(request, 'lista_cobraments.html')
 
 def logout(request):
     response = redirect('landing')  # Redirige a la página de inicio de sesión o cualquier otra página después de hacer logout

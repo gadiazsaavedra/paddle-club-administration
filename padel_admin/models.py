@@ -23,7 +23,7 @@ class Soci(Jugadors):
 class CobramentSoci(models.Model):
     id_cobramentSoci = models.AutoField(primary_key=True)
     data = models.DateField()
-    soci = models.ForeignKey(Soci, on_delete=models.CASCADE, null=True)
+    soci = models.ForeignKey(Soci, on_delete=models.CASCADE)
 
     def __str__(self):
         return '{} , {}, {}'.format(self.id_cobraSoci, self.data, self.soci)
@@ -66,6 +66,9 @@ class Cobrament(models.Model):
     data = models.DateField()
     importe = models.DecimalField(max_digits=4, decimal_places=2)
     recepcionista = models.ForeignKey(Recepcionista, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('reserva', 'jugador')
 
     def __str__(self):
         return '{} , {} , {}, {}, {}'.format(self.reserva, self.jugador, self.data, self.importe, self.recepcionista)

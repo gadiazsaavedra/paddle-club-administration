@@ -49,39 +49,40 @@
       <!-- LLISTA DE JUGADORS -->
       <div class="ui two column grid mt-10">
         {% for jugador in page_obj %}
-        <div class="column">
-          <div class="ui middle aligned divided list">
-            <div class="item">
-              <div class="right floated content">
-                <div class="ui button"><i class="fas fa-edit"></i></div>
-                <a class="ui button eliminar-jugador" data-info="{{ jugador.id_jugador }}"><i class="fas fa-trash"></i></a>
-              </div>
-              <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
-              <div class="content popup" style="font-size: 1.25rem !important;">
-                <a>{{ jugador.nom }} {{ jugador.cognom }}</a>
-              </div>
-              <!--INFO JUGADOR POPUP -->
-              <div class="ui popup">
-                <div class="header text-center">Informació</div>
-                <div class="content mt-3">
-                  <p><i class="fas fa-user mr-4"></i>{{ jugador.nom }} {{ jugador.cognom }}</p>
-                  <p><i class="fas fa-envelope mr-4"></i>{{ jugador.email }}</p>
-                  <p><i class="fas fa-phone mr-4"></i>{{ jugador.telefon }}</p>
-                  <p><i class="mr-4">Lvl</i>Nivell {{ jugador.nivell }}</p>
+          <div class="column">
+            <div class="ui middle aligned divided list">
+              <div class="item">
+                <div class="right floated content">
+                  <a class="ui button editar-jugador" data-info="{{ jugador }}"><i class="fas fa-edit"></i></a>
+                  <a class="ui button eliminar-jugador" data-info="{{ jugador.id_jugador }}"><i class="fas fa-trash"></i></a>
                 </div>
-              </div>
+                <img class="ui avatar image" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random">
+                <div class="content popup" style="font-size: 1.25rem !important;">
+                  <a>{{ jugador.nom }} {{ jugador.cognom }}</a>
+                </div>
+                <!--INFO JUGADOR POPUP -->
+                <div class="ui popup" data-jugador-nom="{{ jugador.nom }}" data-jugador-cognom="{{ jugador.cognom }}" data-jugador-email="{{ jugador.email }}" data-jugador-telefon="{{ jugador.telefon }}" data-jugador-nivell="{{ jugador.nivell }}">
+                  <div class="header text-center">Informació</div>
+                  <div class="content mt-3">
+                    <p><i class="fas fa-user mr-4"></i>{{ jugador.nom }} {{ jugador.cognom }}</p>
+                    <p><i class="fas fa-envelope mr-4"></i>{{ jugador.email }}</p>
+                    <p><i class="fas fa-phone mr-4"></i>{{ jugador.telefon }}</p>
+                    <p><i class="mr-4">Lvl</i>Nivell {{ jugador.nivell }}</p>
+                  </div>
+                </div>
 
-              <div class="content">
-                {{ jugador.email }}
+                <div class="content">
+                  {{ jugador.email }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
         {% empty %}
-        <div class="column">
-          <p>No s'han trobat coincidències.</p>
-        </div>
+          <div class="column">
+            <p>No s'han trobat coincidències.</p>
+          </div>
         {% endfor %}
+
       </div>
 
       <!-- PAGINACION -->
@@ -133,7 +134,7 @@
           </div>
           <div class="field">
             <label>Nivell</label>
-            <input type="text" name="nivell" placeholder="Nivell">
+            <input type="number" name="nivell" placeholder="Nivell" min="1" max="6">
           </div>
           <button class="ui primary button" type="submit">Afegir</button>
         </form>
@@ -168,6 +169,42 @@
       </div>
     </div>
 
+    <!-- EDICIÓ DE JUGADOR -->
+    <div class="ui modal editar-jugador-popup">
+      <i class="close icon"></i>
+      <div class="header">
+        Editar Jugador
+      </div>
+      <div class="content">
+        <form method="POST" class="ui form" id="editar-jugador-form">
+          {% csrf_token %}
+          <input type="hidden" name="_method" value="PATCH">
+          <input type="hidden" name="id_jugador" value="">
+          <div class="field">
+            <label>Nom</label>
+            <input type="text" name="nom">
+          </div>
+          <div class="field">
+            <label>Cognom</label>
+            <input type="text" name="cognom">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" name="email">
+          </div>
+          <div class="field">
+            <label>Telèfon</label>
+            <input type="text" name="telefon">
+          </div>
+          <div class="field">
+            <label>Nivell</label>
+            <input type="number" name="nivell" placeholder="Nivell" min="1" max="6">
+          </div>
+          <button class="ui primary button" type="submit">Editar</button>
+        </form>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.js"></script>
     <script>
@@ -186,6 +223,36 @@
           var jugadorId = $(this).data('info');
           $('#eliminar-jugador-form input[name="jugador_id"]').val(jugadorId);
           $('.eliminar-jugador-popup').modal('show');
+        });
+      });
+    </script>
+    <script>
+      $(document).ready(function() {
+        $('.popup').popup();
+
+        $('.editar-jugador').on('click', function() {
+          var jugadorInfo = $(this).data('info');
+          var jugador = jugadorInfo.split(',');
+
+          $('#editar-jugador-form input[name="jugador_id"]').val(jugador[0].trim());
+
+          // Obtener los atributos del jugador
+          var jugador_id = (jugador[0].trim())
+          var nom = jugador[1].trim();
+          var cognom = jugador[2].trim();
+          var nivell = jugador[3].trim();
+          var telefon = jugador[4].trim();
+          var email = jugador[5].trim();
+
+          // Asignar los atributos del jugador a los campos del formulario
+          $('#editar-jugador-form input[name="id_jugador"]').val(jugador_id);
+          $('#editar-jugador-form input[name="nom"]').attr('placeholder', nom);
+          $('#editar-jugador-form input[name="cognom"]').attr('placeholder', cognom);
+          $('#editar-jugador-form input[name="nivell"]').attr('placeholder', nivell);
+          $('#editar-jugador-form input[name="telefon"]').attr('placeholder', telefon);
+          $('#editar-jugador-form input[name="email"]').attr('placeholder', email);
+
+          $('.editar-jugador-popup').modal('show');
         });
       });
     </script>

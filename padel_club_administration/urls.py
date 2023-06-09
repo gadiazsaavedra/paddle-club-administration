@@ -24,5 +24,6 @@ urlpatterns = [
     path('', views.landing, name='landing'),
     path('reserves/', views.lista_reserves, name='lista_reserves'),
     path('jugadors/', views.lista_jugadors, name='lista_jugadors'),
+    path('cobrament/<str:data>/<str:id_jugador>', views.lista_cobraments, name='lista_cobraments'),
     path('logout/', views.logout, name='logout')
 ]

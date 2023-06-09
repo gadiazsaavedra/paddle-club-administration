@@ -74,7 +74,7 @@
                 <td>{{ reserva.horaInici }}</td>
                 <td>{{ reserva.horaFinalitzacio }}</td>
                 <td>{{ reserva.jugador.nom }} {{ reserva.jugador.cognom }}</td>
-                <td><a class="ui button"><i class="fas fa-dollar-sign"></i></a></td>
+                <td><a href="{% url 'lista_cobraments' data=reserva.data|date:'Y-m-d' id_jugador=reserva.jugador.id_jugador %}" class="ui button"><i class="fas fa-dollar-sign"></i></a></td>
                 <td><a class="ui button eliminar-reserva" data-info="{{ reserva.jugador.id_jugador }}"><i class="fas fa-trash"></i></a></td>
               </tr>
               {% endfor %}
@@ -133,7 +133,6 @@
             </div>
             <button class="ui primary button" type="submit">Buscar</button>
           </form>          
-          
         </div>
       </div>
 
@@ -173,7 +172,6 @@
         document.getElementById('fecha').addEventListener('change', function() {
           fechaGlobal = this.value;
         });
-
         $(document).ready(function() {
           $('.popup').popup();
           $('.eliminar-reserva').on('click', function() {
