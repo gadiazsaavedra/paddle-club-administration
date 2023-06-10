@@ -1,5 +1,6 @@
 from datetime import datetime, date, time, timedelta
 from enum import unique
+import json
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 import random
@@ -10,13 +11,12 @@ def landing(request):
         dni = request.POST.get('dni')
         contrasenya = request.POST.get('contrasenya')
         
-        recepcionista = Recepcionista.objects.get(DNI=dni, contrasenya=contrasenya)
-
-        if recepcionista:
+        try:
+            recepcionista = Recepcionista.objects.get(DNI=dni, contrasenya=contrasenya)
             response = redirect('lista_reserves')
             response.set_cookie('acceso', str(recepcionista.DNI))  # Establecer cookie de acceso
             return response
-        else:
+        except:
             mensaje = 'El DNI o la contrasenya son incorrectes'
             return render(request, 'landing.html', {'mensaje': mensaje})
 
@@ -64,28 +64,28 @@ def lista_reserves(request):
             else:
                 hora_finalitzacio = (datetime.combine(datetime.min, hora_inici) + timedelta(hours=1, minutes=30)).time()
             # obtenim el jugador
-            jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
-            # consultem que eljugador no hagi fet reservas al mateix dia
-            reserva_feta = Reserva.objects.get(jugador=jugador, data=fecha2)
-            if reserva_feta:
+            try:
+                jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
+            except:
+                mensaje_error = "El jugador introudït no existeix."
+                fecha = date.today()
+                day = fecha.strftime('%Y-%m-%d')
+                reserves = Reserva.objects.filter(data=fecha).order_by('horaInici', 'horaFinalitzacio','pista')
+                return render(request, 'lista_reserves.html', {'reserves': reserves, 'day': day, 'hours': hours, 'mensaje_error': mensaje_error})
+            try:
+                # consultem que eljugador no hagi fet reservas al mateix dia
+                reserva_feta = Reserva.objects.get(jugador=jugador, data=fecha2)
                 mensaje_error = "El jugador ja ha realitzat una reserva per aquest dia."
                 fecha = date.today()
                 day = fecha.strftime('%Y-%m-%d')
                 reserves = Reserva.objects.filter(data=fecha).order_by('horaInici', 'horaFinalitzacio','pista')
-                return render(request, 'lista_reserves.html', {'reserves': reserves, 'day': day, 'hours': hours, 'mensaje_error': mensaje_error})            
+                return render(request, 'lista_reserves.html', {'reserves': reserves, 'day': day, 'hours': hours, 'mensaje_error': mensaje_error})
+            except:
+                print('correcte')         
             # consultem les pistes ocupades i li assignem una lliure
             pista = Pistes.objects.filter(tipus=type_pista)
             if pista.count() != 50:
-                if pista.count() != 0:
-                    pista_disponible = False
-                    while not pista_disponible:
-                        pista_ = random.choice(pista)
-                        # Verificar si la pista está ocupada en el momento deseado
-                        reserva_existente = Reserva.objects.filter(pista=pista_, horaInici=hora_inici).exists()
-                        if not reserva_existente:
-                            pista_disponible = True
-                else:
-                    pista_ = random.choice(pista)
+                pista_ = random.choice(pista)
             else:
                 mensaje_error = "Totes les pistes del tipus" + type_pista + "estan ocupades per aquesta hora"
                 fecha = date.today()
@@ -190,23 +190,57 @@ def lista_jugadors(request):
         return render(request, 'landing.html', {'mensaje': mensaje})
 
 def lista_cobraments(request, data, id_jugador):
-    # identificar reserva
-    jugador = Jugadors.objects.get(id_jugador=id_jugador)
-    reserva = Reserva.objects.get(data=data, jugador=jugador)
+    acceso = request.COOKIES.get('acceso')
+    if acceso:
+        # identificar reserva
+        jugador = Jugadors.objects.get(id_jugador=id_jugador)
+        reserva = Reserva.objects.get(data=data, jugador=jugador)
 
-    totals = Cobrament.objects.filter(reserva=reserva)
+        totals = Cobrament.objects.filter(reserva=reserva)
 
-    '''if request.method == 'GET':
-        if totals.count() != 4:
-            jugador_nom = request.GET.get('jugador-nom')
-            jugador_cognom = request.GET.get('jugador-cognom')
-            jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
-            cobrament = Cobrament(jugador=jugador, reserva=reserva)
-            cobrament.save()
-        else:
-            mensaje = 'Limit de 4 persones a la pista.'
-            return render(request, 'lista_cobraments.html', {'mensaje': mensaje})'''
-    return render(request, 'lista_cobraments.html')
+
+        if request.method == 'POST':
+            if totals.count() != 4:
+                jugador_nom = request.POST.get('jugador-nom')
+                jugador_cognom = request.POST.get('jugador-cognom')
+                
+                try:
+                    jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
+                except:
+                    mensaje = 'Jugador introduït inexistent a la base de dades.'
+                    return render(request, 'lista_cobraments.html', {'mensaje': mensaje})
+                
+                try:
+                    existeix_cobrament = Cobrament.objects.get(reserva=reserva, jugador=jugador)
+                    mensaje = 'Aquest jugador ja ha realitzat un cobrament per aquesta reserva.'
+                    return render(request, 'lista_cobraments.html', {'mensaje': mensaje})
+                
+                except:
+                    preu_hora = 10
+                    # ---- calcul preu ----------------------------------           
+                    hora_inicio = datetime.strptime(reserva.horaInici.strftime("%H:%M:%S"), "%H:%M:%S")
+                    hora_final = datetime.strptime(reserva.horaFinalitzacio.strftime("%H:%M:%S"), "%H:%M:%S")
+
+                    diferencia_tiempo = hora_final - hora_inicio
+                    diferencia_horas = int(diferencia_tiempo.total_seconds() / 3600)
+                    diferencia_minutos = int((diferencia_tiempo.total_seconds() % 3600) / 60)
+                    diferencia_horas += round(diferencia_minutos / 60, 2)
+                    importe = preu_hora*diferencia_horas
+
+                    # recollim recepcionista que realitza reserva a través de cookie
+                    rec = Recepcionista.objects.get(DNI=request.COOKIES.get('acceso'))
+                    cobrament = Cobrament.objects.create(reserva=reserva, jugador=jugador, data=data, importe=importe, recepcionista=rec)
+                    cobrament.save()
+
+                    mensaje2 = jugador_nom+' '+jugador_cognom+' ha realitzat un pagament de '+str(importe)+' €'
+                    return render(request, 'lista_cobraments.html', {'mensaje2': mensaje2})
+            else:
+                mensaje = 'Limit de 4 persones a la pista.'
+                return render(request, 'lista_cobraments.html', {'mensaje': mensaje})
+        return render(request, 'lista_cobraments.html')
+    else:
+        mensaje = 'Accés denegat'
+        return render(request, 'landing.html', {'mensaje': mensaje})
 
 def logout(request):
     response = redirect('landing')  # Redirige a la página de inicio de sesión o cualquier otra página después de hacer logout

@@ -4,6 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="{% static 'logo3.png' %}">
         <title>Gamerinha Padel Club</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
         <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
@@ -21,7 +22,7 @@
                 <div class="flex items-center">
                   <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
                   <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
-                  <a href="/" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
+                  <a href="/logout" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                
                 </div>
               </div>
             </div>
@@ -29,17 +30,28 @@
     </header>
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-4xl font-bold mb-10">Cobraments</h1>
-        <form class="ui form" method="GET" action="/cobraments">
-            <div class="field">
-                <label for="jugador">Nom del jugador</label>
-                <input type="text" id="jugador-nom" name="jugador" placeholder="Nom del jugador">
-            </div>
-            <div class="field">
-                <label for="jugador">Cognom del jugador</label>
-                <input type="text" id="jugador-cognom" name="jugador" placeholder="Cognom del jugador">
-            </div>
-            <button class="ui primary button" type="submit">Cercar</button>
+        <form class="ui form" method="POST">
+          {% csrf_token %}
+          <div class="field">
+              <label for="jugador">Nom del jugador</label>
+              <input type="text" id="jugador-nom" name="jugador-nom" placeholder="Nom del jugador">
+          </div>
+          <div class="field">
+              <label for="jugador">Cognom del jugador</label>
+              <input type="text" id="jugador-cognom" name="jugador-cognom" placeholder="Cognom del jugador">
+          </div>
+          <button class="ui primary button" type="submit" name="cercar">Cercar</button>
         </form>
+        {% if mensaje %}
+        <div class="ui message error">
+            <i class="fas fa-exclamation-triangle mr-2"></i>{{ mensaje }}
+        </div>
+        {% endif %}
+        {% if mensaje2 %}
+        <div class="ui positive message flex flex-col p-2">
+            <h4 class="text-center">{{ mensaje2 }}</h4>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>
