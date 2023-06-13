@@ -1,7 +1,7 @@
 <h1 align='center'>Paddle Club administration</h1>
   <h3 align='center'>Web service for a Paddle club administration</h3>
    <p align="center">
-    <img src="https://img.shields.io/badge/STATUS-DEVELOPING-green">
+    <img src="https://img.shields.io/badge/STATUS-FINISHED-blue">
    </p>
    <p align="center">
     <a href="#spain"><img src="https://img.freepik.com/iconos-gratis/espana_318-203514.jpg" width="36" height="36"></a>
