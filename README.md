@@ -88,3 +88,4 @@ At the paddle club we'll have some recepcionists. These people will have full ac
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" width="50" height="50" alt="Tailwind">
   <img src="https://raw.githubusercontent.com/ngx-semantic/ngx-semantic-docs/master/src/assets/images/logo.png" width="50" height="50" alt="Semantic UI">
   </p>
+usando readme
