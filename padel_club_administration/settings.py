@@ -16,6 +16,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Configuración de precios
+PRECIO_HORA_CANCHA = 27000  # Precio por hora en pesos
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -84,7 +87,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'es-es'
-TIME_ZONE = 'Europe/Madrid'
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
 USE_I18N = True
 USE_TZ = True
 

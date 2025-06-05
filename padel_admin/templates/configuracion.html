@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuración - La cancha de German{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold mb-6">Configuración del Sistema</h1>
+
+<div class="card p-6 mb-8">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold">Precios</h2>
+  </div>
+
+  {% if mensaje_exito %}
+  <div class="ui message success mb-6">
+    <i class="fas fa-check-circle mr-2"></i>
+    {{ mensaje_exito }}
+  </div>
+  {% endif %}
+
+  <form method="POST" class="ui form">
+    {% csrf_token %}
+    <div class="field">
+      <label><i class="fas fa-dollar-sign mr-1"></i> Precio por hora de cancha</label>
+      <div class="ui input">
+        <input type="number" name="precio_hora" value="{{ precio_actual }}" min="1" step="1">
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Este precio se aplicará a todos los nuevos pagos.</p>
+    </div>
+    <button class="ui primary button mt-4" type="submit">
+      <i class="fas fa-save mr-1"></i> Guardar Cambios
+    </button>
+  </form>
+</div>
+{% endblock %}

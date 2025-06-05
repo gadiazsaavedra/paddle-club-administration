@@ -25,5 +25,7 @@ urlpatterns = [
     path('reserves/', views.lista_reserves, name='lista_reserves'),
     path('jugadors/', views.lista_jugadors, name='lista_jugadors'),
     path('cobrament/<str:data>/<str:id_jugador>', views.lista_cobraments, name='lista_cobraments'),
+    path('historial-cobros/', views.historial_cobros, name='historial_cobros'),
+    path('configuracion/', views.configuracion, name='configuracion'),
     path('logout/', views.logout, name='logout')
 ]

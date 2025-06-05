@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Pagos - La cancha de German{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold mb-6">Historial de Pagos</h1>
+
+<div class="card p-6 mb-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <!-- FILTROS -->
+    <form method="GET" action="{% url 'historial_cobros' %}" class="w-full">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="field">
+          <label class="block mb-2">Fecha desde:</label>
+          <input type="date" name="fecha_desde" class="border border-gray-300 rounded px-3 py-2 w-full" value="{{ fecha_desde|date:'Y-m-d' }}">
+        </div>
+        <div class="field">
+          <label class="block mb-2">Fecha hasta:</label>
+          <input type="date" name="fecha_hasta" class="border border-gray-300 rounded px-3 py-2 w-full" value="{{ fecha_hasta|date:'Y-m-d' }}">
+        </div>
+        <div class="field">
+          <label class="block mb-2">Jugador:</label>
+          <input type="text" name="jugador" placeholder="Nombre o apellido" class="border border-gray-300 rounded px-3 py-2 w-full" value="{{ jugador }}">
+        </div>
+        <div class="field mt-4">
+          <button type="submit" class="ui primary button">
+            <i class="fas fa-filter mr-1"></i> Filtrar
+          </button>
+          <a href="{% url 'historial_cobros' %}" class="ui button">
+            <i class="fas fa-sync-alt mr-1"></i> Limpiar filtros
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <i class="fas fa-info-circle text-blue-500"></i>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-blue-700">
+          Total de pagos: <strong>{{ cobros.count }}</strong> | 
+          Monto total: <strong>${{ total_importe }}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA DE COBROS -->
+  {% if cobros %}
+  <div class="overflow-x-auto">
+    <table class="ui very basic celled table">
+      <thead>
+        <tr class="text-center">
+          <th><i class="fas fa-calendar mr-1"></i> Fecha</th>
+          <th><i class="fas fa-user mr-1"></i> Jugador</th>
+          <th><i class="fas fa-hashtag mr-1"></i> Cancha</th>
+          <th><i class="fas fa-clock mr-1"></i> Horario</th>
+          <th><i class="fas fa-dollar-sign mr-1"></i> Importe</th>
+          <th><i class="fas fa-user-tie mr-1"></i> Recepcionista</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cobro in cobros %}
+        <tr class="text-center">
+          <td data-label="Fecha">{{ cobro.data }}</td>
+          <td data-label="Jugador">
+            <div class="flex items-center justify-center">
+              <img class="ui avatar image mr-2" src="https://ui-avatars.com/api/?name={{ cobro.jugador.nom|first|capfirst }}+{{ cobro.jugador.cognom|first|capfirst }}&background=random">
+              {{ cobro.jugador.nom }} {{ cobro.jugador.cognom }}
+            </div>
+          </td>
+          <td data-label="Cancha">{{ cobro.reserva.pista.numero }} ({{ cobro.reserva.pista.tipus }})</td>
+          <td data-label="Horario">{{ cobro.reserva.horaInici }} - {{ cobro.reserva.horaFinalitzacio }}</td>
+          <td data-label="Importe" class="font-bold">${{ cobro.importe }}</td>
+          <td data-label="Recepcionista">{{ cobro.recepcionista.nom }} {{ cobro.recepcionista.cognom }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- PAGINACIÓN -->
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="mt-8 flex justify-center">
+    <div class="ui pagination menu">
+      {% if page_obj.has_previous %}
+      <a class="item" href="?page={{ page_obj.previous_page_number }}{% if fecha_desde %}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}{% endif %}{% if jugador %}&jugador={{ jugador }}{% endif %}">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+      {% if num == page_obj.number %}
+      <a class="active item" href="?page={{ num }}{% if fecha_desde %}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}{% endif %}{% if jugador %}&jugador={{ jugador }}{% endif %}">{{ num }}</a>
+      {% else %}
+      <a class="item" href="?page={{ num }}{% if fecha_desde %}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}{% endif %}{% if jugador %}&jugador={{ jugador }}{% endif %}">{{ num }}</a>
+      {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <a class="item" href="?page={{ page_obj.next_page_number }}{% if fecha_desde %}&fecha_desde={{ fecha_desde|date:'Y-m-d' }}{% endif %}{% if fecha_hasta %}&fecha_hasta={{ fecha_hasta|date:'Y-m-d' }}{% endif %}{% if jugador %}&jugador={{ jugador }}{% endif %}">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  
+  {% else %}
+  <div class="ui placeholder segment">
+    <div class="ui icon header">
+      <i class="search icon"></i>
+      No se encontraron pagos
+    </div>
+    <p>Probá con otros filtros o verificá que existan pagos registrados.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

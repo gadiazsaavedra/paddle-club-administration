@@ -5,6 +5,9 @@ from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 import random
 from .models import Jugadors, Reserva, Cobrament, Recepcionista, Pistes, Recepcionista
+from django.db.models import Sum, Q
+from django.conf import settings
+import os
 
 def landing(request):
     if request.method == 'POST':
@@ -216,7 +219,7 @@ def lista_cobraments(request, data, id_jugador):
                     return render(request, 'lista_cobraments.html', {'mensaje': mensaje})
                 
                 except:
-                    preu_hora = 10
+                    preu_hora = settings.PRECIO_HORA_CANCHA
                     # ---- calcul preu ----------------------------------           
                     hora_inicio = datetime.strptime(reserva.horaInici.strftime("%H:%M:%S"), "%H:%M:%S")
                     hora_final = datetime.strptime(reserva.horaFinalitzacio.strftime("%H:%M:%S"), "%H:%M:%S")
@@ -232,12 +235,104 @@ def lista_cobraments(request, data, id_jugador):
                     cobrament = Cobrament.objects.create(reserva=reserva, jugador=jugador, data=data, importe=importe, recepcionista=rec)
                     cobrament.save()
 
-                    mensaje2 = jugador_nom+' '+jugador_cognom+' ha realitzat un pagament de '+str(importe)+' €'
+                    mensaje2 = jugador_nom+' '+jugador_cognom+' ha realizado un pago de $'+str(int(importe))
                     return render(request, 'lista_cobraments.html', {'mensaje2': mensaje2})
             else:
                 mensaje = 'Limit de 4 persones a la pista.'
                 return render(request, 'lista_cobraments.html', {'mensaje': mensaje})
         return render(request, 'lista_cobraments.html')
+    else:
+        mensaje = 'Accés denegat'
+        return render(request, 'landing.html', {'mensaje': mensaje})
+
+def historial_cobros(request):
+    acceso = request.COOKIES.get('acceso')
+    if acceso:
+        # Obtener parámetros de filtrado
+        fecha_desde = request.GET.get('fecha_desde')
+        fecha_hasta = request.GET.get('fecha_hasta')
+        jugador = request.GET.get('jugador')
+        
+        # Consulta base
+        cobros = Cobrament.objects.all().order_by('-data')
+        
+        # Aplicar filtros si existen
+        if fecha_desde:
+            fecha_desde = datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+            cobros = cobros.filter(data__gte=fecha_desde)
+        else:
+            fecha_desde = date.today() - timedelta(days=30)  # Por defecto, último mes
+            cobros = cobros.filter(data__gte=fecha_desde)
+            
+        if fecha_hasta:
+            fecha_hasta = datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+            cobros = cobros.filter(data__lte=fecha_hasta)
+        else:
+            fecha_hasta = date.today()
+            
+        if jugador:
+            cobros = cobros.filter(
+                Q(jugador__nom__icontains=jugador) | 
+                Q(jugador__cognom__icontains=jugador)
+            )
+        
+        # Calcular total
+        total_importe = cobros.aggregate(total=Sum('importe'))['total']
+        if total_importe is None:
+            total_importe = 0
+        
+        # Paginación
+        paginator = Paginator(cobros, 20)  # 20 cobros por página
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context = {
+            'cobros': page_obj,
+            'page_obj': page_obj,
+            'total_importe': int(total_importe),
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'jugador': jugador,
+        }
+        
+        return render(request, 'historial_cobros.html', context)
+    else:
+        mensaje = 'Accés denegat'
+        return render(request, 'landing.html', {'mensaje': mensaje})
+
+def configuracion(request):
+    acceso = request.COOKIES.get('acceso')
+    if acceso:
+        mensaje_exito = None
+        
+        if request.method == 'POST':
+            nuevo_precio = request.POST.get('precio_hora')
+            if nuevo_precio and nuevo_precio.isdigit() and int(nuevo_precio) > 0:
+                # Actualizar el archivo settings.py
+                settings_path = os.path.join(settings.BASE_DIR, 'padel_club_administration', 'settings.py')
+                with open(settings_path, 'r') as file:
+                    content = file.read()
+                
+                # Reemplazar la línea del precio
+                content = content.replace(
+                    f"PRECIO_HORA_CANCHA = {settings.PRECIO_HORA_CANCHA}",
+                    f"PRECIO_HORA_CANCHA = {nuevo_precio}"
+                )
+                
+                with open(settings_path, 'w') as file:
+                    file.write(content)
+                
+                # Actualizar la configuración en tiempo de ejecución
+                settings.PRECIO_HORA_CANCHA = int(nuevo_precio)
+                
+                mensaje_exito = f"El precio se ha actualizado correctamente a ${nuevo_precio} por hora."
+        
+        context = {
+            'precio_actual': settings.PRECIO_HORA_CANCHA,
+            'mensaje_exito': mensaje_exito
+        }
+        
+        return render(request, 'configuracion.html', context)
     else:
         mensaje = 'Accés denegat'
         return render(request, 'landing.html', {'mensaje': mensaje})
