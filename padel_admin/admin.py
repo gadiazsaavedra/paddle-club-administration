@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Jugadors, Soci, CobramentSoci, Pistes, Reserva, Cobrament, Recepcionista
+from .models import Jugadors, Soci, CobramentSoci, Pistes, Reserva, Cobrament, Recepcionista, ConfiguracionGlobal
 
 # Register your models here.
 admin.site.register(Jugadors)
@@ -9,3 +9,4 @@ admin.site.register(Pistes)
 admin.site.register(Recepcionista)
 admin.site.register(Reserva)
 admin.site.register(Cobrament)
+admin.site.register(ConfiguracionGlobal)

@@ -12,7 +12,7 @@ class Jugadors(models.Model):
     contrasenya = models.CharField(max_length=30)
     
     def __str__(self):
-        return '{} , {} , {} , {} , {}, {}, {}'.format(self.id_jugador, self.nom, self.cognom, self.nivell, self.telefon, self.email, self.contrasenya)
+        return '{} - {} {} (Nivell: {})'.format(self.id_jugador, self.nom, self.cognom, self.nivell) # No incluir contraseña
 
 class Soci(Jugadors):
     IBAN = models.CharField(max_length=34)
@@ -20,13 +20,21 @@ class Soci(Jugadors):
     def __str__(self):
         return '{} , {} , {} , {} , {}, {}, {}, {}'.format(self.id_jugador, self.nom, self.cognom, self.nivell, self.telefon, self.email, self.contrasenya, self.IBAN)
 
+class ConfiguracionGlobal(models.Model):
+    clave = models.CharField(max_length=50, primary_key=True)
+    valor = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.clave}: {self.valor}"
+
+
 class CobramentSoci(models.Model):
     id_cobramentSoci = models.AutoField(primary_key=True)
     data = models.DateField()
     soci = models.ForeignKey(Soci, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{} , {}, {}'.format(self.id_cobraSoci, self.data, self.soci)
+        return '{} , {}, {}'.format(self.id_cobramentSoci, self.data, self.soci) # Corregido typo id_cobraSoci
 
 class Pistes(models.Model):
     numero = models.IntegerField(primary_key=True)
@@ -44,7 +52,7 @@ class Recepcionista(models.Model):
     telefon = models.CharField(max_length=13)
 
     def __str__(self):
-        return '{} , {} , {} , {} , {}, {}'.format(self.DNI, self.nom, self.cognom, self.email, self.contrasenya, self.telefon)
+        return '{} - {} {}'.format(self.DNI, self.nom, self.cognom) # No incluir contraseña
 
 class Reserva(models.Model):
     jugador = models.ForeignKey(Jugadors, on_delete=models.CASCADE)
@@ -64,7 +72,7 @@ class Cobrament(models.Model):
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE)
     jugador = models.ForeignKey(Jugadors, on_delete=models.CASCADE)
     data = models.DateField()
-    importe = models.DecimalField(max_digits=4, decimal_places=2)
+    importe = models.DecimalField(max_digits=10, decimal_places=2) # Aumentado max_digits
     recepcionista = models.ForeignKey(Recepcionista, on_delete=models.CASCADE)
 
     class Meta:
