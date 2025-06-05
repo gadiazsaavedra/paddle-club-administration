@@ -88,4 +88,34 @@ At the paddle club we'll have some recepcionists. These people will have full ac
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" width="50" height="50" alt="Tailwind">
   <img src="https://raw.githubusercontent.com/ngx-semantic/ngx-semantic-docs/master/src/assets/images/logo.png" width="50" height="50" alt="Semantic UI">
   </p>
-usando readme
+
+<h2>Funcionalidades Principales</h2>
+
+<h3>Gestión de Jugadores</h3>
+<ul>
+  <li>Añadir nuevos jugadores</li>
+  <li>Buscar jugadores existentes</li>
+  <li>Editar información de jugadores</li>
+  <li>Eliminar jugadores</li>
+</ul>
+
+<h3>Gestión de Reservas</h3>
+<ul>
+  <li>Crear nuevas reservas de pistas</li>
+  <li>Ver reservas por fecha</li>
+  <li>Cancelar reservas existentes</li>
+</ul>
+
+<h3>Gestión de Cobros</h3>
+<ul>
+  <li>Registrar pagos por uso de pistas</li>
+  <li>Ver historial de cobros</li>
+</ul>
+
+<h3>Mejoras Futuras</h3>
+<ul>
+  <li>Añadir un panel de estadísticas para ver la ocupación de pistas</li>
+  <li>Implementar un sistema de reservas online para jugadores</li>
+  <li>Crear informes de ingresos por periodos</li>
+  <li>Añadir un sistema de torneos y competiciones</li>
+</ul>
