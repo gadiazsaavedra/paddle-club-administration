@@ -1,0 +1,192 @@
+/* Estilos responsivos para mejorar la experiencia en dispositivos móviles */
+
+/* Variables */
+:root {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* Estilos generales responsivos */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  h1 {
+    font-size: 1.8rem !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .ui.table {
+    font-size: 0.85rem !important;
+  }
+  
+  .ui.button {
+    padding: 0.6rem 1rem !important;
+  }
+}
+
+/* Navegación responsiva */
+@media (max-width: 640px) {
+  nav .flex.justify-between {
+    flex-direction: column;
+    padding: 0.5rem 0;
+  }
+  
+  nav .flex.items-center {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  
+  nav a {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Tablas responsivas */
+@media (max-width: 768px) {
+  .ui.table thead {
+    display: none;
+  }
+  
+  .ui.table, .ui.table tbody, .ui.table tr, .ui.table td {
+    display: block;
+    width: 100%;
+  }
+  
+  .ui.table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .ui.table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: right;
+    padding: 0.75rem !important;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .ui.table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    padding-right: 1rem;
+  }
+  
+  .ui.table td:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Formularios responsivos */
+@media (max-width: 768px) {
+  .ui.form .two.fields {
+    flex-direction: column !important;
+  }
+  
+  .ui.form .field {
+    margin-bottom: 1rem !important;
+  }
+  
+  .ui.form input, .ui.form select, .ui.form .dropdown {
+    width: 100% !important;
+  }
+  
+  .ui.modal {
+    width: 95% !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Tarjetas de jugadores responsivas */
+@media (max-width: 640px) {
+  .grid-cols-2, .grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Paginación responsiva */
+@media (max-width: 640px) {
+  .ui.pagination.menu {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .ui.pagination.menu .item {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Footer responsivo */
+@media (max-width: 768px) {
+  footer .flex-col.md\\:flex-row {
+    text-align: center;
+  }
+  
+  footer .mb-4.md\\:mb-0 {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  footer .flex.space-x-4 {
+    justify-content: center;
+  }
+}
+
+/* Mejoras para dispositivos táctiles */
+@media (hover: none) {
+  .ui.button, a {
+    transition: none !important;
+  }
+  
+  .ui.button:active, a:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Optimizaciones para pantallas pequeñas */
+@media (max-width: 480px) {
+  .ui.form .field label {
+    font-size: 0.9rem;
+  }
+  
+  .ui.form input, .ui.form select {
+    padding: 0.6rem !important;
+  }
+  
+  .ui.button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .flex.justify-between {
+    flex-direction: column;
+  }
+  
+  .flex.justify-between > * {
+    margin-bottom: 1rem;
+  }
+  
+  .flex.justify-between > *:last-child {
+    margin-bottom: 0;
+  }
+}

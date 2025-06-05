@@ -1,57 +1,62 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
 {% load static %}
-<html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="icon" href="{% static 'logo3.png' %}">
-        <title>Gamerinha Padel Club</title>
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-        <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    </head>
-<body class="bg-gray-100">
-    <header>
-        <nav class="bg-gray-300">
-            <div class="mx-auto px-4 sm:px-6 lg:px-8">
-              <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                  <img src="{% static 'logo2.png' %}">
-                </div>
-                <div class="flex items-center">
-                  <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
-                  <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
-                  <a href="/logout" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                
-                </div>
-              </div>
-            </div>
-          </nav>          
-    </header>
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl font-bold mb-10">Cobraments</h1>
-        <form class="ui form" method="POST">
-          {% csrf_token %}
-          <div class="field">
-              <label for="jugador">Nom del jugador</label>
-              <input type="text" id="jugador-nom" name="jugador-nom" placeholder="Nom del jugador">
-          </div>
-          <div class="field">
-              <label for="jugador">Cognom del jugador</label>
-              <input type="text" id="jugador-cognom" name="jugador-cognom" placeholder="Cognom del jugador">
-          </div>
-          <button class="ui primary button" type="submit" name="cercar">Cercar</button>
-        </form>
-        {% if mensaje %}
-        <div class="ui message error">
-            <i class="fas fa-exclamation-triangle mr-2"></i>{{ mensaje }}
-        </div>
-        {% endif %}
-        {% if mensaje2 %}
-        <div class="ui positive message flex flex-col p-2">
-            <h4 class="text-center">{{ mensaje2 }}</h4>
-        </div>
-        {% endif %}
+
+{% block title %}Cobros - Paddle Club{% endblock %}
+
+{% block content %}
+<h1 class="text-4xl font-bold mb-6">Gestión de Pagos</h1>
+
+<div class="card p-6 mb-8">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold">Registrar Pago</h2>
+    <a href="{% url 'lista_reserves' %}" class="ui button">
+      <i class="fas fa-arrow-left mr-1"></i> Volver a Turnos
+    </a>
+  </div>
+
+  {% if mensaje %}
+  <div class="ui message error mb-6">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    {{ mensaje }}
+  </div>
+  {% endif %}
+
+  {% if mensaje2 %}
+  <div class="ui message success mb-6">
+    <i class="fas fa-check-circle mr-2"></i>
+    {{ mensaje2 }}
+  </div>
+  {% endif %}
+
+  <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <i class="fas fa-info-circle text-blue-500"></i>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-blue-700">
+          Agregá los jugadores que participarán en este turno. Cada jugador debe realizar un pago.
+          <br>Máximo 4 jugadores por cancha.
+        </p>
+      </div>
     </div>
-</body>
-</html>
+  </div>
+
+  <form method="POST" class="ui form">
+    {% csrf_token %}
+    <div class="two fields">
+      <div class="field">
+        <label><i class="fas fa-user mr-1"></i> Nombre del jugador</label>
+        <input type="text" name="jugador-nom" placeholder="Ingresá el nombre del jugador">
+      </div>
+      <div class="field">
+        <label><i class="fas fa-user mr-1"></i> Apellido del jugador</label>
+        <input type="text" name="jugador-cognom" placeholder="Ingresá el apellido del jugador">
+      </div>
+    </div>
+    <button class="ui primary button" type="submit">
+      <i class="fas fa-dollar-sign mr-1"></i> Registrar Pago
+    </button>
+  </form>
+</div>
+{% endblock %}

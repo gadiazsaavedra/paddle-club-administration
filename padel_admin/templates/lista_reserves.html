@@ -1,195 +1,204 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
 {% load static %}
-<html lang="es">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="icon" href="{% static 'logo3.png' %}">
-      <title>Gamerinha Padel Club</title>
-      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-      <link href="{% static 'jugadors_styles.css' %}" rel="stylesheet">
-      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.css" integrity="sha512-8bHTC73gkZ7rZ7vpqUQThUDhqcNFyYi2xgDgPDHc+GXVGHXq+xPjynxIopALmOPqzo9JZj0k6OqqewdGO3EsrQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  </head>
-  <body class="bg-gray-100">
-      <header>
-          <nav class="bg-gray-300">
-              <div class="mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                  <div class="flex items-center">
-                    <img src="{% static 'logo2.png' %}">
-                  </div>
-                  <div class="flex items-center">
-                    <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Reserves</a>
-                    <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">Jugadors</a>
-                    <a href="/logout" class="text-gray-800 hover:text-black px-4 py-2 text-xl"><i class="fas fa-sign-out-alt"></i></a>                  
-                  </div>
-                </div>
-              </div>
-            </nav>          
-      </header>
-      <div class="container mx-auto px-4 py-8">
-        <h1 class="text-4xl font-bold mb-4">Reserves</h1>
 
-        <div class="mt-5 mb-3">
-          <a class="ui primary button" id="abrir-ventana">
-            <span class="inline-flex items-center">Afegir<i class="fas fa-plus-circle ml-2"></i></span>
-          </a>
-        </div>
+{% block title %}Reservas - Paddle Club{% endblock %}
 
-        <div class="flex items-center mb-10">
-          <!-- FILTRO DE DATA -->
-          <form>
-            <label for="fecha" class="mr-2">Data:</label>
-            <input type="date" id="fecha" name="fecha" required class="border border-gray-300 rounded px-2 py-1 mr-2" value="{{ day }}">
-            <button type="submit" class="ui primary button">Filtrar</button>
-          </form>
-        </div>
+{% block content %}
+<h1 class="text-4xl font-bold mb-6">Gestión de Turnos</h1>
 
-        {% if mensaje_error %}
-        <div class="ui message error">
-          {{ mensaje_error }}
+<div class="card p-6 mb-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <a class="ui primary button" id="abrir-ventana">
+      <span class="inline-flex items-center"><i class="fas fa-plus-circle mr-2"></i> Nuevo Turno</span>
+    </a>
+
+    <!-- FILTRO DE DATA -->
+    <form class="mt-4 md:mt-0">
+      <div class="flex items-center">
+        <label for="fecha" class="mr-2 font-medium">Fecha:</label>
+        <input type="date" id="fecha" name="fecha" required class="border border-gray-300 rounded px-3 py-2 mr-2" value="{{ day }}">
+        <button type="submit" class="ui primary button"><i class="fas fa-filter mr-1"></i> Filtrar</button>
+      </div>
+    </form>
+  </div>
+
+  {% if mensaje_error %}
+  <div class="ui message error">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    {{ mensaje_error }}
+  </div>
+  {% endif %}
+
+  <!-- RESERVES -->
+  {% if reserves %}
+  <div class="overflow-x-auto">
+    <table class="ui very basic celled table">
+      <thead>
+        <tr class="text-center">
+          <th><i class="fas fa-hashtag mr-1"></i> Cancha</th>
+          <th><i class="fas fa-tag mr-1"></i> Tipo</th>
+          <th><i class="fas fa-clock mr-1"></i> Inicio</th>
+          <th><i class="fas fa-hourglass-end mr-1"></i> Finalización</th>
+          <th><i class="fas fa-user mr-1"></i> Jugador</th>
+          <th><i class="fas fa-dollar-sign mr-1"></i> Cobro</th>
+          <th><i class="fas fa-cog mr-1"></i> Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reserva in reserves %}
+        <tr class="text-center">
+          <td>{{ reserva.pista.numero }}</td>
+          <td>
+            <span class="ui {% if reserva.pista.tipus == 'Indoor' %}blue{% else %}green{% endif %} label">
+              {{ reserva.pista.tipus }}
+            </span>
+          </td>
+          <td>{{ reserva.horaInici }}</td>
+          <td>{{ reserva.horaFinalitzacio }}</td>
+          <td>
+            <div class="flex items-center justify-center">
+              <img class="ui avatar image mr-2" src="https://ui-avatars.com/api/?name={{ reserva.jugador.nom|first|capfirst }}+{{ reserva.jugador.cognom|first|capfirst }}&background=random">
+              {{ reserva.jugador.nom }} {{ reserva.jugador.cognom }}
+            </div>
+          </td>
+          <td>
+            <a href="{% url 'lista_cobraments' data=reserva.data|date:'Y-m-d' id_jugador=reserva.jugador.id_jugador %}" class="ui teal button">
+              <i class="fas fa-dollar-sign"></i> Cobrar
+            </a>
+          </td>
+          <td>
+            <a class="ui red button eliminar-reserva" data-info="{{ reserva.jugador.id_jugador }}">
+              <i class="fas fa-trash"></i> Eliminar
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="ui placeholder segment">
+    <div class="ui icon header">
+      <i class="calendar times outline icon"></i>
+      No hay turnos para esta fecha
+    </div>
+    <div class="ui primary button" id="abrir-ventana-empty">Crear un turno</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- FORMULARI AFEGIR -->
+<div id="formulario-popup" class="ui modal">
+  <i class="close icon"></i>
+  <div class="header">
+    <i class="fas fa-calendar-plus mr-2"></i> Nuevo Turno
+  </div>
+  <div class="content">
+    <form method="POST" class="ui form">
+      {% csrf_token %}
+      <div class="two fields">
+        <div class="field">
+          <label><i class="fas fa-calendar-day mr-1"></i> Fecha</label>
+          <input type="date" id="fecha-2" name="fecha-2" required value="{{ day }}">
         </div>
-        {% endif %}
+        <div class="field">
+          <label><i class="fas fa-clock mr-1"></i> Hora de inicio</label>
+          <select name="horaInici" class="ui dropdown">
+            <option value="">Seleccioná la hora</option>
+            {% for hour in hours %}
+              <option value="{{ hour }}">{{ hour }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="two fields">
+        <div class="field">
+          <label><i class="fas fa-hourglass mr-1"></i> Duración</label>
+          <select name="horaFinalitzacio" class="ui dropdown">
+            <option value="">Seleccioná la duración</option>
+            <option value="30">30 minutos</option>
+            <option value="60">1 hora</option>
+            <option value="90">1 hora y 30 minutos</option>
+          </select>
+        </div>
+        <div class="field">
+          <label><i class="fas fa-table-tennis mr-1"></i> Tipo de cancha</label>
+          <select name="Pista" class="ui dropdown">
+            <option value="">Seleccioná tipo de cancha</option>
+            <option value="Indoor">Techada</option>
+            <option value="Outdoor">Al aire libre</option>
+          </select>
+        </div>
+      </div>
+      <div class="two fields">
+        <div class="field">
+          <label><i class="fas fa-user mr-1"></i> Nombre del jugador</label>
+          <input type="text" placeholder="Nombre del jugador" name="jugador_nom">
+        </div>
+        <div class="field">
+          <label><i class="fas fa-user mr-1"></i> Apellido del jugador</label>
+          <input type="text" placeholder="Apellido del jugador" name="jugador_cognom">
+        </div>
+      </div>
+      <button class="ui primary button fluid" type="submit">
+        <i class="fas fa-save mr-1"></i> Guardar Turno
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- AVÍS ELIMINACIÓ DE RESERVA -->
+<div class="ui basic modal eliminar-reserva-popup">
+  <div class="ui icon header">
+    <i class="trash alternate outline icon"></i>
+    Confirmar Eliminación
+  </div>
+  <div class="content text-center">
+    <p class="text-lg">¿Estás seguro que querés eliminar este turno?</p>
+    <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+  </div>
+  <div class="actions flex justify-center">
+    <div class="ui red cancel button">
+      <i class="remove icon"></i>
+      Cancelar
+    </div>
+    <form id="eliminar-reserva-form" method="POST" action="{% url 'lista_reserves' %}">
+      {% csrf_token %}
+      <input type="hidden" name="_method" value="DELETE">
+      <input type="hidden" name="jugador_id" value="">
+      <input type="hidden" name="data" value="">
+      <button type="submit" class="ui green ok button">
+        <i class="checkmark icon"></i>
+        Confirmar
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var fechaGlobal = document.getElementById('fecha').value;
+  document.getElementById('fecha').addEventListener('change', function() {
+    fechaGlobal = this.value;
+  });
+  
+  $(document).ready(function() {
+    $('.popup').popup();
     
-        <!-- RESERVES -->
-        {% if reserves %}
-        <div class="flex justify-center mx-auto my-5 mt-10" style="width: 90%;">
-          <table class="ui very basic celled table">
-            <thead>
-              <tr class="text-center text-lg">
-                <th>Pista</th>
-                <th>Tipus</th>
-                <th>Inici</th>
-                <th>Finalització</th>
-                <th>Jugador</th>
-                <th>Cobrament</th>
-                <th>Eliminar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for reserva in reserves %}
-              <tr class="text-center">
-                <td>{{ reserva.pista.numero }}</td>
-                <td>{{ reserva.pista.tipus }}</td>
-                <td>{{ reserva.horaInici }}</td>
-                <td>{{ reserva.horaFinalitzacio }}</td>
-                <td>{{ reserva.jugador.nom }} {{ reserva.jugador.cognom }}</td>
-                <td><a href="{% url 'lista_cobraments' data=reserva.data|date:'Y-m-d' id_jugador=reserva.jugador.id_jugador %}" class="ui button"><i class="fas fa-dollar-sign"></i></a></td>
-                <td><a class="ui button eliminar-reserva" data-info="{{ reserva.jugador.id_jugador }}"><i class="fas fa-trash"></i></a></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <p>No hay reservas disponibles.</p>
-        {% endif %}
-      </div>
-
-      <!-- FORMULARI AFEGIR -->
-      <div id="formulario-popup" class="ui modal">
-        <i class="close icon"></i>
-        <div class="header">
-          Afegir Reserva
-        </div>
-        <div class="content">
-          <form method="POST" class="ui form">
-            {% csrf_token %}
-            <div class="field">
-              <div class="mb-4">
-                <label for="fecha-2">Data</label>
-                <input type="date" id="fecha-2" name="fecha-2" required class="border border-gray-300 rounded px-2 py-1" value="{{ day }}">      
-              </div>
-              <label>Hora inici</label>
-              <select name="horaInici" class="mb-4">
-                <option value="">Selecciona la hora d'inici</option>
-                {% for hour in hours %}
-                  <option value="{{ hour }}">{{ hour }}</option>
-                {% endfor %}
-              </select>
-              <label>Duració</label>
-              <select name="horaFinalitzacio">
-                <option value="">Selecciona la duració de la reserva</option>
-                <option value="30">30 minuts</option>
-                <option value="60">1 hora</option>
-                <option value="90">1 hora i 30 minuts</option>
-              </select>
-              <div class="mt-4">
-                <label>Pista</label>
-                <select name="Pista">
-                  <option value="">Selecciona tipus de pista</option>
-                  <option value="indoor">indoor</option>
-                  <option value="outdoor">outdoor</option>
-                </select>
-              </div>
-              <div class="mt-4">
-                <label >Nom jugador</label>
-                <input type="text" placeholder="Nom jugador que fa reserva" name="jugador_nom">      
-              </div>
-              <div class="mt-4">
-                <label >Cognom jugador</label>
-                <input type="text" placeholder="Cognom jugador que fa reserva" name="jugador_cognom">      
-              </div>
-            </div>
-            <button class="ui primary button" type="submit">Buscar</button>
-          </form>          
-        </div>
-      </div>
-
-      <!-- AVÍS ELIMINACIÓ DE RESERVA -->
-      <div class="ui basic modal eliminar-reserva-popup">
-        <div class="ui icon header">
-          <i class="trash alternate outline icon"></i>
-          Avís d'eliminació
-        </div>
-        <div class="flex justify-center items-center mt-5">
-          <div class="content">
-            <p class="text-lg">¿Estàs segur de què desitges eliminar la reserva?</p>
-          </div>
-          <div class="actions ml-5">
-            <div class="ui red cancel button">
-              <i class="remove icon"></i>
-              Cancelar
-            </div>
-          </div>
-          <form id="eliminar-reserva-form" method="POST" action="{% url 'lista_reserves' %}">
-            {% csrf_token %}
-            <input type="hidden" name="_method" value="DELETE">
-            <input type="hidden" name="jugador_id" value="">
-            <input type="hidden" name="data" value="">
-            <button type="submit" class="ui green ok button">
-              <i class="checkmark icon"></i>
-              Acceptar
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.0/semantic.min.js"></script>
-      <script>
-        var fechaGlobal = document.getElementById('fecha').value;
-        document.getElementById('fecha').addEventListener('change', function() {
-          fechaGlobal = this.value;
-        });
-        $(document).ready(function() {
-          $('.popup').popup();
-          $('.eliminar-reserva').on('click', function() {
-            var jugadorId = $(this).data('info');
-            $('#eliminar-reserva-form input[name="jugador_id"]').val(jugadorId);
-            $('#eliminar-reserva-form input[name="data"]').val(fechaGlobal);
-            $('.eliminar-reserva-popup').modal('show');
-          });
-        });
-      </script>
-      <script>
-        $(document).ready(function() {
-          $('.popup').popup();
-          $('#abrir-ventana').on('click', function() {
-            $('#formulario-popup').modal('show');
-          });
-        });
-      </script>
-  </body>
-</html>
+    $('#abrir-ventana, #abrir-ventana-empty').on('click', function() {
+      $('#formulario-popup').modal('show');
+    });
+    
+    $('.eliminar-reserva').on('click', function() {
+      var jugadorId = $(this).data('info');
+      $('#eliminar-reserva-form input[name="jugador_id"]').val(jugadorId);
+      $('#eliminar-reserva-form input[name="data"]').val(fechaGlobal);
+      $('.eliminar-reserva-popup').modal('show');
+    });
+    
+    // Inicializar dropdowns
+    $('.ui.dropdown').dropdown();
+  });
+</script>
+{% endblock %}

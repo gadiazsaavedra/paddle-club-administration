@@ -84,10 +84,10 @@ def lista_reserves(request):
                 print('correcte')         
             # consultem les pistes ocupades i li assignem una lliure
             pista = Pistes.objects.filter(tipus=type_pista)
-            if pista.count() != 50:
+            if pista.count() > 0:
                 pista_ = random.choice(pista)
             else:
-                mensaje_error = "Totes les pistes del tipus" + type_pista + "estan ocupades per aquesta hora"
+                mensaje_error = "No hay pistas disponibles del tipo " + type_pista + ". Por favor, contacte con el administrador."
                 fecha = date.today()
                 day = fecha.strftime('%Y-%m-%d')
                 reserves = Reserva.objects.filter(data=fecha).order_by('horaInici', 'horaFinalitzacio','pista')

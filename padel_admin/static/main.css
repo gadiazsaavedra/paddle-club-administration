@@ -1,0 +1,269 @@
+/* Estilos generales */
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --accent-color: #e74c3c;
+  --text-color: #333;
+  --light-bg: #f8f9fa;
+  --dark-bg: #343a40;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text-color);
+  background-color: var(--light-bg);
+}
+
+/* Navbar mejorado */
+nav.bg-gray-300 {
+  background: linear-gradient(to right, #3498db, #2ecc71);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+nav a {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: white !important;
+}
+
+nav a:hover {
+  transform: translateY(-2px);
+  color: #f8f9fa !important;
+}
+
+/* Contenedores y tarjetas */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: white;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones mejorados */
+.ui.button {
+  border-radius: 6px !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500 !important;
+}
+
+.ui.primary.button {
+  background-color: var(--primary-color) !important;
+}
+
+.ui.primary.button:hover {
+  background-color: #2980b9 !important;
+  transform: translateY(-2px);
+}
+
+.ui.green.button {
+  background-color: var(--secondary-color) !important;
+}
+
+.ui.green.button:hover {
+  background-color: #27ae60 !important;
+}
+
+.ui.red.button {
+  background-color: var(--accent-color) !important;
+}
+
+.ui.red.button:hover {
+  background-color: #c0392b !important;
+}
+
+/* Tablas mejoradas */
+.ui.table {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.ui.table thead th {
+  background-color: #f1f1f1 !important;
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+  padding: 15px !important;
+}
+
+.ui.table tr:hover {
+  background-color: #f9f9f9 !important;
+}
+
+/* Formularios mejorados */
+.ui.form .field label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.ui.form input, .ui.form select {
+  border-radius: 6px !important;
+  padding: 12px !important;
+  border: 1px solid #ddd !important;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ui.form input:focus, .ui.form select:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2) !important;
+}
+
+/* Modales mejorados */
+.ui.modal {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.ui.modal > .header {
+  background-color: #f8f9fa !important;
+  border-bottom: 1px solid #eee !important;
+  padding: 20px !important;
+  font-size: 1.4rem !important;
+  font-weight: 500 !important;
+}
+
+.ui.modal > .content {
+  padding: 25px !important;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .ui.table {
+    font-size: 0.9rem;
+  }
+  
+  .ui.form input, .ui.form select {
+    padding: 10px !important;
+  }
+}
+
+/* Estilos para la página de jugadores */
+.ui.avatar.image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+}
+
+.ui.middle.aligned.divided.list .item {
+  padding: 15px !important;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.ui.middle.aligned.divided.list .item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Estilos para la página de reservas */
+.ui.celled.table td {
+  padding: 12px !important;
+}
+
+/* Mensajes de error y éxito */
+.ui.message {
+  border-radius: 8px !important;
+  padding: 15px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+}
+
+.ui.error.message {
+  background-color: #fff5f5 !important;
+  color: #e74c3c !important;
+  border-left: 4px solid #e74c3c !important;
+}
+
+.ui.success.message {
+  background-color: #f0fff4 !important;
+  color: #2ecc71 !important;
+  border-left: 4px solid #2ecc71 !important;
+}
+
+/* Paginación */
+.ui.pagination.menu {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden;
+}
+
+.ui.pagination.menu .item {
+  padding: 12px 16px !important;
+  transition: background-color 0.3s ease;
+}
+
+.ui.pagination.menu .active.item {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+/* Iconos */
+i.fas {
+  margin-right: 5px;
+}
+
+/* Estilos para el popup de información */
+.ui.popup {
+  padding: 15px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ui.popup .header {
+  font-weight: 600 !important;
+  margin-bottom: 10px !important;
+  color: var(--primary-color) !important;
+}
+
+.ui.popup .content p {
+  margin-bottom: 8px !important;
+}
+
+/* Títulos */
+h1, h2, h3 {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+h1 {
+  margin-bottom: 30px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+h1:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  border-radius: 2px;
+}
