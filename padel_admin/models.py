@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 # Create your models here.
 class Jugadors(models.Model):
-    id_jugador = models.CharField(primary_key=True)
+    id_jugador = models.CharField(primary_key=True, max_length=10)
     nom = models.CharField(max_length=30)
     cognom = models.CharField(max_length=30)
     nivell = models.IntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(6)])
