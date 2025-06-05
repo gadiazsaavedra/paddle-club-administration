@@ -70,7 +70,7 @@ def lista_reserves(request):
             try:
                 jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
             except:
-                mensaje_error = "El jugador introudït no existeix."
+                mensaje_error = "El jugador introducido no existe."
                 fecha = date.today()
                 day = fecha.strftime('%Y-%m-%d')
                 reserves = Reserva.objects.filter(data=fecha).order_by('horaInici', 'horaFinalitzacio','pista')
