@@ -356,7 +356,7 @@ def lista_cobraments(request, data, id_jugador):
                 return render(request, "lista_cobraments.html", {"mensaje": mensaje})
         return render(request, "lista_cobraments.html")
     else:
-        mensaje = "Accés denegat"
+        mensaje = "Acceso Denegado"
         return render(request, "landing.html", {"mensaje": mensaje})
 
 
