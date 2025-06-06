@@ -181,7 +181,7 @@ def lista_reserves(request):
             {"reserves": reserves, "day": day, "hours": hours},
         )
     else:
-        mensaje = "Accés denegat"
+        mensaje = "Acceso denegado"
         return render(request, "landing.html", {"mensaje": mensaje})
 
 
