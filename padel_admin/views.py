@@ -219,7 +219,6 @@ def lista_jugadors(request):
         search_query = request.GET.get("search")
 
         if request.method == "POST":
-
             if request.POST.get("_method") == "DELETE":
                 jugador_id = request.POST.get("jugador_id")
                 jugador = Jugadors.objects.filter(id_jugador=jugador_id)
@@ -255,12 +254,10 @@ def lista_jugadors(request):
             telefon = request.POST.get("telefon")
             nivell = request.POST.get("nivell")
             contrasenya = str(nom)
-
-            # ens assegurem que id es unic i guardem jugador
+            foto = request.FILES.get("foto")
             id_jugador = random.randrange(10000, 100000)
             try:
                 player = Jugadors.objects.get(id_jugador=id_jugador)
-                print(player)
                 id_jugador = random.randrange(10000, 100000)
                 jugador = Jugadors(
                     id_jugador=id_jugador,
@@ -270,6 +267,7 @@ def lista_jugadors(request):
                     telefon=telefon,
                     nivell=nivell,
                     contrasenya=contrasenya,
+                    foto=foto,
                 )
                 jugador.save()
             except:
@@ -281,6 +279,7 @@ def lista_jugadors(request):
                     telefon=telefon,
                     nivell=nivell,
                     contrasenya=contrasenya,
+                    foto=foto,
                 )
                 jugador.save()
 
@@ -544,4 +543,42 @@ def crear_reserva(request):
     return redirect("calendario_canchas")
 
 
-# padel_admin/views.py
+def perfil_jugador(request):
+    jugador_id = request.COOKIES.get("jugador_id")
+    if not jugador_id:
+        return redirect("landing")
+    jugador = Jugadors.objects.get(id_jugador=jugador_id)
+    reservas = Reserva.objects.filter(jugador=jugador).order_by(
+        "-fecha", "-hora_inicio"
+    )
+    total_reservas = reservas.count()
+    total_horas = sum(
+        [
+            (
+                datetime.combine(r.fecha, r.hora_fin)
+                - datetime.combine(r.fecha, r.hora_inicio)
+            ).total_seconds()
+            / 3600
+            for r in reservas
+        ]
+    )
+    canchas_usadas = (
+        reservas.values("cancha__numero", "cancha__tipo").distinct().count()
+    )
+    if request.method == "POST":
+        jugador.nom = request.POST.get("nom")
+        jugador.cognom = request.POST.get("cognom")
+        jugador.email = request.POST.get("email")
+        jugador.telefon = request.POST.get("telefon")
+        jugador.nivell = request.POST.get("nivell")
+        if request.FILES.get("foto"):
+            jugador.foto = request.FILES.get("foto")
+        jugador.save()
+    context = {
+        "jugador": jugador,
+        "reservas": reservas,
+        "total_reservas": total_reservas,
+        "total_horas": total_horas,
+        "canchas_usadas": canchas_usadas,
+    }
+    return render(request, "perfil_jugador.html", context)

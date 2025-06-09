@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="ui container mt-8 max-w-2xl mx-auto">
+  <h2 class="text-2xl font-bold mb-4">Mi Perfil</h2>
+  <form method="POST" enctype="multipart/form-data" class="ui form mb-8">
+    {% csrf_token %}
+    <div class="flex items-center mb-4">
+      {% if jugador.foto %}
+        <img src="{{ jugador.foto.url }}" class="rounded-full mr-4" style="width:80px;height:80px;object-fit:cover;">
+      {% else %}
+        <img src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random" class="rounded-full mr-4" style="width:80px;height:80px;object-fit:cover;">
+      {% endif %}
+      <div>
+        <label class="block font-semibold">Foto de perfil</label>
+        <input type="file" name="foto" accept="image/*">
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" name="nom" value="{{ jugador.nom }}">
+      </div>
+      <div class="field">
+        <label>Apellido</label>
+        <input type="text" name="cognom" value="{{ jugador.cognom }}">
+      </div>
+    </div>
+    <div class="two fields">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" value="{{ jugador.email }}">
+      </div>
+      <div class="field">
+        <label>Teléfono</label>
+        <input type="text" name="telefon" value="{{ jugador.telefon }}">
+      </div>
+    </div>
+    <div class="field">
+      <label>Nivel</label>
+      <input type="number" name="nivell" min="1" max="6" value="{{ jugador.nivell }}">
+    </div>
+    <button class="ui primary button mt-4" type="submit">Guardar cambios</button>
+  </form>
+  <div class="ui segment">
+    <h3 class="text-lg font-semibold mb-2">Estadísticas</h3>
+    <p><strong>Total de reservas:</strong> {{ total_reservas }}</p>
+    <p><strong>Total de horas jugadas:</strong> {{ total_horas|floatformat:1 }} h</p>
+    <p><strong>Canchas distintas usadas:</strong> {{ canchas_usadas }}</p>
+  </div>
+  <div class="ui segment mt-6">
+    <h3 class="text-lg font-semibold mb-2">Historial de reservas</h3>
+    <table class="ui very basic celled table">
+      <thead>
+        <tr><th>Fecha</th><th>Hora</th><th>Cancha</th></tr>
+      </thead>
+      <tbody>
+        {% for reserva in reservas %}
+        <tr>
+          <td>{{ reserva.fecha|date:'d/m/Y' }}</td>
+          <td>{{ reserva.hora_inicio|time:'H:i' }} - {{ reserva.hora_fin|time:'H:i' }}</td>
+          <td>{{ reserva.cancha.numero }} ({{ reserva.cancha.tipo }})</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">Sin reservas registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

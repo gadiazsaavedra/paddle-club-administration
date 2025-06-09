@@ -14,6 +14,7 @@ class Jugadors(models.Model):
     telefon = models.CharField(max_length=13)
     email = models.EmailField(max_length=50)
     contrasenya = models.CharField(max_length=30)
+    foto = models.ImageField(upload_to="fotos_jugadores/", blank=True, null=True)
 
     def __str__(self):
         return "{} , {} , {} , {} , {}, {}, {}".format(

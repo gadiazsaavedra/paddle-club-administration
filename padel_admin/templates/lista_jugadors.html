@@ -27,7 +27,11 @@
       <div class="card p-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <img class="ui avatar image mr-3" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random&size=64">
+            {% if jugador.foto %}
+              <img class="ui avatar image mr-3" src="{{ jugador.foto.url }}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;">
+            {% else %}
+              <img class="ui avatar image mr-3" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random&size=64" style="width:64px;height:64px;object-fit:cover;border-radius:50%;">
+            {% endif %}
             <div>
               <h3 class="text-lg font-semibold popup" data-content="Nivel: {{ jugador.nivell }}">
                 {{ jugador.nom }} {{ jugador.cognom }}
@@ -97,7 +101,7 @@
     <i class="fas fa-user-plus mr-2"></i> Nuevo Jugador
   </div>
   <div class="content">
-    <form method="POST" class="ui form">
+    <form method="POST" class="ui form" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="two fields">
         <div class="field">
@@ -108,6 +112,10 @@
           <label><i class="fas fa-user mr-1"></i> Apellido</label>
           <input type="text" name="cognom" placeholder="Ingresá el apellido">
         </div>
+      </div>
+      <div class="field">
+        <label><i class="fas fa-image mr-1"></i> Foto de perfil</label>
+        <input type="file" name="foto" accept="image/*">
       </div>
       <div class="field">
         <label><i class="fas fa-envelope mr-1"></i> Email</label>
@@ -176,7 +184,7 @@
     <i class="fas fa-user-edit mr-2"></i> Editar Jugador
   </div>
   <div class="content">
-    <form method="POST" class="ui form" id="editar-jugador-form">
+    <form method="POST" class="ui form" id="editar-jugador-form" enctype="multipart/form-data">
       {% csrf_token %}
       <input type="hidden" name="_method" value="PATCH">
       <input type="hidden" name="id_jugador" value="">
@@ -189,6 +197,10 @@
           <label><i class="fas fa-user mr-1"></i> Apellido</label>
           <input type="text" name="cognom">
         </div>
+      </div>
+      <div class="field">
+        <label><i class="fas fa-image mr-1"></i> Foto de perfil</label>
+        <input type="file" name="foto" accept="image/*">
       </div>
       <div class="field">
         <label><i class="fas fa-envelope mr-1"></i> Email</label>
