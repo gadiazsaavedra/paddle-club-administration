@@ -123,10 +123,19 @@
         </div>
         <div class="field">
           <label><i class="fas fa-table-tennis mr-1"></i> Tipo de cancha</label>
-          <select name="Pista" class="ui dropdown">
+          <select name="Pista" class="ui dropdown" id="tipo_cancha_select">
             <option value="">Seleccioná tipo de cancha</option>
             <option value="Indoor">Techada</option>
             <option value="Outdoor">Al aire libre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label><i class="fas fa-hashtag mr-1"></i> Número de cancha</label>
+          <select name="cancha_numero" class="ui dropdown" id="cancha_numero_select">
+            <option value="">Seleccioná número de cancha</option>
+            {% for pista in pistas_disponibles %}
+              <option value="{{ pista.numero }}" data-tipo="{{ pista.tipo }}">{{ pista.numero }} ({{ pista.tipo }})</option>
+            {% endfor %}
           </select>
         </div>
       </div>
@@ -199,6 +208,19 @@
     
     // Inicializar dropdowns
     $('.ui.dropdown').dropdown();
+    
+    // Filtrar número de cancha según tipo
+    $('#tipo_cancha_select').on('change', function() {
+      var tipo = $(this).val();
+      $('#cancha_numero_select option').each(function() {
+        if (!tipo || $(this).attr('data-tipo') === tipo || $(this).val() === "") {
+          $(this).show();
+        } else {
+          $(this).hide();
+        }
+      });
+      $('#cancha_numero_select').val('');
+    });
   });
 </script>
 {% endblock %}

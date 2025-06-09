@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import transaction
+from datetime import timedelta, date
 
 
 class Jugadors(models.Model):
@@ -106,3 +108,63 @@ class Cobrament(models.Model):
         return "{} , {} , {}, {}, {}".format(
             self.reserva, self.jugador, self.data, self.importe, self.recepcionista
         )
+
+
+class ReservaRecurrente(models.Model):
+    jugador = models.ForeignKey(Jugadors, on_delete=models.CASCADE)
+    cancha = models.ForeignKey(Pistes, on_delete=models.CASCADE)
+    dia_semana = models.IntegerField(
+        choices=[
+            (i, d)
+            for i, d in enumerate(
+                [
+                    "Lunes",
+                    "Martes",
+                    "Miércoles",
+                    "Jueves",
+                    "Viernes",
+                    "Sábado",
+                    "Domingo",
+                ]
+            )
+        ],
+        help_text="Día de la semana (0=Lunes, 6=Domingo)",
+    )
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    notas = models.CharField(max_length=200, blank=True, null=True)
+    activa = models.BooleanField(default=True)
+    creada = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.jugador} - {self.get_dia_semana_display()} {self.hora_inicio} ({self.fecha_inicio} a {self.fecha_fin}) - Cancha {self.cancha.numero}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Crear reservas individuales para cada semana dentro del rango
+        if self.activa:
+            current_date = self.fecha_inicio
+            # Buscar el primer día correcto de la semana
+            while current_date.weekday() != self.dia_semana:
+                current_date += timedelta(days=1)
+            # Crear reservas semanales hasta la fecha_fin
+            while current_date <= self.fecha_fin:
+                # Evitar duplicados: solo crear si no existe
+                from .models import Reserva
+
+                if not Reserva.objects.filter(
+                    jugador=self.jugador,
+                    cancha=self.cancha,
+                    fecha=current_date,
+                    hora_inicio=self.hora_inicio,
+                ).exists():
+                    Reserva.objects.create(
+                        jugador=self.jugador,
+                        cancha=self.cancha,
+                        fecha=current_date,
+                        hora_inicio=self.hora_inicio,
+                        hora_fin=self.hora_fin,
+                    )
+                current_date += timedelta(days=7)

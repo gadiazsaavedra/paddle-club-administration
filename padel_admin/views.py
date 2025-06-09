@@ -43,6 +43,8 @@ def lista_reserves(request):
                 datetime.combine(datetime.min, current_hour) + timedelta(minutes=30)
             ).time()
 
+        pistas_disponibles = Pistes.objects.all().order_by("numero")
+
         if request.method == "POST":
             # eliminar jugador
             if request.POST.get("_method") == "DELETE":
@@ -69,6 +71,7 @@ def lista_reserves(request):
             hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
             duracio = request.POST.get("horaFinalitzacio")
             type_cancha = request.POST.get("Pista")
+            cancha_numero = request.POST.get("cancha_numero")
             jugador_nom = request.POST.get("jugador_nom")
             jugador_cognom = request.POST.get("jugador_cognom")
             # transformem duracio en hora de finalitzacio
@@ -102,6 +105,7 @@ def lista_reserves(request):
                         "reserves": reserves,
                         "day": day,
                         "hours": hours,
+                        "pistas_disponibles": pistas_disponibles,
                         "mensaje_error": mensaje_error,
                     },
                 )
@@ -121,20 +125,36 @@ def lista_reserves(request):
                         "reserves": reserves,
                         "day": day,
                         "hours": hours,
+                        "pistas_disponibles": pistas_disponibles,
                         "mensaje_error": mensaje_error,
                     },
                 )
             except:
-                print("correcte")
-            # consultem les pistes ocupades i li assignem una lliure
-            canchas = Pistes.objects.filter(tipo=type_cancha)
-            if canchas.count() > 0:
-                cancha_ = random.choice(canchas)
-            else:
+                pass
+            # Selección de cancha por número
+            if not cancha_numero:
+                mensaje_error = "Debes seleccionar un número de cancha."
+                fecha = date.today()
+                day = fecha.strftime("%Y-%m-%d")
+                reserves = Reserva.objects.filter(fecha=fecha).order_by(
+                    "hora_inicio", "hora_inicio", "cancha"
+                )
+                return render(
+                    request,
+                    "lista_reserves.html",
+                    {
+                        "reserves": reserves,
+                        "day": day,
+                        "hours": hours,
+                        "pistas_disponibles": pistas_disponibles,
+                        "mensaje_error": mensaje_error,
+                    },
+                )
+            try:
+                cancha_ = Pistes.objects.get(numero=cancha_numero, tipo=type_cancha)
+            except Pistes.DoesNotExist:
                 mensaje_error = (
-                    "No hay canchas disponibles del tipo "
-                    + type_cancha
-                    + ". Por favor, contacte con el administrador."
+                    "La cancha seleccionada no existe o no es del tipo elegido."
                 )
                 fecha = date.today()
                 day = fecha.strftime("%Y-%m-%d")
@@ -148,10 +168,10 @@ def lista_reserves(request):
                         "reserves": reserves,
                         "day": day,
                         "hours": hours,
+                        "pistas_disponibles": pistas_disponibles,
                         "mensaje_error": mensaje_error,
                     },
                 )
-
             # recollim recepcionista que realitza reserva a través de cookie
             rec = Recepcionista.objects.get(DNI=request.COOKIES.get("acceso"))
             # guardem reserva
@@ -181,7 +201,12 @@ def lista_reserves(request):
         return render(
             request,
             "lista_reserves.html",
-            {"reserves": reserves, "day": day, "hours": hours},
+            {
+                "reserves": reserves,
+                "day": day,
+                "hours": hours,
+                "pistas_disponibles": pistas_disponibles,
+            },
         )
     else:
         mensaje = "Acceso denegado"
@@ -437,17 +462,33 @@ def calendario_canchas(request):
 def reservar_cancha(request):
     if request.method == "POST":
         cancha_id = request.POST.get("cancha_id")
+        cancha_tipo = request.POST.get("cancha_tipo")
         fecha = request.POST.get("fecha")
         hora_inicio = request.POST.get("hora_inicio")
         jugador_id = request.COOKIES.get("jugador_id")
         if not jugador_id:
             return redirect("calendario_canchas")
         jugador = Jugadors.objects.get(id_jugador=jugador_id)
-        cancha = Pistes.objects.get(numero=cancha_id)
+        try:
+            cancha = Pistes.objects.get(numero=cancha_id, tipo=cancha_tipo)
+        except Pistes.DoesNotExist:
+            messages.error(
+                request, "La cancha seleccionada no existe o no es del tipo elegido."
+            )
+            return redirect("calendario_canchas")
         hora_inicio_obj = datetime.strptime(hora_inicio, "%H:%M:%S").time()
         hora_fin_obj = (
             datetime.combine(date.today(), hora_inicio_obj) + timedelta(minutes=30)
         ).time()
+        # Validar que no haya solapamiento
+        if Reserva.objects.filter(
+            cancha=cancha,
+            fecha=fecha,
+            hora_inicio__lt=hora_fin_obj,
+            hora_fin__gt=hora_inicio_obj,
+        ).exists():
+            messages.error(request, "La cancha ya está reservada en ese horario.")
+            return redirect("calendario_canchas")
         Reserva.objects.create(
             jugador=jugador,
             fecha=fecha,
@@ -456,6 +497,7 @@ def reservar_cancha(request):
             hora_fin=hora_fin_obj,
             recepcionista=None,
         )
+        messages.success(request, "Reserva creada exitosamente.")
         return redirect("calendario_canchas")
 
 

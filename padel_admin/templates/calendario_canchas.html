@@ -85,6 +85,7 @@
                                 <form method="post" action="{% url 'reservar_cancha' %}" class="form-reservar" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').innerHTML='Reservando...';setTimeout(function(){ window.location.href='{% url 'lista_reserves' %}'; }, 100);">
                                     {% csrf_token %}
                                     <input type="hidden" name="cancha_id" value="{{ cancha.numero }}">
+                                    <input type="hidden" name="cancha_tipo" value="{{ cancha.tipo }}">
                                     <input type="hidden" name="fecha" value="{{ fecha }}">
                                     <input type="hidden" name="hora_inicio" value="{{ fila.hora|time:'H:i:s' }}">
                                     <button type="submit" class="ui green button transition-all duration-150 hover:scale-105"><i class="fas fa-plus-circle mr-1"></i>Reservar</button>
