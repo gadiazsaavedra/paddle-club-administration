@@ -14,16 +14,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
 from padel_admin import views
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.landing, name='landing'),
-    path('reserves/', views.lista_reserves, name='lista_reserves'),
-    path('jugadors/', views.lista_jugadors, name='lista_jugadors'),
-    path('cobrament/<str:data>/<str:id_jugador>', views.lista_cobraments, name='lista_cobraments'),
-    path('logout/', views.logout, name='logout')
+    path("admin/", admin.site.urls),
+    path("", views.landing, name="landing"),
+    path("reserves/", views.lista_reserves, name="lista_reserves"),
+    path("jugadors/", views.lista_jugadors, name="lista_jugadors"),
+    path(
+        "cobrament/<str:data>/<str:id_jugador>",
+        views.lista_cobraments,
+        name="lista_cobraments",
+    ),
+    path("logout/", views.logout, name="logout"),
+    path("calendario/", views.calendario_canchas, name="calendario_canchas"),
+    path("reservar/", views.reservar_cancha, name="reservar_cancha"),
+    path("calendario/", views.calendario_canchas, name="calendario_canchas"),
+    path("crear-reserva/", views.crear_reserva, name="crear_reserva"),
 ]

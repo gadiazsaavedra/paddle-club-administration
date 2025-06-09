@@ -12,7 +12,7 @@
       <span class="inline-flex items-center"><i class="fas fa-plus-circle mr-2"></i> Nuevo Turno</span>
     </a>
 
-    <!-- FILTRO DE DATA -->
+    <!-- FILTRO DE FECHA -->
     <form class="mt-4 md:mt-0">
       <div class="flex items-center">
         <label for="fecha" class="mr-2 font-medium">Fecha:</label>
@@ -47,14 +47,14 @@
       <tbody>
         {% for reserva in reserves %}
         <tr class="text-center">
-          <td>{{ reserva.pista.numero }}</td>
+          <td>{{ reserva.cancha.numero }}</td>
           <td>
-            <span class="ui {% if reserva.pista.tipus == 'Indoor' %}blue{% else %}green{% endif %} label">
-              {{ reserva.pista.tipus }}
+            <span class="ui {% if reserva.cancha.tipo == 'Indoor' %}blue{% else %}green{% endif %} label">
+              {{ reserva.cancha.tipo }}
             </span>
           </td>
-          <td>{{ reserva.horaInici }}</td>
-          <td>{{ reserva.horaFinalitzacio }}</td>
+          <td>{{ reserva.hora_inicio }}</td>
+          <td>{{ reserva.hora_fin }}</td>
           <td>
             <div class="flex items-center justify-center">
               <img class="ui avatar image mr-2" src="https://ui-avatars.com/api/?name={{ reserva.jugador.nom|first|capfirst }}+{{ reserva.jugador.cognom|first|capfirst }}&background=random">
@@ -62,7 +62,7 @@
             </div>
           </td>
           <td>
-            <a href="{% url 'lista_cobraments' data=reserva.data|date:'Y-m-d' id_jugador=reserva.jugador.id_jugador %}" class="ui teal button">
+            <a href="{% url 'lista_cobraments' data=reserva.fecha|date:'Y-m-d' id_jugador=reserva.jugador.id_jugador %}" class="ui teal button">
               <i class="fas fa-dollar-sign"></i> Cobrar
             </a>
           </td>

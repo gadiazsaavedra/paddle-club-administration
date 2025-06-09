@@ -43,7 +43,7 @@
             <a class="ui blue button editar-jugador" data-info="{{ jugador }}">
               <i class="fas fa-edit"></i>
             </a>
-            <a class="ui red button eliminar-jugador" data-info="{{ jugador.id_jugador }}">
+            <a class="ui red button eliminar-jugador" data-id="{{ jugador.id_jugador }}" data-nombre="{{ jugador.nom }}" data-apellido="{{ jugador.cognom }}">
               <i class="fas fa-trash"></i>
             </a>
           </div>
@@ -149,7 +149,7 @@
     Confirmar Eliminación
   </div>
   <div class="content text-center">
-    <p class="text-lg">¿Estás seguro que querés eliminar este jugador?</p>
+    <p class="text-lg">¿Estás seguro que querés eliminar al jugador <span id="nombre-jugador-eliminar" class="font-bold"></span>?</p>
     <p class="text-sm text-gray-500">Esta acción eliminará también todos sus turnos asociados.</p>
   </div>
   <div class="actions flex justify-center">
@@ -235,8 +235,11 @@
     });
     
     $('.eliminar-jugador').on('click', function() {
-      var jugadorId = $(this).data('info');
+      var jugadorId = $(this).data('id');
+      var nombre = $(this).data('nombre');
+      var apellido = $(this).data('apellido');
       $('#eliminar-jugador-form input[name="jugador_id"]').val(jugadorId);
+      $('#nombre-jugador-eliminar').text(nombre + ' ' + apellido);
       $('.eliminar-jugador-popup').modal('show');
     });
     
