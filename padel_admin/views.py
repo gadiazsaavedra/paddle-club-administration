@@ -410,10 +410,15 @@ def calendario_canchas(request):
         for hora in horas:
             estados = []
             for i, fecha in enumerate(fechas_semana):
-                reservada = reservas.filter(
+                reserva = reservas.filter(
                     cancha=cancha, fecha=fecha, hora_inicio__lte=hora, hora_fin__gt=hora
-                ).exists()
-                estados.append((reservada, fecha))
+                ).first()
+                if reserva:
+                    estados.append(
+                        (True, fecha, reserva.jugador.nom, reserva.jugador.cognom)
+                    )
+                else:
+                    estados.append((False, fecha, "", ""))
             filas.append({"hora": hora, "estados": estados})
         calendario_cancha_filas.append((cancha, filas))
 
