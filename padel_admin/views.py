@@ -374,38 +374,57 @@ def logout(request):
 
 
 def calendario_canchas(request):
-    # Obtener fecha seleccionada o usar hoy
+    # Obtener fecha actual o la seleccionada
     fecha_str = request.GET.get("fecha")
     if fecha_str:
-        fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        fecha_actual = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     else:
-        fecha = date.today()
+        fecha_actual = datetime.now().date()
 
-    canchas = Pistes.objects.all()
-    reservas = Reserva.objects.filter(fecha=fecha)
+    # Generar fechas para la semana
+    inicio_semana = fecha_actual - timedelta(days=fecha_actual.weekday())
+    fechas_semana = [inicio_semana + timedelta(days=i) for i in range(7)]
 
-    # Horarios disponibles (ejemplo: de 9 a 21 cada 30 minutos)
+    # Obtener todas las canchas
+    canchas = Pistes.objects.all().order_by("numero")
+
+    # Horas disponibles (9:00 a 21:00)
     horas = []
-    hora_actual = datetime.strptime("09:00", "%H:%M")
-    hora_fin = datetime.strptime("21:00", "%H:%M")
-    while hora_actual <= hora_fin:
-        horas.append(hora_actual.time())
-        hora_actual += timedelta(minutes=30)
+    hora_actual = datetime.strptime("09:00", "%H:%M").time()
+    hora_fin = datetime.strptime("21:00", "%H:%M").time()
 
-    # Diccionario: cancha -> horarios ocupados
-    disponibilidad = {}
+    while hora_actual <= hora_fin:
+        horas.append(hora_actual)
+        dt = datetime.combine(datetime.today(), hora_actual)
+        dt = dt + timedelta(minutes=30)
+        hora_actual = dt.time()
+
+    # Obtener todas las reservas para la semana
+    reservas = Reserva.objects.filter(
+        fecha__gte=fechas_semana[0], fecha__lte=fechas_semana[6]
+    )
+
+    calendario_cancha_filas = []
     for cancha in canchas:
-        ocupados = reservas.filter(cancha=cancha).values_list(
-            "hora_inicio", "hora_inicio"
-        )
-        disponibilidad[cancha] = list(ocupados)
+        filas = []
+        for hora in horas:
+            estados = []
+            for i, fecha in enumerate(fechas_semana):
+                reservada = reservas.filter(
+                    cancha=cancha, fecha=fecha, hora_inicio__lte=hora, hora_fin__gt=hora
+                ).exists()
+                estados.append((reservada, fecha))
+            filas.append({"hora": hora, "estados": estados})
+        calendario_cancha_filas.append((cancha, filas))
 
     context = {
-        "fecha": fecha,
         "canchas": canchas,
+        "fechas_semana": fechas_semana,
         "horas": horas,
-        "disponibilidad": disponibilidad,
+        "calendario_cancha_filas": calendario_cancha_filas,
+        "fecha_actual": fecha_actual,
     }
+
     return render(request, "calendario_canchas.html", context)
 
 
@@ -479,59 +498,3 @@ def crear_reserva(request):
 
 
 # padel_admin/views.py
-
-
-def calendario_canchas(request):
-    # Obtener fecha actual o la seleccionada
-    fecha_str = request.GET.get("fecha")
-    if fecha_str:
-        fecha_actual = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-    else:
-        fecha_actual = datetime.now().date()
-
-    # Generar fechas para la semana
-    inicio_semana = fecha_actual - timedelta(days=fecha_actual.weekday())
-    fechas_semana = [inicio_semana + timedelta(days=i) for i in range(7)]
-
-    # Obtener todas las canchas
-    canchas = Pistes.objects.all().order_by("numero")
-
-    # Horas disponibles (9:00 a 21:00)
-    horas = []
-    hora_actual = datetime.strptime("09:00", "%H:%M").time()
-    hora_fin = datetime.strptime("21:00", "%H:%M").time()
-
-    while hora_actual <= hora_fin:
-        horas.append(hora_actual)
-        # Incrementar en 30 minutos
-        dt = datetime.combine(datetime.today(), hora_actual)
-        dt = dt + timedelta(minutes=30)
-        hora_actual = dt.time()
-
-    # Obtener todas las reservas para la semana
-    reservas = Reserva.objects.filter(
-        fecha__gte=fechas_semana[0], fecha__lte=fechas_semana[6]
-    )
-
-    # Crear matriz de disponibilidad
-    calendario = {}
-    for cancha in canchas:
-        calendario[cancha.numero] = {}
-        for fecha in fechas_semana:
-            calendario[cancha.numero][fecha] = {}
-            for hora in horas:
-                # Verificar si hay reserva para esta cancha, fecha y hora
-                reservada = reservas.filter(
-                    cancha=cancha, fecha=fecha, hora_inicio__lte=hora, hora_fin__gt=hora
-                ).exists()
-                calendario[cancha.numero][fecha][hora] = reservada
-
-    context = {
-        "canchas": canchas,
-        "fechas_semana": fechas_semana,
-        "horas": horas,
-        "calendario": calendario,
-        "fecha_actual": fecha_actual,
-    }
-
-    return render(request, "calendario_canchas.html", context)

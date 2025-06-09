@@ -1,221 +1,95 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Calendario de Canchas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container">
-    <h2>Disponibilidad de canchas para {{ fecha }}</h2>
-    <form method="get" class="mb-3">
-        <input type="date" name="fecha" value="{{ fecha }}">
-        <button type="submit" class="btn btn-primary">Ver fecha</button>
-    </form>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Horario</th>
-                {% for cancha in canchas %}
-                    <th>{{ cancha.nom }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for hora in horas %}
-            <tr>
-                <td>{{ hora|time:"H:i" }}</td>
-                {% for cancha in canchas %}
-                    {% with ocupado=False %}
-                        {% for ini, fin in disponibilidad[cancha] %}
-                            {% if hora >= ini and hora < fin %}
-                                {% with ocupado=True %}
-                                {% endwith %}
-                            {% endif %}
-                        {% endfor %}
-                        <td>
-                            {% if ocupado %}
-                                <span class="text-danger">Ocupada</span>
-                            {% else %}
-                                <form method="post" action="{% url 'reservar_cancha' %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="cancha_id" value="{{ cancha.id }}">
-                                    <input type="hidden" name="fecha" value="{{ fecha }}">
-                                    <input type="hidden" name="hora_inicio" value="{{ hora }}">
-                                    <button type="submit" class="btn btn-success btn-sm">Reservar</button>
-                                </form>
-                            {% endif %}
-                        </td>
-                    {% endwith %}
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-</body>
-</html>
-<!-- padel_admin/templates/calendario_canchas.html -->
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Calendario de Canchas - La cancha de German{% endblock %}
-
-{% block extra_css %}
-<style>
-    .calendar-container {
-        overflow-x: auto;
-    }
-    .calendar-table {
-        min-width: 100%;
-        border-collapse: collapse;
-    }
-    .calendar-table th, .calendar-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
-    }
-    .calendar-header {
-        background-color: #f2f2f2;
-        position: sticky;
-        top: 0;
-    }
-    .time-column {
-        background-color: #f2f2f2;
-        position: sticky;
-        left: 0;
-    }
-    .available {
-        background-color: #d4edda;
-        cursor: pointer;
-    }
-    .reserved {
-        background-color: #f8d7da;
-    }
-    .cancha-header {
-        font-weight: bold;
-        background-color: #e9ecef;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<h1 class="text-4xl font-bold mb-6">Calendario de Canchas</h1>
+<style>
+.calendario-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+}
+.calendario-table th, .calendario-table td {
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 0.5em 0.3em;
+}
+.calendario-table th {
+    background: #2d3e50;
+    color: #fff;
+    font-weight: 600;
+}
+.calendario-table td.disponible {
+    background: #e6ffe6;
+}
+.calendario-table td.ocupado {
+    background: #ffe6e6;
+    color: #b00;
+    font-weight: 600;
+}
+.calendario-table td button {
+    background: #2ecc40;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.3em 0.8em;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background 0.2s;
+}
+.calendario-table td button:hover {
+    background: #27ae60;
+}
+@media (max-width: 900px) {
+    .calendario-table {
+        font-size: 0.85rem;
+    }
+}
+</style>
 
-<div class="card p-6 mb-8">
-    <!-- Navegación de fechas -->
-    <div class="flex justify-between items-center mb-6">
-        <a href="?fecha={{ fechas_semana.0|date:'Y-m-d' }}" class="ui button">
-            <i class="fas fa-chevron-left"></i> Semana anterior
-        </a>
-        <h2 class="text-xl font-semibold">
-            {{ fechas_semana.0|date:"d/m/Y" }} - {{ fechas_semana.6|date:"d/m/Y" }}
-        </h2>
-        <a href="?fecha={{ fechas_semana.6|date:'Y-m-d' }}" class="ui button">
-            Semana siguiente <i class="fas fa-chevron-right"></i>
-        </a>
-    </div>
+<h2 style="text-align:center; margin-bottom:1em;">Calendario semanal de canchas</h2>
+<p style="text-align:center; color: #555; margin-bottom:1em;">
+    Semana del <strong>{{ fechas_semana.0|date:'d/m/Y' }}</strong> al <strong>{{ fechas_semana|last|date:'d/m/Y' }}</strong>
+</p>
 
-    <!-- Calendario -->
-    <div class="calendar-container">
-        <table class="calendar-table">
-            <thead class="calendar-header">
+{% if not calendario_cancha_filas or calendario_cancha_filas|length == 0 %}
+    <div class="ui warning message">No hay canchas registradas en el sistema.</div>
+{% else %}
+    <div style="overflow-x:auto;">
+    {% for cancha, filas in calendario_cancha_filas %}
+        <h3>Cancha {{ cancha.numero }} ({{ cancha.tipo }})</h3>
+        <table class="calendario-table">
+            <thead>
                 <tr>
                     <th>Hora</th>
                     {% for fecha in fechas_semana %}
-                    <th>{{ fecha|date:"D d/m" }}</th>
+                        <th>{{ fecha|date:'D d/m' }}</th>
                     {% endfor %}
                 </tr>
             </thead>
-            
-            {% for cancha in canchas %}
             <tbody>
+                {% for fila in filas %}
                 <tr>
-                    <td colspan="8" class="cancha-header">Cancha {{ cancha.numero }} ({{ cancha.tipo }})</td>
-                </tr>
-                {% for hora in horas %}
-                <tr>
-                    <td class="time-column">{{ hora|time:"H:i" }}</td>
-                    {% for fecha in fechas_semana %}
-                    <td class="{% if calendario.cancha.numero.fecha.hora %}reserved{% else %}available{% endif %}"
-                        data-cancha="{{ cancha.numero }}"
-                        data-fecha="{{ fecha|date:'Y-m-d' }}"
-                        data-hora="{{ hora|time:'H:i' }}">
-                        {% if calendario.cancha.numero.fecha.hora %}
-                            Reservado
+                    <td>{{ fila.hora|time:'H:i' }}</td>
+                    {% for estado, fecha in fila.estados %}
+                        {% if estado %}
+                            <td class="ocupado">Ocupado</td>
                         {% else %}
-                            Disponible
+                            <td class="disponible">
+                                <form method="post" action="{% url 'reservar_cancha' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="cancha_id" value="{{ cancha.numero }}">
+                                    <input type="hidden" name="fecha" value="{{ fecha }}">
+                                    <input type="hidden" name="hora_inicio" value="{{ fila.hora|time:'H:i:s' }}">
+                                    <button type="submit">Reservar</button>
+                                </form>
+                            </td>
                         {% endif %}
-                    </td>
                     {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>
-            {% endfor %}
         </table>
+    {% endfor %}
     </div>
-</div>
+{% endif %}
 
-<!-- Modal para nueva reserva -->
-<div id="reserva-modal" class="ui modal">
-    <i class="close icon"></i>
-    <div class="header">
-        <i class="fas fa-calendar-plus mr-2"></i> Nueva Reserva
-    </div>
-    <div class="content">
-        <form method="POST" action="{% url 'crear_reserva' %}" class="ui form">
-            {% csrf_token %}
-            <input type="hidden" name="cancha_id" id="cancha_id">
-            <input type="hidden" name="fecha" id="fecha_reserva">
-            <input type="hidden" name="hora_inicio" id="hora_inicio">
-            
-            <div class="field">
-                <label>Duración</label>
-                <select name="duracion" class="ui dropdown">
-                    <option value="30">30 minutos</option>
-                    <option value="60" selected>1 hora</option>
-                    <option value="90">1 hora y 30 minutos</option>
-                </select>
-            </div>
-            
-            <div class="two fields">
-                <div class="field">
-                    <label>Nombre del jugador</label>
-                    <input type="text" name="jugador_nom" placeholder="Ingresá el nombre">
-                </div>
-                <div class="field">
-                    <label>Apellido del jugador</label>
-                    <input type="text" name="jugador_cognom" placeholder="Ingresá el apellido">
-                </div>
-            </div>
-            
-            <button class="ui primary button fluid" type="submit">
-                <i class="fas fa-save mr-1"></i> Guardar Reserva
-            </button>
-        </form>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        // Inicializar dropdowns
-        $('.ui.dropdown').dropdown();
-        
-        // Manejar clic en celda disponible
-        $('.available').on('click', function() {
-            var cancha = $(this).data('cancha');
-            var fecha = $(this).data('fecha');
-            var hora = $(this).data('hora');
-            
-            // Llenar el formulario del modal
-            $('#cancha_id').val(cancha);
-            $('#fecha_reserva').val(fecha);
-            $('#hora_inicio').val(hora);
-            
-            // Mostrar el modal
-            $('#reserva-modal').modal('show');
-        });
-    });
-</script>
 {% endblock %}
