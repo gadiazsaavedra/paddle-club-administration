@@ -137,9 +137,17 @@ def lista_reserves(request):
                     "mensaje_error": mensaje_error,
                 },
             )
-        try:
-            reserva_feta = Reserva.objects.get(jugador=jugador, fecha=fecha2)
-            mensaje_error = "El jugador ya tiene una reserva en este dia."
+        # Comprobar solapamiento de reservas del jugador en ese día y horario
+        solapamiento = Reserva.objects.filter(
+            jugador=jugador,
+            fecha=fecha2,
+            hora_inicio__lt=hora_fin,
+            hora_fin__gt=hora_inicio,
+        ).exists()
+        if solapamiento:
+            mensaje_error = (
+                "El jugador ya tiene una reserva que se solapa con este horario."
+            )
             fecha = date.today()
             day = fecha.strftime("%Y-%m-%d")
             reserves = Reserva.objects.filter(fecha=fecha).order_by(
@@ -156,8 +164,6 @@ def lista_reserves(request):
                     "mensaje_error": mensaje_error,
                 },
             )
-        except Reserva.DoesNotExist:
-            pass
         # Selección de cancha por número
         if not cancha_numero:
             mensaje_error = "Debes seleccionar un número de cancha."

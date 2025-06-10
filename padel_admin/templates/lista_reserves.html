@@ -233,9 +233,11 @@
     $('#jugador_select').on('change', function() {
       var selected = $(this).val();
       var [nom, cognom] = selected.split('|');
-      var coincidencias = jugadores.filter(j => j.nom === nom || j.cognom === cognom);
+      var coincidencias = jugadores.filter(j => 
+        j.nom === nom && j.cognom === cognom && nom !== "" && cognom !== ""
+      );
       if (coincidencias.length > 1) {
-        var msg = 'Atención: Hay jugadores con el mismo nombre o apellido. Verifica el ID antes de reservar.';
+        var msg = 'Atención: Hay jugadores con el mismo nombre y apellido. Verifica el ID antes de reservar.';
         $('#jugador-warning').text(msg).show();
       } else {
         $('#jugador-warning').hide();
