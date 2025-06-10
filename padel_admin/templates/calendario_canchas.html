@@ -82,15 +82,13 @@
                             </td>
                         {% else %}
                             <td class="disponible">
-                                <form method="post" action="{% url 'reservar_cancha' %}" class="form-reservar" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').innerHTML='Reservando...';setTimeout(function(){ window.location.href='{% url 'lista_reserves' %}'; }, 100);">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="cancha_id" value="{{ cancha.numero }}">
-                                    <input type="hidden" name="cancha_tipo" value="{{ cancha.tipo }}">
-                                    <input type="hidden" name="fecha" value="{{ fecha }}">
-                                    <input type="hidden" name="hora_inicio" value="{{ fila.hora|time:'H:i:s' }}">
-                                    <button type="submit" class="ui green button transition-all duration-150 hover:scale-105"><i class="fas fa-plus-circle mr-1"></i>Reservar</button>
-                                </form>
-                            </td>
+                                <button type="button" class="ui green button reservar-btn" 
+    data-fecha="{{ fecha|date:'Y-m-d' }}" 
+    data-hora="{{ fila.hora|time:'H:i' }}" 
+    data-cancha="{{ cancha.numero }}" 
+    data-tipo="{{ cancha.tipo }}">
+    <i class="fas fa-plus-circle mr-1"></i>Reservar
+</button>
                         {% endif %}
                     {% endfor %}
                 </tr>
@@ -126,6 +124,15 @@ $(document).ready(function() {
         var nombre = $(this).data('jugador');
         $('#nombre-jugador').text(nombre);
         $('#modal-jugador').modal('show');
+    });
+    $('.reservar-btn').on('click', function() {
+        // Obtener datos del botón
+        var fecha = $(this).data('fecha');
+        var hora = $(this).data('hora');
+        var cancha = $(this).data('cancha');
+        var tipo = $(this).data('tipo');
+        // Abrir modal de nuevo turno en lista_reserves.html
+        window.location.href = "{% url 'lista_reserves' %}?fecha=" + fecha + "&hora=" + hora + "&cancha=" + cancha + "&tipo=" + tipo;
     });
 });
 </script>

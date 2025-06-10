@@ -99,14 +99,14 @@
       <div class="two fields">
         <div class="field">
           <label><i class="fas fa-calendar-day mr-1"></i> Fecha</label>
-          <input type="date" id="fecha-2" name="fecha-2" required value="{{ day }}">
+          <input type="date" id="fecha-2" name="fecha-2" required value="{{ request.GET.fecha|default:day }}">
         </div>
         <div class="field">
           <label><i class="fas fa-clock mr-1"></i> Hora de inicio</label>
           <select name="horaInici" class="ui dropdown">
             <option value="">Seleccioná la hora</option>
             {% for hour in hours %}
-              <option value="{{ hour }}">{{ hour }}</option>
+              <option value="{{ hour }}" {% if request.GET.hora == hour %}selected{% endif %}>{{ hour }}</option>
             {% endfor %}
           </select>
         </div>
@@ -125,8 +125,8 @@
           <label><i class="fas fa-table-tennis mr-1"></i> Tipo de cancha</label>
           <select name="Pista" class="ui dropdown" id="tipo_cancha_select">
             <option value="">Seleccioná tipo de cancha</option>
-            <option value="Indoor">Techada</option>
-            <option value="Outdoor">Al aire libre</option>
+            <option value="Indoor" {% if request.GET.tipo == 'Indoor' %}selected{% endif %}>Techada</option>
+            <option value="Outdoor" {% if request.GET.tipo == 'Outdoor' %}selected{% endif %}>Al aire libre</option>
           </select>
         </div>
         <div class="field">
@@ -134,19 +134,21 @@
           <select name="cancha_numero" class="ui dropdown" id="cancha_numero_select">
             <option value="">Seleccioná número de cancha</option>
             {% for pista in pistas_disponibles %}
-              <option value="{{ pista.numero }}" data-tipo="{{ pista.tipo }}">{{ pista.numero }} ({{ pista.tipo }})</option>
+              <option value="{{ pista.numero }}" data-tipo="{{ pista.tipo }}" {% if request.GET.cancha == pista.numero|stringformat:'s' %}selected{% endif %}>{{ pista.numero }} ({{ pista.tipo }})</option>
             {% endfor %}
           </select>
         </div>
       </div>
       <div class="two fields">
         <div class="field">
-          <label><i class="fas fa-user mr-1"></i> Nombre del jugador</label>
-          <input type="text" placeholder="Nombre del jugador" name="jugador_nom">
-        </div>
-        <div class="field">
-          <label><i class="fas fa-user mr-1"></i> Apellido del jugador</label>
-          <input type="text" placeholder="Apellido del jugador" name="jugador_cognom">
+          <label><i class="fas fa-user mr-1"></i> Seleccionar jugador</label>
+          <select name="jugador_select" id="jugador_select" class="ui search dropdown">
+            <option value="">Seleccioná un jugador</option>
+            {% for jugador in jugadores_registrados %}
+              <option value="{{ jugador.nom }}|{{ jugador.cognom }}">{{ jugador.nom }} {{ jugador.cognom }} ({{ jugador.id_jugador }})</option>
+            {% endfor %}
+          </select>
+          <div id="jugador-warning" class="ui warning message mt-2" style="display:none;"></div>
         </div>
       </div>
       <button class="ui primary button fluid" type="submit">
@@ -221,6 +223,32 @@
       });
       $('#cancha_numero_select').val('');
     });
+    
+    // Advertencia de coincidencias de nombre o apellido
+    var jugadores = [
+      {% for jugador in jugadores_registrados %}
+        { nom: "{{ jugador.nom|escapejs }}", cognom: "{{ jugador.cognom|escapejs }}", id: "{{ jugador.id_jugador }}" },
+      {% endfor %}
+    ];
+    $('#jugador_select').on('change', function() {
+      var selected = $(this).val();
+      var [nom, cognom] = selected.split('|');
+      var coincidencias = jugadores.filter(j => j.nom === nom || j.cognom === cognom);
+      if (coincidencias.length > 1) {
+        var msg = 'Atención: Hay jugadores con el mismo nombre o apellido. Verifica el ID antes de reservar.';
+        $('#jugador-warning').text(msg).show();
+      } else {
+        $('#jugador-warning').hide();
+      }
+    });
+    
+    // Abrir modal automáticamente si hay parámetros GET de fecha, hora, cancha y tipo
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fecha') && urlParams.get('hora') && urlParams.get('cancha') && urlParams.get('tipo')) {
+      setTimeout(function() {
+        $('#formulario-popup').modal('show');
+      }, 300); // pequeño delay para asegurar render
+    }
   });
 </script>
 {% endblock %}

@@ -47,6 +47,7 @@ def lista_reserves(request):
         ).time()
 
     pistas_disponibles = Pistes.objects.all().order_by("numero")
+    jugadores_registrados = Jugadors.objects.all().order_by("nom", "cognom")
 
     if request.method == "POST":
         # eliminar jugador
@@ -85,14 +86,22 @@ def lista_reserves(request):
                 {"reserves": reserves, "day": day, "hours": hours},
             )
         # AFEGIR RESERVA
+        # Obtener nombre y apellido del dropdown
+        jugador_select = request.POST.get("jugador_select")
+        if jugador_select:
+            # Puede venir como 'nombre|apellido' o 'nombre|'
+            partes = jugador_select.split("|", 1)
+            jugador_nom = partes[0].strip()
+            jugador_cognom = partes[1].strip() if len(partes) > 1 else ""
+        else:
+            jugador_nom = request.POST.get("jugador_nom", "").strip()
+            jugador_cognom = request.POST.get("jugador_cognom", "").strip()
         fecha2 = request.POST.get("fecha-2")
         hora_inicio_str = request.POST.get("horaInici")
         hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
         duracio = request.POST.get("horaFinalitzacio")
         type_cancha = request.POST.get("Pista")
         cancha_numero = request.POST.get("cancha_numero")
-        jugador_nom = request.POST.get("jugador_nom")
-        jugador_cognom = request.POST.get("jugador_cognom")
         # transformem duracio en hora de finalitzacio
         if duracio == "30":
             hora_fin = (
@@ -224,6 +233,7 @@ def lista_reserves(request):
             "day": day,
             "hours": hours,
             "pistas_disponibles": pistas_disponibles,
+            "jugadores_registrados": jugadores_registrados,
         },
     )
 
