@@ -434,59 +434,44 @@ def lista_cobraments(request, data, id_jugador):
             except Recepcionista.DoesNotExist:
                 mensaje = "Recepcionista no encontrado. Inicie sesión nuevamente."
                 return render(request, "landing.html", {"mensaje": mensaje})
-            # Validación y cuantización FINAL antes de crear el cobro
-            try:
-                # Forzar a string y limpiar posibles caracteres extraños
-                importe_str = str(importe).replace(" ", "").replace(",", ".")
-                # Si el string es 'None', '', 'nan', 'NaN', 'inf', etc, forzar a 0
-                if importe_str.lower() in (
-                    "none",
-                    "",
-                    "nan",
-                    "infinity",
-                    "inf",
-                    "-inf",
-                    "-infinity",
-                ):
-                    raise InvalidOperation("Importe no válido (vacío, NaN o infinito)")
-                # Si el string tiene más de un punto decimal, tomar solo la parte antes del primer punto y los dos primeros dígitos decimales
-                if importe_str.count(".") > 1:
-                    partes = importe_str.split(".")
-                    importe_str = partes[0] + "." + "".join(partes[1:])
-                # Si hay más de dos decimales, truncar a dos decimales como string (solo si dec es numérica)
-                if "." in importe_str:
-                    ent, dec = importe_str.split(".")
-                    dec = "".join([c for c in dec if c.isdigit()])[:2]
-                    importe_str = ent + "." + dec if dec else ent
-                # Solo permitir dígitos y un punto decimal
-                if not all(c.isdigit() or c == "." for c in importe_str):
-                    raise InvalidOperation("Importe contiene caracteres no numéricos")
-                # Intentar convertir a Decimal
+
+            # --- Start of Refactored Importe Validation ---
+            # Ensure importe is a Decimal and finite.
+            if not isinstance(importe, Decimal):
                 try:
-                    importe = Decimal(importe_str)
-                except Exception as e:
-                    raise InvalidOperation(f"Error al convertir el importe: {str(e)}")
-                # Validaciones extra
-                if not importe.is_finite() or importe.is_nan() or importe < 0:
-                    raise InvalidOperation(
-                        "Importe no válido (NaN, infinito o negativo)"
+                    temp_importe_str = str(importe)
+                    if (
+                        temp_importe_str.lower() == "none"
+                    ):  # Handle if importe was Python None then str()
+                        logging.warning(
+                            f"Importe was 'None' string, attempting to treat as 0 for cobro {reserva.id} by {jugador.id_jugador}"
+                        )
+                        importe = Decimal("0.00")
+                    else:
+                        importe = Decimal(temp_importe_str)
+                except InvalidOperation:
+                    logging.error(
+                        f"Importe '{importe}' could not be converted to Decimal for cobro {reserva.id} by {jugador.id_jugador}."
                     )
-                partes = str(importe).split(".")
-                if len(partes[0]) > 8:
-                    raise InvalidOperation(
-                        "El importe es demasiado grande para el campo (máx 8 dígitos enteros)"
+                    # If conversion fails, it's a critical issue with the calculated importe.
+                    mensaje = f"Error crítico: El valor del importe ({importe}) no es un número decimal válido. No se puede registrar el cobro."
+                    return render(
+                        request,
+                        "lista_cobraments.html",
+                        {
+                            "mensaje": mensaje,
+                            "jugador": jugador,
+                            "reserva": reserva,
+                            "importe": Decimal("0.00"),
+                            "ya_pago": ya_pago,
+                        },
                     )
-                # Redondear SIEMPRE hacia abajo (ROUND_FLOOR) a dos decimales antes de guardar
-                try:
-                    importe = importe.quantize(Decimal("0.01"), rounding="ROUND_FLOOR")
-                except Exception as e:
-                    raise InvalidOperation(f"Error al cuantizar el importe: {str(e)}")
-                if importe == Decimal("0.00"):
-                    raise InvalidOperation(
-                        "No se puede registrar el cobro porque el importe es 0. Verifique la tarifa configurada."
-                    )
-            except (InvalidOperation, Exception) as e:
-                mensaje = f"Error al validar el importe antes de guardar: {str(e)}. Verifique la tarifa configurada."
+
+            if not importe.is_finite():
+                logging.warning(
+                    f"Importe is non-finite ({importe}) before saving cobro {reserva.id} by {jugador.id_jugador}. Cobro prevented."
+                )
+                mensaje = f"Error: El importe calculado ({importe}) es inválido (NaN/Infinito). No se puede registrar el cobro. Verifique la tarifa."
                 return render(
                     request,
                     "lista_cobraments.html",
@@ -494,10 +479,67 @@ def lista_cobraments(request, data, id_jugador):
                         "mensaje": mensaje,
                         "jugador": jugador,
                         "reserva": reserva,
-                        "importe": 0,
-                        "ya_pago": False,
+                        "importe": Decimal(
+                            "0.00"
+                        ),  # Display 0.00 or a representation of the error
+                        "ya_pago": ya_pago,
                     },
                 )
+
+            # At this point, importe is a finite Decimal. Now quantize.
+            try:
+                importe = importe.quantize(Decimal("0.01"), rounding="ROUND_FLOOR")
+            except InvalidOperation:
+                # This should not happen if importe is finite, but as a safeguard:
+                logging.error(
+                    f"CRITICAL: InvalidOperation during quantize of finite importe {importe} for cobro {reserva.id} by {jugador.id_jugador}."
+                )
+                mensaje = "Error crítico al redondear el importe. No se pudo registrar el cobro."
+                return render(
+                    request,
+                    "lista_cobraments.html",
+                    {
+                        "mensaje": mensaje,
+                        "jugador": jugador,
+                        "reserva": reserva,
+                        "importe": importe,  # Show the problematic importe
+                        "ya_pago": ya_pago,
+                    },
+                )
+
+            # Check model constraints for Cobrament.importe (max_digits=4, decimal_places=2)
+            # Ahora permitimos hasta 1,000,000.00
+            if abs(importe) >= Decimal("1000000.01"):
+                mensaje = f"El importe final ({importe}) excede el máximo permitido de 1,000,000.00."
+                return render(
+                    request,
+                    "lista_cobraments.html",
+                    {
+                        "mensaje": mensaje,
+                        "jugador": jugador,
+                        "reserva": reserva,
+                        "importe": importe,
+                        "ya_pago": ya_pago,
+                    },
+                )
+
+            if importe == Decimal(
+                "0.00"
+            ):  # This check was present in your original code
+                mensaje = "No se puede registrar el cobro porque el importe es 0. Verifique la tarifa configurada."
+                return render(
+                    request,
+                    "lista_cobraments.html",
+                    {
+                        "mensaje": mensaje,
+                        "jugador": jugador,
+                        "reserva": reserva,
+                        "importe": importe,
+                        "ya_pago": ya_pago,  # ya_pago should likely be False or its current state
+                    },
+                )
+            # --- End of Refactored Importe Validation ---
+
             try:
                 cobrament = Cobrament.objects.create(
                     reserva=reserva,
@@ -506,10 +548,10 @@ def lista_cobraments(request, data, id_jugador):
                     importe=importe,
                     recepcionista=rec,
                 )
-                cobrament.save()
+                # .create() already saves, no need for cobrament.save() here
             except Exception as e:
                 logging.error(f"Error al guardar el cobro: {e}")
-                mensaje = f"Error al guardar el cobro: {str(e)}. Importe inválido."
+                mensaje = f"Error al guardar el cobro: {str(e)}. Importe ({importe}) inválido."
                 return render(
                     request,
                     "lista_cobraments.html",

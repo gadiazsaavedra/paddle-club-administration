@@ -99,7 +99,7 @@ class Cobrament(models.Model):
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE)
     jugador = models.ForeignKey(Jugadors, on_delete=models.CASCADE)
     data = models.DateField()
-    importe = models.DecimalField(max_digits=4, decimal_places=2)
+    importe = models.DecimalField(max_digits=9, decimal_places=2)
     recepcionista = models.ForeignKey(Recepcionista, on_delete=models.CASCADE)
 
     class Meta:
