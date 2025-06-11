@@ -22,18 +22,7 @@
     </form>
   </div>
 
-  {% if mensaje_exito %}
-  <div class="ui message success">
-    <i class="fas fa-check-circle mr-2"></i>
-    {{ mensaje_exito }}
-  </div>
-  {% endif %}
-  {% if mensaje_error %}
-  <div class="ui message error">
-    <i class="fas fa-exclamation-circle mr-2"></i>
-    {{ mensaje_error }}
-  </div>
-  {% endif %}
+  {% include '_mensajes.html' %}
 
   <!-- RESERVES -->
   {% if reserves %}

@@ -2,9 +2,7 @@
 {% block title %}Editar Cobro{% endblock %}
 {% block content %}
 <h1 class="text-2xl font-bold mb-4">Editar Cobro</h1>
-{% if mensaje %}
-  <div class="ui message error">{{ mensaje }}</div>
-{% endif %}
+{% include '_mensajes.html' %}
 <form method="POST" class="ui form">
   {% csrf_token %}
   <div class="field">
