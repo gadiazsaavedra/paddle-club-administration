@@ -76,6 +76,33 @@
         </button>
       </form>
     {% endif %}
+
+    <h3 class="text-xl font-semibold mt-8 mb-2">Cobros realizados para esta reserva</h3>
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th>Jugador</th>
+          <th>Importe</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cobro in reserva.cobrament_set.all %}
+        <tr>
+          <td>{{ cobro.jugador.nom }} {{ cobro.jugador.cognom }}</td>
+          <td>${{ cobro.importe }}</td>
+          <td>{{ cobro.data }}</td>
+          <td>
+            <a href="{% url 'editar_cobro' cobro.id %}" class="ui blue button mini">Editar</a>
+            <a href="{% url 'eliminar_cobro' cobro.id %}" class="ui red button mini">Eliminar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No hay cobros registrados para esta reserva.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
   {% else %}
     <div class="ui message warning mb-4">No se encontró la información de la reserva o jugador.</div>
   {% endif %}

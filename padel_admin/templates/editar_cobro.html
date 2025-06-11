@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Editar Cobro{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Editar Cobro</h1>
+{% if mensaje %}
+  <div class="ui message error">{{ mensaje }}</div>
+{% endif %}
+<form method="POST" class="ui form">
+  {% csrf_token %}
+  <div class="field">
+    <label>Jugador</label>
+    <input type="text" value="{{ cobrament.jugador.nom }} {{ cobrament.jugador.cognom }}" readonly>
+  </div>
+  <div class="field">
+    <label>Reserva</label>
+    <input type="text" value="{{ cobrament.reserva.fecha }} {{ cobrament.reserva.hora_inicio }} - {{ cobrament.reserva.hora_fin }}" readonly>
+  </div>
+  <div class="field">
+    <label>Importe actual</label>
+    <input type="text" value="{{ cobrament.importe }}" readonly>
+  </div>
+  <div class="field">
+    <label>Nuevo importe</label>
+    <input type="number" name="nuevo_importe" step="0.01" min="0" max="1000000" required>
+  </div>
+  <button class="ui primary button" type="submit">Guardar Cambios</button>
+  <a href="{% url 'lista_cobraments' data=cobrament.reserva.fecha id_jugador=cobrament.jugador.id_jugador %}" class="ui button">Cancelar</a>
+</form>
+{% endblock %}

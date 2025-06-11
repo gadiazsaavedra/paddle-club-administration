@@ -18,6 +18,7 @@ from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 import logging
 from decimal import Decimal, InvalidOperation, localcontext
+from django.urls import reverse
 
 
 def landing(request):
@@ -747,3 +748,121 @@ def crear_reserva_util(
     )
     reserva.save()
     return reserva, None
+
+
+def editar_cobro_util(cobrament, nuevo_importe, request):
+    """Centraliza la lógica de validación y edición de cobros. Devuelve (cobrament_editado, error_message)"""
+    acceso = request.COOKIES.get("acceso")
+    if not acceso:
+        return None, "No hay sesión de recepcionista activa."
+    try:
+        rec = Recepcionista.objects.get(DNI=acceso)
+    except Recepcionista.DoesNotExist:
+        return None, "Recepcionista no encontrado. Inicie sesión nuevamente."
+    try:
+        nuevo_importe = Decimal(str(nuevo_importe))
+        if not nuevo_importe.is_finite() or nuevo_importe < 0:
+            return None, "Importe no válido (NaN/Infinito/Negativo)."
+        if abs(nuevo_importe) >= Decimal("1000000.01"):
+            return (
+                None,
+                f"El importe final ({nuevo_importe}) excede el máximo permitido de 1,000,000.00.",
+            )
+        nuevo_importe = nuevo_importe.quantize(Decimal("0.01"), rounding="ROUND_FLOOR")
+    except Exception as e:
+        return None, f"Error al validar el importe: {str(e)}."
+    try:
+        importe_anterior = cobrament.importe
+        cobrament.importe = nuevo_importe
+        cobrament.recepcionista = rec
+        cobrament.save()
+        from .models import HistoricoReserva
+
+        HistoricoReserva.objects.create(
+            reserva=cobrament.reserva,
+            jugador=cobrament.jugador,
+            accion="edicion_pago",
+            importe=nuevo_importe,
+            detalles=f"Edición de cobro: de {importe_anterior} a {nuevo_importe} por {rec.nombre if hasattr(rec, 'nombre') else rec.DNI}",
+        )
+        return cobrament, None
+    except Exception as e:
+        return None, f"Error al editar el cobro: {str(e)}."
+
+
+def eliminar_cobro_util(cobrament, request):
+    """Centraliza la lógica de eliminación de cobros y registro en histórico. Devuelve (True, error_message)"""
+    acceso = request.COOKIES.get("acceso")
+    if not acceso:
+        return False, "No hay sesión de recepcionista activa."
+    try:
+        rec = Recepcionista.objects.get(DNI=acceso)
+    except Recepcionista.DoesNotExist:
+        return False, "Recepcionista no encontrado. Inicie sesión nuevamente."
+    try:
+        from .models import HistoricoReserva
+
+        HistoricoReserva.objects.create(
+            reserva=cobrament.reserva,
+            jugador=cobrament.jugador,
+            accion="eliminacion_pago",
+            importe=cobrament.importe,
+            detalles=f"Cobro eliminado por {rec.nombre if hasattr(rec, 'nombre') else rec.DNI}",
+        )
+        cobrament.delete()
+        return True, None
+    except Exception as e:
+        return False, f"Error al eliminar el cobro: {str(e)}."
+
+
+def editar_cobro(request, id_cobro):
+    try:
+        cobrament = Cobrament.objects.get(id=id_cobro)
+    except Cobrament.DoesNotExist:
+        return render(
+            request, "lista_cobraments.html", {"mensaje": "Cobro no encontrado."}
+        )
+    if request.method == "POST":
+        nuevo_importe = request.POST.get("nuevo_importe")
+        cobrament_editado, error = editar_cobro_util(cobrament, nuevo_importe, request)
+        if error:
+            return render(
+                request, "editar_cobro.html", {"mensaje": error, "cobrament": cobrament}
+            )
+        return redirect(
+            reverse(
+                "lista_cobraments",
+                kwargs={
+                    "data": cobrament.reserva.fecha,
+                    "id_jugador": cobrament.jugador.id_jugador,
+                },
+            )
+        )
+    return render(request, "editar_cobro.html", {"cobrament": cobrament})
+
+
+def eliminar_cobro(request, id_cobro):
+    try:
+        cobrament = Cobrament.objects.get(id=id_cobro)
+    except Cobrament.DoesNotExist:
+        return render(
+            request, "lista_cobraments.html", {"mensaje": "Cobro no encontrado."}
+        )
+    if request.method == "POST":
+        ok, error = eliminar_cobro_util(cobrament, request)
+        if error:
+            return render(
+                request,
+                "eliminar_cobro.html",
+                {"mensaje": error, "cobrament": cobrament},
+            )
+        return redirect(
+            reverse(
+                "lista_cobraments",
+                kwargs={
+                    "data": cobrament.reserva.fecha,
+                    "id_jugador": cobrament.jugador.id_jugador,
+                },
+            )
+        )
+    return render(request, "eliminar_cobro.html", {"cobrament": cobrament})
