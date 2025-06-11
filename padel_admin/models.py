@@ -169,3 +169,30 @@ class ReservaRecurrente(models.Model):
                         hora_fin=self.hora_fin,
                     )
                 current_date += timedelta(days=7)
+
+
+class Tarifa(models.Model):
+    DIAS_SEMANA = [
+        (0, "Lunes"),
+        (1, "Martes"),
+        (2, "Miércoles"),
+        (3, "Jueves"),
+        (4, "Viernes"),
+        (5, "Sábado"),
+        (6, "Domingo"),
+    ]
+    dia_semana = models.IntegerField(choices=DIAS_SEMANA)
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    precio = models.DecimalField(
+        max_digits=10, decimal_places=2
+    )  # Permite valores hasta 9,999,999.99
+
+    class Meta:
+        unique_together = ("dia_semana", "hora_inicio", "hora_fin")
+        verbose_name = "Tarifa"
+        verbose_name_plural = "Tarifas"
+        ordering = ["dia_semana", "hora_inicio"]
+
+    def __str__(self):
+        return f"{self.get_dia_semana_display()} {self.hora_inicio.strftime('%H:%M')} - {self.hora_fin.strftime('%H:%M')}: ${self.precio}"

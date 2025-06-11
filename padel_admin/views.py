@@ -4,10 +4,20 @@ import json
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 import random
-from .models import Jugadors, Reserva, Cobrament, Recepcionista, Pistes, Recepcionista
+from .models import (
+    Jugadors,
+    Reserva,
+    Cobrament,
+    Recepcionista,
+    Pistes,
+    Recepcionista,
+    Tarifa,
+)
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+import logging
+from decimal import Decimal, InvalidOperation, localcontext
 
 
 def landing(request):
@@ -49,6 +59,30 @@ def lista_reserves(request):
     pistas_disponibles = Pistes.objects.all().order_by("numero")
     jugadores_registrados = Jugadors.objects.all().order_by("nom", "cognom")
 
+    # --- FUNCIONES INTERNAS PARA CENTRALIZAR LÓGICA ---
+    def obtener_fecha_y_reservas(fecha_str=None):
+        if fecha_str:
+            fecha_obj = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+        else:
+            fecha_obj = date.today()
+        day = fecha_obj.strftime("%Y-%m-%d")
+        reserves = Reserva.objects.filter(fecha=fecha_obj).order_by(
+            "hora_inicio", "hora_inicio", "cancha"
+        )
+        return day, reserves
+
+    def render_lista_reserves(request, contexto_extra=None):
+        contexto = {
+            "hours": hours,
+            "pistas_disponibles": pistas_disponibles,
+            "jugadores_registrados": jugadores_registrados,
+        }
+        if contexto_extra:
+            contexto.update(contexto_extra)
+        return render(request, "lista_reserves.html", contexto)
+
+    # --- FIN FUNCIONES INTERNAS ---
+
     if request.method == "POST":
         # eliminar jugador
         if request.POST.get("_method") == "DELETE":
@@ -60,36 +94,42 @@ def lista_reserves(request):
                 reserva.delete()
             except (Jugadors.DoesNotExist, Reserva.DoesNotExist):
                 mensaje_error = "No se encontró el jugador o la reserva."
-                fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
-                day = fecha_obj.strftime("%Y-%m-%d")
-                reserves = Reserva.objects.filter(fecha=fecha_obj).order_by(
-                    "hora_inicio", "hora_inicio", "cancha"
-                )
-                return render(
+                day, reserves = obtener_fecha_y_reservas(fecha)
+                return render_lista_reserves(
                     request,
-                    "lista_reserves.html",
                     {
                         "reserves": reserves,
                         "day": day,
-                        "hours": hours,
                         "mensaje_error": mensaje_error,
                     },
                 )
-            fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
-            day = fecha_obj.strftime("%Y-%m-%d")
-            reserves = Reserva.objects.filter(fecha=fecha_obj).order_by(
-                "hora_inicio", "hora_inicio", "cancha"
-            )
-            return render(
-                request,
-                "lista_reserves.html",
-                {"reserves": reserves, "day": day, "hours": hours},
-            )
+            day, reserves = obtener_fecha_y_reservas(fecha)
+            return render_lista_reserves(request, {"reserves": reserves, "day": day})
         # AFEGIR RESERVA
+        # Validar campos obligatorios
+        required_fields = [
+            ("fecha-2", request.POST.get("fecha-2")),
+            ("horaInici", request.POST.get("horaInici")),
+            ("horaFinalitzacio", request.POST.get("horaFinalitzacio")),
+            ("Pista", request.POST.get("Pista")),
+            ("cancha_numero", request.POST.get("cancha_numero")),
+            ("jugador_select", request.POST.get("jugador_select")),
+        ]
+        missing = [name for name, value in required_fields if not value]
+        if missing:
+            mensaje_error = f"Faltan campos obligatorios: {', '.join(missing)}."
+            day, reserves = obtener_fecha_y_reservas()
+            return render_lista_reserves(
+                request,
+                {
+                    "reserves": reserves,
+                    "day": day,
+                    "mensaje_error": mensaje_error,
+                },
+            )
         # Obtener nombre y apellido del dropdown
         jugador_select = request.POST.get("jugador_select")
         if jugador_select:
-            # Puede venir como 'nombre|apellido' o 'nombre|'
             partes = jugador_select.split("|", 1)
             jugador_nom = partes[0].strip()
             jugador_cognom = partes[1].strip() if len(partes) > 1 else ""
@@ -102,42 +142,20 @@ def lista_reserves(request):
         duracio = request.POST.get("horaFinalitzacio")
         type_cancha = request.POST.get("Pista")
         cancha_numero = request.POST.get("cancha_numero")
-        # transformem duracio en hora de finalitzacio
-        if duracio == "30":
-            hora_fin = (
-                datetime.combine(datetime.min, hora_inicio) + timedelta(minutes=30)
-            ).time()
-        elif duracio == "60":
-            hora_fin = (
-                datetime.combine(datetime.min, hora_inicio) + timedelta(hours=1)
-            ).time()
-        else:
-            hora_fin = (
-                datetime.combine(datetime.min, hora_inicio)
-                + timedelta(hours=1, minutes=30)
-            ).time()
-        # obtenim el jugador
+        hora_fin = calcular_hora_fin(hora_inicio, duracio)
         try:
             jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
         except Jugadors.DoesNotExist:
             mensaje_error = "El jugador no existe."
-            fecha = date.today()
-            day = fecha.strftime("%Y-%m-%d")
-            reserves = Reserva.objects.filter(fecha=fecha).order_by(
-                "hora_inicio", "hora_inicio", "cancha"
-            )
-            return render(
+            day, reserves = obtener_fecha_y_reservas()
+            return render_lista_reserves(
                 request,
-                "lista_reserves.html",
                 {
                     "reserves": reserves,
                     "day": day,
-                    "hours": hours,
-                    "pistas_disponibles": pistas_disponibles,
                     "mensaje_error": mensaje_error,
                 },
             )
-        # Comprobar solapamiento de reservas del jugador en ese día y horario
         solapamiento = Reserva.objects.filter(
             jugador=jugador,
             fecha=fecha2,
@@ -148,38 +166,23 @@ def lista_reserves(request):
             mensaje_error = (
                 "El jugador ya tiene una reserva que se solapa con este horario."
             )
-            fecha = date.today()
-            day = fecha.strftime("%Y-%m-%d")
-            reserves = Reserva.objects.filter(fecha=fecha).order_by(
-                "hora_inicio", "hora_inicio", "cancha"
-            )
-            return render(
+            day, reserves = obtener_fecha_y_reservas()
+            return render_lista_reserves(
                 request,
-                "lista_reserves.html",
                 {
                     "reserves": reserves,
                     "day": day,
-                    "hours": hours,
-                    "pistas_disponibles": pistas_disponibles,
                     "mensaje_error": mensaje_error,
                 },
             )
-        # Selección de cancha por número
         if not cancha_numero:
             mensaje_error = "Debes seleccionar un número de cancha."
-            fecha = date.today()
-            day = fecha.strftime("%Y-%m-%d")
-            reserves = Reserva.objects.filter(fecha=fecha).order_by(
-                "hora_inicio", "hora_inicio", "cancha"
-            )
-            return render(
+            day, reserves = obtener_fecha_y_reservas()
+            return render_lista_reserves(
                 request,
-                "lista_reserves.html",
                 {
                     "reserves": reserves,
                     "day": day,
-                    "hours": hours,
-                    "pistas_disponibles": pistas_disponibles,
                     "mensaje_error": mensaje_error,
                 },
             )
@@ -187,19 +190,12 @@ def lista_reserves(request):
             cancha_ = Pistes.objects.get(numero=cancha_numero, tipo=type_cancha)
         except Pistes.DoesNotExist:
             mensaje_error = "La cancha seleccionada no existe o no es del tipo elegido."
-            fecha = date.today()
-            day = fecha.strftime("%Y-%m-%d")
-            reserves = Reserva.objects.filter(fecha=fecha).order_by(
-                "hora_inicio", "hora_inicio", "cancha"
-            )
-            return render(
+            day, reserves = obtener_fecha_y_reservas()
+            return render_lista_reserves(
                 request,
-                "lista_reserves.html",
                 {
                     "reserves": reserves,
                     "day": day,
-                    "hours": hours,
-                    "pistas_disponibles": pistas_disponibles,
                     "mensaje_error": mensaje_error,
                 },
             )
@@ -219,27 +215,41 @@ def lista_reserves(request):
         reserva.save()
 
     fecha = request.GET.get("fecha")
-    if fecha:
-        fecha_obj = datetime.strptime(fecha, "%Y-%m-%d").date()
-        reserves = Reserva.objects.filter(fecha=fecha_obj).order_by(
-            "hora_inicio", "hora_inicio", "cancha"
-        )
-        day = fecha_obj.strftime("%Y-%m-%d")
-    else:
-        fecha = date.today()
-        day = fecha.strftime("%Y-%m-%d")
-        reserves = Reserva.objects.filter(fecha=fecha).order_by(
-            "hora_inicio", "hora_inicio", "cancha"
-        )
-    return render(
+    day, reserves = obtener_fecha_y_reservas(fecha)
+    # Para mostrar importe estimado en el formulario de reserva
+    importe_estimado = None
+    if (
+        request.method == "GET"
+        and request.GET.get("fecha")
+        and request.GET.get("hora")
+        and request.GET.get("horaFinalitzacio")
+    ):
+        try:
+            fecha_str = request.GET.get("fecha")
+            hora_inicio_str = request.GET.get("hora")
+            duracion = request.GET.get("horaFinalitzacio")
+            fecha_obj = datetime.strptime(fecha_str, "%Y-%m-%d").date()
+            hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
+            hora_fin = calcular_hora_fin(hora_inicio, duracion)
+            tarifa = obtener_tarifa_para_reserva(fecha_obj, hora_inicio, hora_fin)
+            if tarifa:
+                dt_inicio = datetime.combine(fecha_obj, hora_inicio)
+                dt_fin = datetime.combine(fecha_obj, hora_fin)
+                duracion_horas = (dt_fin - dt_inicio).total_seconds() / 3600
+                importe_estimado = round(float(tarifa.precio) * duracion_horas, 2)
+        except Exception as e:
+            logging.exception(e)
+            importe_estimado = None
+    mensaje_exito = None
+    if request.method == "POST" and not missing:
+        mensaje_exito = "Reserva creada exitosamente."
+    return render_lista_reserves(
         request,
-        "lista_reserves.html",
         {
             "reserves": reserves,
             "day": day,
-            "hours": hours,
-            "pistas_disponibles": pistas_disponibles,
-            "jugadores_registrados": jugadores_registrados,
+            "importe_estimado": importe_estimado,
+            "mensaje_exito": mensaje_exito,
         },
     )
 
@@ -348,41 +358,147 @@ def lista_cobraments(request, data, id_jugador):
         mensaje = "No se encontró el jugador o la reserva."
         return render(request, "lista_cobraments.html", {"mensaje": mensaje})
     totals = Cobrament.objects.filter(reserva=reserva)
+    ya_pago = Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists()
+    importe = None
+    if reserva:
+        tarifa = obtener_tarifa_para_reserva(
+            reserva.fecha, reserva.hora_inicio, reserva.hora_fin
+        )
+        try:
+            if not tarifa or tarifa.precio in (None, ""):
+                importe = Decimal("0.00")
+            else:
+                precio_str = str(tarifa.precio).replace(" ", "").replace(",", ".")
+                precio_decimal = Decimal(precio_str)
+                dt_inicio = datetime.combine(reserva.fecha, reserva.hora_inicio)
+                dt_fin = datetime.combine(reserva.fecha, reserva.hora_fin)
+                duracion_horas = Decimal(
+                    str((dt_fin - dt_inicio).total_seconds())
+                ) / Decimal("3600")
+                importe = precio_decimal * duracion_horas
+                if not importe.is_finite() or importe < 0:
+                    raise InvalidOperation("Importe no válido")
+                partes = str(importe).split(".")
+                if len(partes[0]) > 8:
+                    raise InvalidOperation("Importe demasiado grande para el campo.")
+                # Redondear hacia abajo (floor) a entero para mostrar, pero guardar con dos decimales
+                try:
+                    importe_floor = importe.to_integral_value(rounding="ROUND_FLOOR")
+                except Exception as e:
+                    logging.error(f"Error al redondear importe_floor: {e}")
+                    importe_floor = Decimal("0.00")
+                try:
+                    # Asegura que importe sea Decimal válido y no NaN/infinito
+                    if not isinstance(importe, Decimal):
+                        importe = Decimal(str(importe))
+                    if not importe.is_finite() or importe.is_nan():
+                        importe = Decimal("0.00")
+                    else:
+                        # Cuantiza solo si tiene parte decimal
+                        importe = importe.quantize(Decimal("0.01"))
+                except Exception as e:
+                    logging.error(f"Error al cuantizar importe: {e}")
+                    importe = Decimal("0.00")
+        except (InvalidOperation, TypeError, ValueError) as e:
+            mensaje = f"Error al calcular el importe: {str(e)}. Verifique la tarifa configurada."
+            return render(
+                request,
+                "lista_cobraments.html",
+                {
+                    "mensaje": mensaje,
+                    "jugador": jugador,
+                    "reserva": reserva,
+                    "importe": 0,
+                    "ya_pago": ya_pago,
+                },
+            )
     if request.method == "POST":
         if totals.count() != 4:
-            jugador_nom = request.POST.get("jugador-nom")
-            jugador_cognom = request.POST.get("jugador-cognom")
+            if ya_pago:
+                mensaje = "El jugador ya pagó esta reserva."
+                return render(
+                    request,
+                    "lista_cobraments.html",
+                    {
+                        "mensaje": mensaje,
+                        "jugador": jugador,
+                        "reserva": reserva,
+                        "importe": (
+                            importe_floor if "importe_floor" in locals() else importe
+                        ),
+                        "ya_pago": ya_pago,
+                    },
+                )
             try:
-                jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
-            except Jugadors.DoesNotExist:
-                mensaje = "Jugador inexistente en la base de datos."
-                return render(request, "lista_cobraments.html", {"mensaje": mensaje})
+                rec = Recepcionista.objects.get(DNI=acceso)
+            except Recepcionista.DoesNotExist:
+                mensaje = "Recepcionista no encontrado. Inicie sesión nuevamente."
+                return render(request, "landing.html", {"mensaje": mensaje})
+            # Validación y cuantización FINAL antes de crear el cobro
             try:
-                existeix_cobrament = Cobrament.objects.get(
-                    reserva=reserva, jugador=jugador
-                )
-                mensaje = "El jugador ya pago esta reserva."
-                return render(request, "lista_cobraments.html", {"mensaje": mensaje})
-            except Cobrament.DoesNotExist:
-                preu_hora = 10
-                hora_inicio = datetime.strptime(
-                    reserva.hora_inicio.strftime("%H:%M:%S"), "%H:%M:%S"
-                )
-                hora_final = datetime.strptime(
-                    reserva.hora_fin.strftime("%H:%M:%S"), "%H:%M:%S"
-                )
-                diferencia_tiempo = hora_final - hora_inicio
-                diferencia_horas = int(diferencia_tiempo.total_seconds() / 3600)
-                diferencia_minutos = int(
-                    (diferencia_tiempo.total_seconds() % 3600) / 60
-                )
-                diferencia_horas += round(diferencia_minutos / 60, 2)
-                importe = preu_hora * diferencia_horas
+                # Forzar a string y limpiar posibles caracteres extraños
+                importe_str = str(importe).replace(" ", "").replace(",", ".")
+                # Si el string es 'None', '', 'nan', 'NaN', 'inf', etc, forzar a 0
+                if importe_str.lower() in (
+                    "none",
+                    "",
+                    "nan",
+                    "infinity",
+                    "inf",
+                    "-inf",
+                    "-infinity",
+                ):
+                    raise InvalidOperation("Importe no válido (vacío, NaN o infinito)")
+                # Si el string tiene más de un punto decimal, tomar solo la parte antes del primer punto y los dos primeros dígitos decimales
+                if importe_str.count(".") > 1:
+                    partes = importe_str.split(".")
+                    importe_str = partes[0] + "." + "".join(partes[1:])
+                # Si hay más de dos decimales, truncar a dos decimales como string (solo si dec es numérica)
+                if "." in importe_str:
+                    ent, dec = importe_str.split(".")
+                    dec = "".join([c for c in dec if c.isdigit()])[:2]
+                    importe_str = ent + "." + dec if dec else ent
+                # Solo permitir dígitos y un punto decimal
+                if not all(c.isdigit() or c == "." for c in importe_str):
+                    raise InvalidOperation("Importe contiene caracteres no numéricos")
+                # Intentar convertir a Decimal
                 try:
-                    rec = Recepcionista.objects.get(DNI=acceso)
-                except Recepcionista.DoesNotExist:
-                    mensaje = "Recepcionista no encontrado. Inicie sesión nuevamente."
-                    return render(request, "landing.html", {"mensaje": mensaje})
+                    importe = Decimal(importe_str)
+                except Exception as e:
+                    raise InvalidOperation(f"Error al convertir el importe: {str(e)}")
+                # Validaciones extra
+                if not importe.is_finite() or importe.is_nan() or importe < 0:
+                    raise InvalidOperation(
+                        "Importe no válido (NaN, infinito o negativo)"
+                    )
+                partes = str(importe).split(".")
+                if len(partes[0]) > 8:
+                    raise InvalidOperation(
+                        "El importe es demasiado grande para el campo (máx 8 dígitos enteros)"
+                    )
+                # Redondear SIEMPRE hacia abajo (ROUND_FLOOR) a dos decimales antes de guardar
+                try:
+                    importe = importe.quantize(Decimal("0.01"), rounding="ROUND_FLOOR")
+                except Exception as e:
+                    raise InvalidOperation(f"Error al cuantizar el importe: {str(e)}")
+                if importe == Decimal("0.00"):
+                    raise InvalidOperation(
+                        "No se puede registrar el cobro porque el importe es 0. Verifique la tarifa configurada."
+                    )
+            except (InvalidOperation, Exception) as e:
+                mensaje = f"Error al validar el importe antes de guardar: {str(e)}. Verifique la tarifa configurada."
+                return render(
+                    request,
+                    "lista_cobraments.html",
+                    {
+                        "mensaje": mensaje,
+                        "jugador": jugador,
+                        "reserva": reserva,
+                        "importe": 0,
+                        "ya_pago": False,
+                    },
+                )
+            try:
                 cobrament = Cobrament.objects.create(
                     reserva=reserva,
                     jugador=jugador,
@@ -391,23 +507,64 @@ def lista_cobraments(request, data, id_jugador):
                     recepcionista=rec,
                 )
                 cobrament.save()
-                mensaje2 = (
-                    jugador_nom
-                    + " "
-                    + jugador_cognom
-                    + " ha realizado un pago de "
-                    + str(importe)
-                    + " $"
-                )
+            except Exception as e:
+                logging.error(f"Error al guardar el cobro: {e}")
+                mensaje = f"Error al guardar el cobro: {str(e)}. Importe inválido."
                 return render(
                     request,
                     "lista_cobraments.html",
-                    {"mensaje2": mensaje2, "importe": importe},
+                    {
+                        "mensaje": mensaje,
+                        "jugador": jugador,
+                        "reserva": reserva,
+                        "importe": importe,
+                        "ya_pago": False,
+                    },
                 )
+            mensaje2 = (
+                jugador.nom
+                + " "
+                + jugador.cognom
+                + " ha realizado un pago de "
+                + str(importe_floor if "importe_floor" in locals() else importe)
+                + " $"
+            )
+            return render(
+                request,
+                "lista_cobraments.html",
+                {
+                    "mensaje2": mensaje2,
+                    "importe": (
+                        importe_floor if "importe_floor" in locals() else importe
+                    ),
+                    "jugador": jugador,
+                    "reserva": reserva,
+                    "ya_pago": True,
+                },
+            )
         else:
             mensaje = "Limite de 4 persones en la cancha."
-            return render(request, "lista_cobraments.html", {"mensaje": mensaje})
-    return render(request, "lista_cobraments.html")
+            return render(
+                request,
+                "lista_cobraments.html",
+                {
+                    "mensaje": mensaje,
+                    "jugador": jugador,
+                    "reserva": reserva,
+                    "importe": importe,
+                    "ya_pago": ya_pago,
+                },
+            )
+    return render(
+        request,
+        "lista_cobraments.html",
+        {
+            "jugador": jugador,
+            "reserva": reserva,
+            "importe": importe_floor if "importe_floor" in locals() else importe,
+            "ya_pago": ya_pago,
+        },
+    )
 
 
 def logout(request):
@@ -623,3 +780,34 @@ def perfil_jugador(request):
         "canchas_usadas": canchas_usadas,
     }
     return render(request, "perfil_jugador.html", context)
+
+
+def obtener_tarifa_para_reserva(fecha, hora_inicio, hora_fin):
+    # fecha: date, hora_inicio/hora_fin: time
+    dia_semana = fecha.weekday()  # 0=Lunes
+    # Buscar tarifa que cubra el rango horario
+    tarifa = (
+        Tarifa.objects.filter(
+            dia_semana=dia_semana, hora_inicio__lte=hora_inicio, hora_fin__gte=hora_fin
+        )
+        .order_by("hora_inicio")
+        .first()
+    )
+    return tarifa
+
+
+def calcular_hora_fin(hora_inicio, duracion):
+    if duracion == "30":
+        return (
+            datetime.combine(datetime.min, hora_inicio) + timedelta(minutes=30)
+        ).time()
+    elif duracion == "60":
+        return (datetime.combine(datetime.min, hora_inicio) + timedelta(hours=1)).time()
+    elif duracion == "90":
+        return (
+            datetime.combine(datetime.min, hora_inicio) + timedelta(hours=1, minutes=30)
+        ).time()
+    else:
+        return (
+            datetime.combine(datetime.min, hora_inicio) + timedelta(minutes=30)
+        ).time()

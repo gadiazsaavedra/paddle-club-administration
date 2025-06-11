@@ -40,28 +40,44 @@
       </div>
       <div class="ml-3">
         <p class="text-sm text-blue-700">
-          Agregá los jugadores que participarán en este turno. Cada jugador debe realizar un pago.
-          <br>Máximo 4 jugadores por cancha.
+          Solo el jugador asociado a la reserva puede realizar el pago.<br>
+          El importe se calcula automáticamente según la tarifa y duración.
         </p>
       </div>
     </div>
   </div>
 
-  <form method="POST" class="ui form">
-    {% csrf_token %}
-    <div class="two fields">
-      <div class="field">
-        <label><i class="fas fa-user mr-1"></i> Nombre del jugador</label>
-        <input type="text" name="jugador-nom" placeholder="Ingresá el nombre del jugador">
-      </div>
-      <div class="field">
-        <label><i class="fas fa-user mr-1"></i> Apellido del jugador</label>
-        <input type="text" name="jugador-cognom" placeholder="Ingresá el apellido del jugador">
-      </div>
+  {% if jugador and reserva %}
+    <div class="mb-4">
+      <strong>Jugador:</strong> {{ jugador.nom }} {{ jugador.cognom }}<br>
+      <strong>Fecha:</strong> {{ reserva.fecha|date:'d/m/Y' }}<br>
+      <strong>Horario:</strong> {{ reserva.hora_inicio|time:'H:i' }} - {{ reserva.hora_fin|time:'H:i' }}<br>
+      <strong>Cancha:</strong> {{ reserva.cancha }}
     </div>
-    <button class="ui primary button" type="submit">
-      <i class="fas fa-dollar-sign mr-1"></i> Registrar Pago
-    </button>
-  </form>
+    <div class="mb-4">
+      <strong>Importe a pagar:</strong> $
+      {% if importe %}
+        {{ importe|floatformat:0 }}
+      {% else %}
+        0
+      {% endif %}
+    </div>
+    {% if ya_pago %}
+      <div class="ui message success mb-4">
+        <i class="fas fa-check-circle mr-2"></i>
+        El jugador ya realizó el pago de esta reserva.
+      </div>
+      <button class="ui primary button" type="button" disabled>Pagado</button>
+    {% else %}
+      <form method="POST" class="ui form">
+        {% csrf_token %}
+        <button class="ui primary button" type="submit">
+          <i class="fas fa-dollar-sign mr-1"></i> Pagar
+        </button>
+      </form>
+    {% endif %}
+  {% else %}
+    <div class="ui message warning mb-4">No se encontró la información de la reserva o jugador.</div>
+  {% endif %}
 </div>
 {% endblock %}

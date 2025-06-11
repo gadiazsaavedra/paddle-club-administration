@@ -8,6 +8,7 @@ from .models import (
     Cobrament,
     Recepcionista,
     ReservaRecurrente,
+    Tarifa,
 )
 
 # Register your models here.
@@ -18,6 +19,7 @@ admin.site.register(Pistes)
 admin.site.register(Recepcionista)
 admin.site.register(Reserva)
 admin.site.register(Cobrament)
+admin.site.register(Tarifa)
 
 
 @admin.register(ReservaRecurrente)

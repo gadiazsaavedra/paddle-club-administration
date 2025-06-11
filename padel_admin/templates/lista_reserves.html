@@ -22,6 +22,12 @@
     </form>
   </div>
 
+  {% if mensaje_exito %}
+  <div class="ui message success">
+    <i class="fas fa-check-circle mr-2"></i>
+    {{ mensaje_exito }}
+  </div>
+  {% endif %}
   {% if mensaje_error %}
   <div class="ui message error">
     <i class="fas fa-exclamation-circle mr-2"></i>
@@ -116,9 +122,9 @@
           <label><i class="fas fa-hourglass mr-1"></i> Duración</label>
           <select name="horaFinalitzacio" class="ui dropdown">
             <option value="">Seleccioná la duración</option>
-            <option value="30">30 minutos</option>
-            <option value="60">1 hora</option>
-            <option value="90">1 hora y 30 minutos</option>
+            <option value="30" {% if request.GET.horaFinalitzacio == '30' %}selected{% endif %}>30 minutos</option>
+            <option value="60" {% if request.GET.horaFinalitzacio == '60' %}selected{% endif %}>1 hora</option>
+            <option value="90" {% if request.GET.horaFinalitzacio == '90' %}selected{% endif %}>1 hora y 30 minutos</option>
           </select>
         </div>
         <div class="field">
@@ -139,6 +145,18 @@
           </select>
         </div>
       </div>
+      <!-- IMPORTE ESTIMADO -->
+      {% if importe_estimado is not None %}
+        <div class="ui info message mt-2">
+          <i class="fas fa-dollar-sign mr-1"></i>
+          Importe estimado para este turno: <strong>${{ importe_estimado }}</strong>
+        </div>
+      {% elif request.GET.hora and request.GET.horaFinalitzacio and request.GET.fecha %}
+        <div class="ui warning message mt-2">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          No hay tarifa configurada para este horario.
+        </div>
+      {% endif %}
       <div class="two fields">
         <div class="field">
           <label><i class="fas fa-user mr-1"></i> Seleccionar jugador</label>
@@ -251,6 +269,20 @@
         $('#formulario-popup').modal('show');
       }, 300); // pequeño delay para asegurar render
     }
+    
+    // Actualizar importe estimado dinámicamente
+    $('#fecha-2, select[name="horaInici"], select[name="horaFinalitzacio"]').on('change', function() {
+      var fecha = $('#fecha-2').val();
+      var hora = $('select[name="horaInici"]').val();
+      var duracion = $('select[name="horaFinalitzacio"]').val();
+      if (fecha && hora && duracion) {
+        var params = new URLSearchParams(window.location.search);
+        params.set('fecha', fecha);
+        params.set('hora', hora);
+        params.set('horaFinalitzacio', duracion);
+        window.location.search = params.toString();
+      }
+    });
   });
 </script>
 {% endblock %}
