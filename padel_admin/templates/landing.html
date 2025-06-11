@@ -102,13 +102,7 @@
                 Ingresar
             </button>
         </form>
-        
-        {% if mensaje %}
-            <div class="error-message">
-                <i class="fas fa-exclamation-triangle mr-2"></i>{{ mensaje }}
-            </div>
-        {% endif %}
-        
+        {% include '_mensajes.html' %}
         <div class="text-center mt-4">
             <a href="{% url 'calendario_canchas' %}" class="btn btn-info btn-lg">
                 Ver calendario de canchas

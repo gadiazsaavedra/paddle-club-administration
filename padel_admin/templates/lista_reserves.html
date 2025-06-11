@@ -192,6 +192,46 @@
     </form>
   </div>
 </div>
+
+{% if multiple_reservas and reservas_a_eliminar %}
+  <div class="ui warning message mt-6">
+    <i class="fas fa-exclamation-triangle mr-2"></i>
+    Hay más de una reserva para este jugador y fecha. Selecciona la reserva a eliminar:
+  </div>
+  <div class="ui segment mb-8">
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th>Cancha</th>
+          <th>Tipo</th>
+          <th>Hora inicio</th>
+          <th>Hora fin</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reserva in reservas_a_eliminar %}
+        <tr>
+          <td>{{ reserva.cancha.numero }}</td>
+          <td>{{ reserva.cancha.tipo }}</td>
+          <td>{{ reserva.hora_inicio }}</td>
+          <td>{{ reserva.hora_fin }}</td>
+          <td>
+            <form method="POST" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="_method" value="DELETE">
+              <input type="hidden" name="jugador_id" value="{{ reserva.jugador.id_jugador }}">
+              <input type="hidden" name="data" value="{{ reserva.fecha|date:'Y-m-d' }}">
+              <input type="hidden" name="hora_inicio" value="{{ reserva.hora_inicio }}">
+              <button type="submit" class="ui red button mini">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

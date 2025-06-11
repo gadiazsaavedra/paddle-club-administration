@@ -31,11 +31,14 @@ def landing(request):
             response.set_cookie("acceso", str(recepcionista.DNI))
             return response
         except Recepcionista.DoesNotExist:
-            mensaje = "El DNI o password son incorrectos"
-            return render(request, "landing.html", {"mensaje": mensaje})
+            messages.error(request, "El DNI o password son incorrectos")
+            return render(request, "landing.html")
         except MultipleObjectsReturned:
-            mensaje = "Error: hay múltiples recepcionistas con ese DNI. Contacte al administrador."
-            return render(request, "landing.html", {"mensaje": mensaje})
+            messages.error(
+                request,
+                "Error: hay múltiples recepcionistas con ese DNI. Contacte al administrador.",
+            )
+            return render(request, "landing.html")
     else:
         return render(request, "landing.html")
 
@@ -89,9 +92,56 @@ def lista_reserves(request):
         if request.POST.get("_method") == "DELETE":
             jugador_id = request.POST.get("jugador_id")
             fecha = request.POST.get("data")
+            hora_inicio = request.POST.get("hora_inicio")
             try:
                 jugador = Jugadors.objects.get(id_jugador=jugador_id)
-                reserva = Reserva.objects.get(jugador=jugador, fecha=fecha)
+                reservas = Reserva.objects.filter(
+                    jugador=jugador, fecha=fecha
+                ).order_by("hora_inicio")
+                if reservas.count() == 0:
+                    messages.error(request, "No se encontró el jugador o la reserva.")
+                    day, reserves = obtener_fecha_y_reservas(fecha)
+                    return render_lista_reserves(
+                        request,
+                        {
+                            "reserves": reserves,
+                            "day": day,
+                        },
+                    )
+                elif reservas.count() == 1 or hora_inicio:
+                    if hora_inicio:
+                        reserva = reservas.filter(hora_inicio=hora_inicio).first()
+                        if not reserva:
+                            messages.error(
+                                request,
+                                "No se encontró la reserva con la hora indicada.",
+                            )
+                            day, reserves = obtener_fecha_y_reservas(fecha)
+                            return render_lista_reserves(
+                                request,
+                                {
+                                    "reserves": reserves,
+                                    "day": day,
+                                },
+                            )
+                    else:
+                        reserva = reservas.first()
+                else:
+                    messages.warning(
+                        request,
+                        "Hay más de una reserva para este jugador y fecha. Selecciona la reserva a eliminar.",
+                    )
+                    day, reserves = obtener_fecha_y_reservas(fecha)
+                    return render_lista_reserves(
+                        request,
+                        {
+                            "reserves": reserves,
+                            "day": day,
+                            "jugador": jugador,
+                            "reservas_a_eliminar": reservas,
+                            "multiple_reservas": True,
+                        },
+                    )
                 # Registrar histórico de cancelación antes de borrar
                 from .models import HistoricoReserva
 
@@ -103,15 +153,14 @@ def lista_reserves(request):
                     detalles="Reserva cancelada por el usuario o admin",
                 )
                 reserva.delete()
-            except (Jugadors.DoesNotExist, Reserva.DoesNotExist):
-                mensaje_error = "No se encontró el jugador o la reserva."
+            except Jugadors.DoesNotExist:
+                messages.error(request, "No se encontró el jugador o la reserva.")
                 day, reserves = obtener_fecha_y_reservas(fecha)
                 return render_lista_reserves(
                     request,
                     {
                         "reserves": reserves,
                         "day": day,
-                        "mensaje_error": mensaje_error,
                     },
                 )
             day, reserves = obtener_fecha_y_reservas(fecha)
@@ -128,14 +177,15 @@ def lista_reserves(request):
         ]
         missing = [name for name, value in required_fields if not value]
         if missing:
-            mensaje_error = f"Faltan campos obligatorios: {', '.join(missing)}."
+            messages.error(
+                request, f"Faltan campos obligatorios: {', '.join(missing)}."
+            )
             day, reserves = obtener_fecha_y_reservas()
             return render_lista_reserves(
                 request,
                 {
                     "reserves": reserves,
                     "day": day,
-                    "mensaje_error": mensaje_error,
                 },
             )
         datos = obtener_datos_reserva_formulario(request, modo="recepcionista")
@@ -143,15 +193,18 @@ def lista_reserves(request):
             **datos, request=request, recepcionista_required=True
         )
         if error:
+            messages.error(request, error)
             day, reserves = obtener_fecha_y_reservas()
             return render_lista_reserves(
                 request,
                 {
                     "reserves": reserves,
                     "day": day,
-                    "mensaje_error": error,
                 },
             )
+        messages.success(request, "Reserva creada exitosamente.")
+        day, reserves = obtener_fecha_y_reservas()
+        return render_lista_reserves(request, {"reserves": reserves, "day": day})
 
     fecha = request.GET.get("fecha")
     day, reserves = obtener_fecha_y_reservas(fecha)
@@ -179,16 +232,12 @@ def lista_reserves(request):
         except Exception as e:
             logging.exception(e)
             importe_estimado = None
-    mensaje_exito = None
-    if request.method == "POST" and not missing:
-        mensaje_exito = "Reserva creada exitosamente."
     return render_lista_reserves(
         request,
         {
             "reserves": reserves,
             "day": day,
             "importe_estimado": importe_estimado,
-            "mensaje_exito": mensaje_exito,
         },
     )
 
@@ -196,9 +245,8 @@ def lista_reserves(request):
 def lista_jugadors(request):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
-        mensaje = "Accés denegat: no hay sesión activa."
-        return render(request, "landing.html", {"mensaje": mensaje})
-
+        messages.error(request, "Accés denegat: no hay sesión activa.")
+        return render(request, "landing.html")
     search_query = request.GET.get("search")
 
     if request.method == "POST":
@@ -387,40 +435,61 @@ def registrar_cobro_util(reserva, jugador, data, request):
 def lista_cobraments(request, data, id_jugador):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
-        mensaje = "Acceso Denegado: no hay sesión activa."
-        return render(request, "landing.html", {"mensaje": mensaje})
+        messages.error(request, "Acceso Denegado: no hay sesión activa.")
+        return render(request, "landing.html")
     try:
         jugador = Jugadors.objects.get(id_jugador=id_jugador)
-        reserva = Reserva.objects.get(fecha=data, jugador=jugador)
-    except (Jugadors.DoesNotExist, Reserva.DoesNotExist):
-        mensaje = "No se encontró el jugador o la reserva."
-        return render(request, "lista_cobraments.html", {"mensaje": mensaje})
-    ya_pago = Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists()
-    if request.method == "POST":
-        # Usar función utilitaria para registrar cobro (centraliza cálculo y validación)
-        cobrament, importe_final, error = registrar_cobro_util(
-            reserva, jugador, data, request
+        reservas = Reserva.objects.filter(fecha=data, jugador=jugador).order_by(
+            "hora_inicio"
         )
-        if error:
+        if reservas.count() == 0:
+            messages.error(request, "No se encontró el jugador o la reserva.")
+            return render(request, "lista_cobraments.html")
+        elif reservas.count() == 1:
+            reserva = reservas.first()
+        else:
+            # Hay más de una reserva, mostrar lista para elegir
+            messages.warning(
+                request,
+                "Hay más de una reserva para este jugador y fecha. Selecciona la reserva deseada.",
+            )
             return render(
                 request,
                 "lista_cobraments.html",
                 {
-                    "mensaje": error,
+                    "jugador": jugador,
+                    "reservas": reservas,
+                    "multiple_reservas": True,
+                },
+            )
+    except Jugadors.DoesNotExist:
+        messages.error(request, "No se encontró el jugador.")
+        return render(request, "lista_cobraments.html")
+    ya_pago = Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists()
+    if request.method == "POST":
+        cobrament, importe_final, error = registrar_cobro_util(
+            reserva, jugador, data, request
+        )
+        if error:
+            messages.error(request, error)
+            return render(
+                request,
+                "lista_cobraments.html",
+                {
                     "jugador": jugador,
                     "reserva": reserva,
                     "importe": importe_final if importe_final is not None else 0,
                     "ya_pago": ya_pago,
                 },
             )
-        mensaje2 = (
-            f"{jugador.nom} {jugador.cognom} ha realizado un pago de {importe_final} $"
+        messages.success(
+            request,
+            f"{jugador.nom} {jugador.cognom} ha realizado un pago de {importe_final} $",
         )
         return render(
             request,
             "lista_cobraments.html",
             {
-                "mensaje2": mensaje2,
                 "importe": importe_final,
                 "jugador": jugador,
                 "reserva": reserva,
@@ -428,7 +497,6 @@ def lista_cobraments(request, data, id_jugador):
             },
         )
     # GET: mostrar importe estimado (sin registrar cobro)
-    # Usar la misma lógica de cálculo que en registrar_cobro_util para mostrar importe estimado
     tarifa = obtener_tarifa_para_reserva(
         reserva.fecha, reserva.hora_inicio, reserva.hora_fin
     )
@@ -819,16 +887,15 @@ def editar_cobro(request, id_cobro):
     try:
         cobrament = Cobrament.objects.get(id=id_cobro)
     except Cobrament.DoesNotExist:
-        return render(
-            request, "lista_cobraments.html", {"mensaje": "Cobro no encontrado."}
-        )
+        messages.error(request, "Cobro no encontrado.")
+        return render(request, "lista_cobraments.html")
     if request.method == "POST":
         nuevo_importe = request.POST.get("nuevo_importe")
         cobrament_editado, error = editar_cobro_util(cobrament, nuevo_importe, request)
         if error:
-            return render(
-                request, "editar_cobro.html", {"mensaje": error, "cobrament": cobrament}
-            )
+            messages.error(request, error)
+            return render(request, "editar_cobro.html", {"cobrament": cobrament})
+        messages.success(request, "Cobro editado correctamente.")
         return redirect(
             reverse(
                 "lista_cobraments",
@@ -845,17 +912,18 @@ def eliminar_cobro(request, id_cobro):
     try:
         cobrament = Cobrament.objects.get(id=id_cobro)
     except Cobrament.DoesNotExist:
-        return render(
-            request, "lista_cobraments.html", {"mensaje": "Cobro no encontrado."}
-        )
+        messages.error(request, "Cobro no encontrado.")
+        return render(request, "lista_cobraments.html")
     if request.method == "POST":
         ok, error = eliminar_cobro_util(cobrament, request)
         if error:
+            messages.error(request, error)
             return render(
                 request,
                 "eliminar_cobro.html",
-                {"mensaje": error, "cobrament": cobrament},
+                {"cobrament": cobrament},
             )
+        messages.success(request, "Cobro eliminado correctamente.")
         return redirect(
             reverse(
                 "lista_cobraments",
