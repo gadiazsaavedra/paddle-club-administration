@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Estadísticas de Reservas</h2>
+<div class="mb-4">
+  <strong>Total cobrado:</strong> ${{ total_cobrado }}
+</div>
+<div class="mb-4">
+  <strong>Jugadores que pagaron:</strong>
+  <ul>
+    {% for nom, cognom, reserva_id in jugadores_pagaron %}
+      <li>{{ nom }} {{ cognom }} (Reserva ID: {{ reserva_id }})</li>
+    {% empty %}
+      <li>No hay pagos registrados.</li>
+    {% endfor %}
+  </ul>
+</div>
+<div class="mb-4">
+  <strong>Jugadores que cancelaron:</strong>
+  <ul>
+    {% for nom, cognom, reserva_id in jugadores_cancelaron %}
+      <li>{{ nom }} {{ cognom }} (Reserva ID: {{ reserva_id }})</li>
+    {% empty %}
+      <li>No hay cancelaciones registradas.</li>
+    {% endfor %}
+  </ul>
+</div>
+<div class="mb-4">
+  <strong>Histórico de acciones recientes:</strong>
+  <table class="ui celled table">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Jugador</th>
+        <th>Reserva</th>
+        <th>Acción</th>
+        <th>Importe</th>
+        <th>Detalles</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in historico %}
+      <tr>
+        <td>{{ h.fecha|date:'d/m/Y H:i' }}</td>
+        <td>{{ h.jugador.nom }} {{ h.jugador.cognom }}</td>
+        <td>{{ h.reserva.id }}</td>
+        <td>{{ h.get_accion_display }}</td>
+        <td>{% if h.importe %}${{ h.importe }}{% else %}-{% endif %}</td>
+        <td>{{ h.detalles }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6">No hay acciones registradas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

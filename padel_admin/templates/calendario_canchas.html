@@ -25,6 +25,12 @@
     color: #b00;
     font-weight: 600;
 }
+.calendario-table td.pagado {
+    background: #e6ffe6;
+    color: #218838;
+    font-weight: 700;
+    border: 2px solid #218838;
+}
 .calendario-table td button {
     background: #2ecc40;
     color: #fff;
@@ -70,7 +76,7 @@
                 <tr>
                     <td>{{ fila.hora|time:'H:i' }}</td>
                     {% for estado, fecha, jugador_nom, jugador_cognom in fila.estados %}
-                        {% if estado %}
+                        {% if estado == "ocupado" %}
                             <td class="ocupado">
                                 <a href="#" class="ver-jugador group" data-jugador="{{ jugador_nom }} {{ jugador_cognom }}" title="Ver quién ocupa este turno">
                                     <span class="inline-flex items-center">
@@ -80,15 +86,26 @@
                                     </span>
                                 </a>
                             </td>
+                        {% elif estado == "pagado" %}
+                            <td class="pagado">
+                                <a href="#" class="ver-jugador group" data-jugador="{{ jugador_nom }} {{ jugador_cognom }}" title="Ver quién pagó este turno">
+                                    <span class="inline-flex items-center">
+                                        <i class="fas fa-check-circle mr-1 text-green-600"></i>
+                                        <span class="hidden group-hover:inline-block bg-green-800 text-white text-xs rounded px-2 py-1 absolute z-10 mt-6 ml-[-30px]">{{ jugador_nom }} {{ jugador_cognom }}</span>
+                                        Pagado
+                                    </span>
+                                </a>
+                            </td>
                         {% else %}
                             <td class="disponible">
                                 <button type="button" class="ui green button reservar-btn" 
-    data-fecha="{{ fecha|date:'Y-m-d' }}" 
-    data-hora="{{ fila.hora|time:'H:i' }}" 
-    data-cancha="{{ cancha.numero }}" 
-    data-tipo="{{ cancha.tipo }}">
-    <i class="fas fa-plus-circle mr-1"></i>Reservar
-</button>
+                data-fecha="{{ fecha|date:'Y-m-d' }}" 
+                data-hora="{{ fila.hora|time:'H:i' }}" 
+                data-cancha="{{ cancha.numero }}" 
+                data-tipo="{{ cancha.tipo }}">
+                <i class="fas fa-plus-circle mr-1"></i>Reservar
+            </button>
+                            </td>
                         {% endif %}
                     {% endfor %}
                 </tr>

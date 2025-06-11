@@ -91,6 +91,16 @@ def lista_reserves(request):
             try:
                 jugador = Jugadors.objects.get(id_jugador=jugador_id)
                 reserva = Reserva.objects.get(jugador=jugador, fecha=fecha)
+                # Registrar histórico de cancelación antes de borrar
+                from .models import HistoricoReserva
+
+                HistoricoReserva.objects.create(
+                    reserva=reserva,
+                    jugador=jugador,
+                    accion="cancelacion",
+                    importe=None,
+                    detalles="Reserva cancelada por el usuario o admin",
+                )
                 reserva.delete()
             except (Jugadors.DoesNotExist, Reserva.DoesNotExist):
                 mensaje_error = "No se encontró el jugador o la reserva."
@@ -548,6 +558,16 @@ def lista_cobraments(request, data, id_jugador):
                     importe=importe,
                     recepcionista=rec,
                 )
+                # Registrar histórico de pago
+                from .models import HistoricoReserva
+
+                HistoricoReserva.objects.create(
+                    reserva=reserva,
+                    jugador=jugador,
+                    accion="pago",
+                    importe=importe,
+                    detalles=f"Pago registrado por {jugador.nom} {jugador.cognom}",
+                )
                 # .create() already saves, no need for cobrament.save() here
             except Exception as e:
                 logging.error(f"Error al guardar el cobro: {e}")
@@ -647,6 +667,9 @@ def calendario_canchas(request):
     reservas = Reserva.objects.filter(
         fecha__gte=fechas_semana[0], fecha__lte=fechas_semana[6]
     )
+    # Obtener todos los cobros de reservas de la semana
+    cobros = Cobrament.objects.filter(reserva__in=reservas)
+    reservas_pagadas_ids = set(cobros.values_list("reserva_id", flat=True))
 
     calendario_cancha_filas = []
     for cancha in canchas:
@@ -658,11 +681,26 @@ def calendario_canchas(request):
                     cancha=cancha, fecha=fecha, hora_inicio__lte=hora, hora_fin__gt=hora
                 ).first()
                 if reserva:
-                    estados.append(
-                        (True, fecha, reserva.jugador.nom, reserva.jugador.cognom)
-                    )
+                    if reserva.id in reservas_pagadas_ids:
+                        estados.append(
+                            (
+                                "pagado",
+                                fecha,
+                                reserva.jugador.nom,
+                                reserva.jugador.cognom,
+                            )
+                        )
+                    else:
+                        estados.append(
+                            (
+                                "ocupado",
+                                fecha,
+                                reserva.jugador.nom,
+                                reserva.jugador.cognom,
+                            )
+                        )
                 else:
-                    estados.append((False, fecha, "", ""))
+                    estados.append(("disponible", fecha, "", ""))
             filas.append({"hora": hora, "estados": estados})
         calendario_cancha_filas.append((cancha, filas))
 

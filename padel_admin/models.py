@@ -196,3 +196,19 @@ class Tarifa(models.Model):
 
     def __str__(self):
         return f"{self.get_dia_semana_display()} {self.hora_inicio.strftime('%H:%M')} - {self.hora_fin.strftime('%H:%M')}: ${self.precio}"
+
+
+class HistoricoReserva(models.Model):
+    ACCION_CHOICES = [
+        ("pago", "Pago realizado"),
+        ("cancelacion", "Reserva cancelada"),
+    ]
+    reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE)
+    jugador = models.ForeignKey(Jugadors, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    accion = models.CharField(max_length=20, choices=ACCION_CHOICES)
+    importe = models.DecimalField(max_digits=9, decimal_places=2, null=True, blank=True)
+    detalles = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.jugador} - {self.reserva} - {self.accion} - {self.fecha} - {self.importe}"

@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from padel_admin import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -37,6 +37,7 @@ urlpatterns = [
     path("calendario/", views.calendario_canchas, name="calendario_canchas"),
     path("crear-reserva/", views.crear_reserva, name="crear_reserva"),
     path("perfil/", views.perfil_jugador, name="perfil_jugador"),
+    path("", include("padel_admin.urls")),
 ]
 
 if settings.DEBUG:
