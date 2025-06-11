@@ -137,92 +137,20 @@ def lista_reserves(request):
                     "mensaje_error": mensaje_error,
                 },
             )
-        # Obtener nombre y apellido del dropdown
-        jugador_select = request.POST.get("jugador_select")
-        if jugador_select:
-            partes = jugador_select.split("|", 1)
-            jugador_nom = partes[0].strip()
-            jugador_cognom = partes[1].strip() if len(partes) > 1 else ""
-        else:
-            jugador_nom = request.POST.get("jugador_nom", "").strip()
-            jugador_cognom = request.POST.get("jugador_cognom", "").strip()
-        fecha2 = request.POST.get("fecha-2")
-        hora_inicio_str = request.POST.get("horaInici")
-        hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
-        duracio = request.POST.get("horaFinalitzacio")
-        type_cancha = request.POST.get("Pista")
-        cancha_numero = request.POST.get("cancha_numero")
-        hora_fin = calcular_hora_fin(hora_inicio, duracio)
-        try:
-            jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
-        except Jugadors.DoesNotExist:
-            mensaje_error = "El jugador no existe."
-            day, reserves = obtener_fecha_y_reservas()
-            return render_lista_reserves(
-                request,
-                {
-                    "reserves": reserves,
-                    "day": day,
-                    "mensaje_error": mensaje_error,
-                },
-            )
-        solapamiento = Reserva.objects.filter(
-            jugador=jugador,
-            fecha=fecha2,
-            hora_inicio__lt=hora_fin,
-            hora_fin__gt=hora_inicio,
-        ).exists()
-        if solapamiento:
-            mensaje_error = (
-                "El jugador ya tiene una reserva que se solapa con este horario."
-            )
-            day, reserves = obtener_fecha_y_reservas()
-            return render_lista_reserves(
-                request,
-                {
-                    "reserves": reserves,
-                    "day": day,
-                    "mensaje_error": mensaje_error,
-                },
-            )
-        if not cancha_numero:
-            mensaje_error = "Debes seleccionar un número de cancha."
-            day, reserves = obtener_fecha_y_reservas()
-            return render_lista_reserves(
-                request,
-                {
-                    "reserves": reserves,
-                    "day": day,
-                    "mensaje_error": mensaje_error,
-                },
-            )
-        try:
-            cancha_ = Pistes.objects.get(numero=cancha_numero, tipo=type_cancha)
-        except Pistes.DoesNotExist:
-            mensaje_error = "La cancha seleccionada no existe o no es del tipo elegido."
-            day, reserves = obtener_fecha_y_reservas()
-            return render_lista_reserves(
-                request,
-                {
-                    "reserves": reserves,
-                    "day": day,
-                    "mensaje_error": mensaje_error,
-                },
-            )
-        try:
-            rec = Recepcionista.objects.get(DNI=acceso)
-        except Recepcionista.DoesNotExist:
-            mensaje_error = "Recepcionista no encontrado. Inicie sesión nuevamente."
-            return render(request, "landing.html", {"mensaje": mensaje_error})
-        reserva = Reserva(
-            jugador=jugador,
-            fecha=fecha2,
-            cancha=cancha_,
-            hora_inicio=hora_inicio,
-            hora_fin=hora_fin,
-            recepcionista=rec,
+        datos = obtener_datos_reserva_formulario(request, modo="recepcionista")
+        reserva, error = crear_reserva_util(
+            **datos, request=request, recepcionista_required=True
         )
-        reserva.save()
+        if error:
+            day, reserves = obtener_fecha_y_reservas()
+            return render_lista_reserves(
+                request,
+                {
+                    "reserves": reserves,
+                    "day": day,
+                    "mensaje_error": error,
+                },
+            )
 
     fecha = request.GET.get("fecha")
     day, reserves = obtener_fecha_y_reservas(fecha)
@@ -718,100 +646,27 @@ def calendario_canchas(request):
 @csrf_exempt
 def reservar_cancha(request):
     if request.method == "POST":
-        cancha_id = request.POST.get("cancha_id")
-        cancha_tipo = request.POST.get("cancha_tipo")
-        fecha = request.POST.get("fecha")
-        hora_inicio = request.POST.get("hora_inicio")
-        jugador_id = request.COOKIES.get("jugador_id")
-        if not jugador_id:
-            return redirect("calendario_canchas")
-        try:
-            jugador = Jugadors.objects.get(id_jugador=jugador_id)
-        except Jugadors.DoesNotExist:
-            messages.error(
-                request, "El jugador no existe o no ha iniciado sesión correctamente."
-            )
-            return redirect("calendario_canchas")
-        try:
-            cancha = Pistes.objects.get(numero=cancha_id, tipo=cancha_tipo)
-        except Pistes.DoesNotExist:
-            messages.error(
-                request, "La cancha seleccionada no existe o no es del tipo elegido."
-            )
-            return redirect("calendario_canchas")
-        hora_inicio_obj = datetime.strptime(hora_inicio, "%H:%M:%S").time()
-        hora_fin_obj = (
-            datetime.combine(date.today(), hora_inicio_obj) + timedelta(minutes=30)
-        ).time()
-        # Validar que no haya solapamiento
-        if Reserva.objects.filter(
-            cancha=cancha,
-            fecha=fecha,
-            hora_inicio__lt=hora_fin_obj,
-            hora_fin__gt=hora_inicio_obj,
-        ).exists():
-            messages.error(request, "La cancha ya está reservada en ese horario.")
-            return redirect("calendario_canchas")
-        Reserva.objects.create(
-            jugador=jugador,
-            fecha=fecha,
-            cancha=cancha,
-            hora_inicio=hora_inicio_obj,
-            hora_fin=hora_fin_obj,
-            recepcionista=None,
+        datos = obtener_datos_reserva_formulario(request, modo="jugador")
+        reserva, error = crear_reserva_util(
+            **datos, request=request, recepcionista_required=False
         )
-        messages.success(request, "Reserva creada exitosamente.")
-        return redirect("calendario_canchas")
+        if error:
+            messages.error(request, error)
+        else:
+            messages.success(request, "Reserva creada exitosamente.")
+    return redirect("calendario_canchas")
 
 
 def crear_reserva(request):
     if request.method == "POST":
-        cancha_id = request.POST.get("cancha_id")
-        fecha = request.POST.get("fecha")
-        hora_inicio_str = request.POST.get("hora_inicio")
-        duracion = int(request.POST.get("duracion"))
-        jugador_nom = request.POST.get("jugador_nom")
-        jugador_cognom = request.POST.get("jugador_cognom")
-        hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
-        dt = datetime.combine(datetime.today(), hora_inicio)
-        dt = dt + timedelta(minutes=duracion)
-        hora_fin = dt.time()
-        try:
-            jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
-            cancha = Pistes.objects.get(numero=cancha_id)
-            if Reserva.objects.filter(
-                cancha=cancha,
-                fecha=fecha,
-                hora_inicio__lt=hora_fin,
-                hora_fin__gt=hora_inicio,
-            ).exists():
-                messages.error(request, "La cancha ya está reservada en ese horario.")
-                return redirect("calendario_canchas")
-            acceso = request.COOKIES.get("acceso")
-            if not acceso:
-                messages.error(request, "No hay sesión de recepcionista activa.")
-                return redirect("landing")
-            recepcionista = Recepcionista.objects.get(DNI=acceso)
-            reserva = Reserva(
-                jugador=jugador,
-                fecha=fecha,
-                cancha=cancha,
-                hora_inicio=hora_inicio,
-                hora_fin=hora_fin,
-                recepcionista=recepcionista,
-            )
-            reserva.save()
+        datos = obtener_datos_reserva_formulario(request, modo="jugador")
+        reserva, error = crear_reserva_util(
+            **datos, request=request, recepcionista_required=True
+        )
+        if error:
+            messages.error(request, error)
+        else:
             messages.success(request, "Reserva creada exitosamente.")
-        except Jugadors.DoesNotExist:
-            messages.error(request, "El jugador no existe.")
-        except Pistes.DoesNotExist:
-            messages.error(request, "La cancha no existe.")
-        except Recepcionista.DoesNotExist:
-            messages.error(
-                request, "Recepcionista no encontrado. Inicie sesión nuevamente."
-            )
-        except Exception as e:
-            messages.error(request, f"Error al crear la reserva: {str(e)}")
     return redirect("calendario_canchas")
 
 
@@ -891,3 +746,100 @@ def calcular_hora_fin(hora_inicio, duracion):
         return (
             datetime.combine(datetime.min, hora_inicio) + timedelta(minutes=30)
         ).time()
+
+
+def obtener_datos_reserva_formulario(request, modo="recepcionista"):
+    """Extrae y valida los datos del formulario para crear una reserva."""
+    if modo == "recepcionista":
+        jugador_select = request.POST.get("jugador_select")
+        if jugador_select:
+            partes = jugador_select.split("|", 1)
+            jugador_nom = partes[0].strip()
+            jugador_cognom = partes[1].strip() if len(partes) > 1 else ""
+        else:
+            jugador_nom = request.POST.get("jugador_nom", "").strip()
+            jugador_cognom = request.POST.get("jugador_cognom", "").strip()
+        fecha = request.POST.get("fecha-2")
+        hora_inicio_str = request.POST.get("horaInici")
+        duracion = request.POST.get("horaFinalitzacio")
+        type_cancha = request.POST.get("Pista")
+        cancha_numero = request.POST.get("cancha_numero")
+    else:
+        # Para modo jugador (crear_reserva y reservar_cancha)
+        jugador_nom = request.POST.get("jugador_nom", "").strip()
+        jugador_cognom = request.POST.get("jugador_cognom", "").strip()
+        fecha = request.POST.get("fecha")
+        hora_inicio_str = request.POST.get("hora_inicio")
+        duracion = request.POST.get("duracion")
+        type_cancha = request.POST.get("cancha_tipo")
+        cancha_numero = request.POST.get("cancha_id")
+    return {
+        "jugador_nom": jugador_nom,
+        "jugador_cognom": jugador_cognom,
+        "fecha": fecha,
+        "hora_inicio_str": hora_inicio_str,
+        "duracion": duracion,
+        "type_cancha": type_cancha,
+        "cancha_numero": cancha_numero,
+    }
+
+
+def crear_reserva_util(
+    jugador_nom,
+    jugador_cognom,
+    fecha,
+    hora_inicio_str,
+    duracion,
+    type_cancha,
+    cancha_numero,
+    request,
+    recepcionista_required=True,
+):
+    """Centraliza la lógica de validación y creación de reservas. Devuelve (reserva, error_message)"""
+    try:
+        jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
+    except Jugadors.DoesNotExist:
+        return None, "El jugador no existe."
+    try:
+        hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
+    except Exception:
+        return None, "Hora de inicio inválida."
+    hora_fin = calcular_hora_fin(hora_inicio, duracion)
+    try:
+        cancha = Pistes.objects.get(numero=cancha_numero, tipo=type_cancha)
+    except Pistes.DoesNotExist:
+        return None, "La cancha seleccionada no existe o no es del tipo elegido."
+    # Validar solapamiento
+    if Reserva.objects.filter(
+        cancha=cancha,
+        fecha=fecha,
+        hora_inicio__lt=hora_fin,
+        hora_fin__gt=hora_inicio,
+    ).exists():
+        return None, "La cancha ya está reservada en ese horario."
+    if Reserva.objects.filter(
+        jugador=jugador,
+        fecha=fecha,
+        hora_inicio__lt=hora_fin,
+        hora_fin__gt=hora_inicio,
+    ).exists():
+        return None, "El jugador ya tiene una reserva que se solapa con este horario."
+    recepcionista = None
+    if recepcionista_required:
+        acceso = request.COOKIES.get("acceso")
+        if not acceso:
+            return None, "No hay sesión de recepcionista activa."
+        try:
+            recepcionista = Recepcionista.objects.get(DNI=acceso)
+        except Recepcionista.DoesNotExist:
+            return None, "Recepcionista no encontrado. Inicie sesión nuevamente."
+    reserva = Reserva(
+        jugador=jugador,
+        fecha=fecha,
+        cancha=cancha,
+        hora_inicio=hora_inicio,
+        hora_fin=hora_fin,
+        recepcionista=recepcionista,
+    )
+    reserva.save()
+    return reserva, None
