@@ -150,7 +150,7 @@ def lista_reserves(request):
 
                 cobros = Cobrament.objects.filter(reserva=reserva)
                 for cobro in cobros:
-                    HistoricoReserva.objects.create(
+                    registrar_historico_reserva(
                         reserva=reserva,
                         jugador=cobro.jugador,
                         accion="devolucion",
@@ -159,7 +159,7 @@ def lista_reserves(request):
                     )
                     cobro.delete()
                 # Registrar histórico de cancelación antes de borrar
-                HistoricoReserva.objects.create(
+                registrar_historico_reserva(
                     reserva=reserva,
                     jugador=jugador,
                     accion="cancelacion",
@@ -428,9 +428,7 @@ def registrar_cobro_util(reserva, jugador, data, request):
             importe=importe,
             recepcionista=rec,
         )
-        from .models import HistoricoReserva
-
-        HistoricoReserva.objects.create(
+        registrar_historico_reserva(
             reserva=reserva,
             jugador=jugador,
             accion="pago",
@@ -485,9 +483,7 @@ def lista_cobraments(request, data, id_jugador):
             # Devolución: eliminar cobro, registrar devolución, eliminar reserva
             cobros = Cobrament.objects.filter(reserva=reserva)
             for cobro in cobros:
-                from .models import HistoricoReserva
-
-                HistoricoReserva.objects.create(
+                registrar_historico_reserva(
                     reserva=reserva,
                     jugador=cobro.jugador,
                     accion="devolucion",
@@ -496,9 +492,7 @@ def lista_cobraments(request, data, id_jugador):
                 )
                 cobro.delete()
             # Registrar histórico de cancelación antes de borrar
-            from .models import HistoricoReserva
-
-            HistoricoReserva.objects.create(
+            registrar_historico_reserva(
                 reserva=reserva,
                 jugador=jugador,
                 accion="cancelacion",
@@ -887,9 +881,7 @@ def editar_cobro_util(cobrament, nuevo_importe, request):
         cobrament.importe = nuevo_importe
         cobrament.recepcionista = rec
         cobrament.save()
-        from .models import HistoricoReserva
-
-        HistoricoReserva.objects.create(
+        registrar_historico_reserva(
             reserva=cobrament.reserva,
             jugador=cobrament.jugador,
             accion="edicion_pago",
@@ -911,9 +903,7 @@ def eliminar_cobro_util(cobrament, request):
     except Recepcionista.DoesNotExist:
         return False, "Recepcionista no encontrado. Inicie sesión nuevamente."
     try:
-        from .models import HistoricoReserva
-
-        HistoricoReserva.objects.create(
+        registrar_historico_reserva(
             reserva=cobrament.reserva,
             jugador=cobrament.jugador,
             accion="eliminacion_pago",
@@ -977,3 +967,16 @@ def eliminar_cobro(request, id_cobro):
             )
         )
     return render(request, "eliminar_cobro.html", {"cobrament": cobrament})
+
+
+def registrar_historico_reserva(reserva, jugador, accion, importe=None, detalles=None):
+    """Registra una acción en el histórico de reservas de forma centralizada."""
+    from .models import HistoricoReserva
+
+    return HistoricoReserva.objects.create(
+        reserva=reserva,
+        jugador=jugador,
+        accion=accion,
+        importe=importe,
+        detalles=detalles,
+    )
