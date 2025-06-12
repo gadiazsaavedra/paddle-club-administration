@@ -166,26 +166,26 @@
 </div>
 
 <!-- AVÍS ELIMINACIÓ DE RESERVA -->
-<div class="ui basic modal eliminar-reserva-popup">
-  <div class="ui icon header">
-    <i class="trash alternate outline icon"></i>
-    Confirmar Eliminación
+<div class="ui basic modal eliminar-reserva-popup fade-in" style="border-radius: 16px; overflow: hidden;">
+  <div class="ui icon header" style="background: #f8f9fa; border-bottom: 1px solid #eee; padding: 24px 24px 12px 24px;">
+    <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #e74c3c;"></i>
+    <span class="ml-3" style="font-size: 1.5rem; font-weight: 600; color: #2c3e50;">Confirmar Eliminación</span>
   </div>
-  <div class="content text-center">
-    <p class="text-lg">¿Estás seguro que querés eliminar este turno?</p>
-    <p class="text-sm text-gray-500">Esta acción no se puede deshacer.</p>
+  <div class="content text-center" style="padding: 28px 24px 16px 24px;">
+    <p class="text-xl font-bold mb-4" style="font-size: 1.5rem; color: #e74c3c; text-align: center;">¿Estás seguro que querés eliminar este turno?</p>
+    <p class="text-lg font-bold mb-0" style="font-size: 1.15rem; color: #e74c3c; text-align: center;">Esta acción no se puede deshacer.</p>
   </div>
-  <div class="actions flex justify-center">
-    <div class="ui red cancel button">
+  <div class="actions flex justify-center gap-4 pb-6">
+    <div class="ui red cancel button" style="min-width: 120px; font-size: 1.1rem; border-radius: 8px;">
       <i class="remove icon"></i>
       Cancelar
     </div>
-    <form id="eliminar-reserva-form" method="POST" action="{% url 'lista_reserves' %}">
+    <form id="eliminar-reserva-form" method="POST" action="{% url 'lista_reserves' %}" style="display:inline;">
       {% csrf_token %}
       <input type="hidden" name="_method" value="DELETE">
       <input type="hidden" name="jugador_id" value="">
       <input type="hidden" name="data" value="">
-      <button type="submit" class="ui green ok button">
+      <button type="submit" class="ui green ok button" style="min-width: 120px; font-size: 1.1rem; border-radius: 8px;">
         <i class="checkmark icon"></i>
         Confirmar
       </button>
