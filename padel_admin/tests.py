@@ -1,6 +1,9 @@
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, Client, override_settings
 from django.contrib.auth.models import AnonymousUser
 from django.db import IntegrityError, transaction
+from django.test.utils import CaptureQueriesContext
+from django.db import connection
+from django.urls import reverse
 from datetime import datetime, timedelta, time, date
 from decimal import Decimal
 from .models import Jugadors, Recepcionista, Pistes, Tarifa, Reserva, Cobrament
@@ -217,3 +220,135 @@ class CobroMaximoTest(TestCase):
         )
         self.assertIsNone(cobrament5)
         self.assertIn("Limite de 4", error5)
+
+
+class OptimizedViewsTestCase(TestCase):
+    def setUp(self):
+        # Crear datos mínimos: 2 canchas, 2 jugadores, 2 reservas en la misma semana
+        self.cancha1 = Pistes.objects.create(numero=1, tipo="indoor")
+        self.cancha2 = Pistes.objects.create(numero=2, tipo="outdoor")
+        self.jugador1 = Jugadors.objects.create(
+            id_jugador=10001,
+            nom="Ana",
+            cognom="López",
+            email="ana@test.com",
+            telefon="123",
+            nivell="A",
+            contrasenya="ana",
+        )
+        self.jugador2 = Jugadors.objects.create(
+            id_jugador=10002,
+            nom="Luis",
+            cognom="Pérez",
+            email="luis@test.com",
+            telefon="456",
+            nivell="B",
+            contrasenya="luis",
+        )
+        fecha = datetime.now().date()
+        self.reserva1 = Reserva.objects.create(
+            jugador=self.jugador1,
+            cancha=self.cancha1,
+            fecha=fecha,
+            hora_inicio=time(9, 0),
+            hora_fin=time(10, 0),
+        )
+        self.reserva2 = Reserva.objects.create(
+            jugador=self.jugador2,
+            cancha=self.cancha2,
+            fecha=fecha,
+            hora_inicio=time(10, 0),
+            hora_fin=time(11, 0),
+        )
+
+    def test_calendario_canchas_query_count(self):
+        """Verifica que la vista calendario_canchas no genera N+1 queries y responde correctamente."""
+        client = self.client
+        url = reverse("calendario_canchas")
+        with CaptureQueriesContext(connection) as ctx:
+            response = client.get(url)
+        # Esperamos un número bajo de queries (canchas, reservas, cobros, etc.)
+        self.assertLessEqual(
+            len(ctx.captured_queries),
+            6,
+            f"Demasiadas queries: {len(ctx.captured_queries)}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ana")
+        self.assertContains(response, "Luis")
+
+
+from contextlib import contextmanager
+from django.db import connection
+
+
+@contextmanager
+def assertNumQueriesLessThan(num):
+    initial = len(connection.queries)
+    yield
+    final = len(connection.queries)
+    executed = final - initial
+    assert (
+        executed < num
+    ), f"Se ejecutaron {executed} queries, se esperaban menos de {num}."
+
+
+class CalendarioCanchasQueryTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Crear 3 canchas
+        for i in range(1, 4):
+            Pistes.objects.create(numero=i, tipo="padel")
+        # Crear 2 jugadores
+        j1 = Jugadors.objects.create(
+            id_jugador=10001,
+            nom="Ana",
+            cognom="Lopez",
+            email="ana@x.com",
+            telefon="123",
+            nivell=1,
+            contrasenya="a",
+        )
+        j2 = Jugadors.objects.create(
+            id_jugador=10002,
+            nom="Luis",
+            cognom="Perez",
+            email="luis@x.com",
+            telefon="456",
+            nivell=2,
+            contrasenya="b",
+        )
+        # Crear reservas para la semana
+        base_date = date.today() - timedelta(days=date.today().weekday())
+        for d in range(7):
+            f = base_date + timedelta(days=d)
+            Reserva.objects.create(
+                jugador=j1,
+                cancha=Pistes.objects.get(numero=1),
+                fecha=f,
+                hora_inicio=time(9, 0),
+                hora_fin=time(10, 0),
+            )
+            Reserva.objects.create(
+                jugador=j2,
+                cancha=Pistes.objects.get(numero=2),
+                fecha=f,
+                hora_inicio=time(10, 0),
+                hora_fin=time(11, 0),
+            )
+
+    def test_calendario_canchas_query_count(self):
+        client = Client()
+        url = reverse("calendario_canchas")
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as ctx:
+            response = client.get(url)
+        self.assertLessEqual(
+            len(ctx.captured_queries),
+            6,
+            f"Demasiadas queries: {len(ctx.captured_queries)}",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ana")
+        self.assertContains(response, "Luis")

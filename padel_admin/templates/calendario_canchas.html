@@ -18,18 +18,28 @@
     font-weight: 600;
 }
 .calendario-table td.disponible {
-    background: #e6ffe6;
+    background: #f8f9fa;
+    color: #888;
+    font-weight: 500;
+    position: relative;
 }
 .calendario-table td.ocupado {
-    background: #ffe6e6;
-    color: #b00;
+    background: #fff3cd;
+    color: #b8860b;
     font-weight: 600;
+    position: relative;
 }
 .calendario-table td.pagado {
-    background: #e6ffe6;
+    background: #d4edda;
     color: #218838;
     font-weight: 700;
     border: 2px solid #218838;
+    position: relative;
+}
+.calendario-table td .estado-icon {
+    margin-right: 0.3em;
+    font-size: 1.1em;
+    vertical-align: middle;
 }
 .calendario-table td button {
     background: #2ecc40;
@@ -78,9 +88,9 @@
                     {% for estado, fecha, jugador_nom, jugador_cognom in fila.estados %}
                         {% if estado == "ocupado" %}
                             <td class="ocupado">
+                                <span class="estado-icon" title="Ocupado"><i class="fas fa-user-lock" style="color:#b8860b;"></i></span>
                                 <a href="#" class="ver-jugador group" data-jugador="{{ jugador_nom }} {{ jugador_cognom }}" title="Ver quién ocupa este turno">
                                     <span class="inline-flex items-center">
-                                        <i class="fas fa-user-lock mr-1 text-red-600"></i>
                                         <span class="hidden group-hover:inline-block bg-gray-800 text-white text-xs rounded px-2 py-1 absolute z-10 mt-6 ml-[-30px]">{{ jugador_nom }} {{ jugador_cognom }}</span>
                                         Ocupado
                                     </span>
@@ -88,9 +98,9 @@
                             </td>
                         {% elif estado == "pagado" %}
                             <td class="pagado">
+                                <span class="estado-icon" title="Pagado"><i class="fas fa-check-circle" style="color:#218838;"></i></span>
                                 <a href="#" class="ver-jugador group" data-jugador="{{ jugador_nom }} {{ jugador_cognom }}" title="Ver quién pagó este turno">
                                     <span class="inline-flex items-center">
-                                        <i class="fas fa-check-circle mr-1 text-green-600"></i>
                                         <span class="hidden group-hover:inline-block bg-green-800 text-white text-xs rounded px-2 py-1 absolute z-10 mt-6 ml-[-30px]">{{ jugador_nom }} {{ jugador_cognom }}</span>
                                         Pagado
                                     </span>
@@ -98,6 +108,7 @@
                             </td>
                         {% else %}
                             <td class="disponible">
+                                <span class="estado-icon" title="Disponible"><i class="fas fa-circle" style="color:#bbb;"></i></span>
                                 <button type="button" class="ui green button reservar-btn" 
                 data-fecha="{{ fecha|date:'Y-m-d' }}" 
                 data-hora="{{ fila.hora|time:'H:i' }}" 

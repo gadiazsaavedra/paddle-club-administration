@@ -202,6 +202,7 @@ class HistoricoReserva(models.Model):
     ACCION_CHOICES = [
         ("pago", "Pago realizado"),
         ("cancelacion", "Reserva cancelada"),
+        ("devolucion", "Devolución realizada"),
     ]
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE)
     jugador = models.ForeignKey(Jugadors, on_delete=models.CASCADE)

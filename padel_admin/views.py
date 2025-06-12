@@ -395,8 +395,10 @@ def perfil_jugador(request):
     if not jugador_id:
         return redirect("landing")
     jugador = get_jugador_or_404(jugador_id)
-    reservas = Reserva.objects.filter(jugador=jugador).order_by(
-        "-fecha", "-hora_inicio"
+    reservas = (
+        Reserva.objects.filter(jugador=jugador)
+        .select_related("cancha", "recepcionista")
+        .order_by("-fecha", "-hora_inicio")
     )
     total_reservas = reservas.count()
     total_horas = sum(
@@ -422,7 +424,6 @@ def perfil_jugador(request):
         else:
             nom = request.POST.get("nom")
             cognom = request.POST.get("cognom")
-            # Normalización para evitar duplicados en edición de perfil
             nom_normalizado = nom.strip().lower()
             cognom_normalizado = cognom.strip().lower()
             if (
@@ -529,7 +530,7 @@ def lista_cobraments(request, data, id_jugador):
     jugador = get_jugador_or_404(id_jugador)
     reservas = (
         Reserva.objects.filter(fecha=data, jugador=jugador)
-        .select_related("cancha")
+        .select_related("cancha", "jugador")
         .order_by("hora_inicio")
     )
     if not reservas.exists():
@@ -545,16 +546,14 @@ def lista_cobraments(request, data, id_jugador):
         return render(
             request,
             "lista_cobraments.html",
-            {
-                "jugador": jugador,
-                "reservas": reservas,
-                "multiple_reservas": True,
-            },
+            {"jugador": jugador, "reservas": reservas, "multiple_reservas": True},
         )
-    ya_pago = Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists()
+    cobros = Cobrament.objects.filter(reserva=reserva).select_related(
+        "jugador", "recepcionista"
+    )
+    ya_pago = cobros.filter(jugador=jugador).exists()
     if request.method == "POST":
         if request.POST.get("devolucion") == "1":
-            cobros = Cobrament.objects.filter(reserva=reserva)
             for cobro in cobros:
                 registrar_historico_reserva(
                     reserva=reserva,
@@ -634,6 +633,7 @@ def lista_cobraments(request, data, id_jugador):
             "reserva": reserva,
             "importe": importe,
             "ya_pago": ya_pago,
+            "cobros": cobros,
         },
     )
 
@@ -725,6 +725,11 @@ def calendario_canchas(request):
     reservas = Reserva.objects.filter(
         fecha__gte=fechas_semana[0], fecha__lte=fechas_semana[6]
     ).select_related("jugador", "cancha")
+    # Construir índice: {(cancha_numero, fecha): [reserva, ...]}
+    reservas_index = {}
+    for r in reservas:
+        reservas_index.setdefault((r.cancha.numero, r.fecha), []).append(r)
+
     # Obtener todos los cobros de reservas de la semana
     cobros = Cobrament.objects.filter(reserva__in=reservas)
     reservas_pagadas_ids = set(cobros.values_list("reserva_id", flat=True))
@@ -735,9 +740,12 @@ def calendario_canchas(request):
         for hora in horas:
             estados = []
             for i, fecha in enumerate(fechas_semana):
-                reserva = reservas.filter(
-                    cancha=cancha, fecha=fecha, hora_inicio__lte=hora, hora_fin__gt=hora
-                ).first()
+                # Buscar reserva para esta cancha, fecha y hora
+                reservas_dia = reservas_index.get((cancha.numero, fecha), [])
+                reserva = next(
+                    (r for r in reservas_dia if r.hora_inicio <= hora < r.hora_fin),
+                    None,
+                )
                 if reserva:
                     if reserva.id in reservas_pagadas_ids:
                         estados.append(
