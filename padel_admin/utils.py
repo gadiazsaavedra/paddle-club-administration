@@ -51,3 +51,48 @@ def validate_required_fields(request, required_fields):
     """Valida que los campos requeridos estén presentes en el request.POST."""
     missing = [name for name in required_fields if not request.POST.get(name)]
     return missing
+
+
+def get_recepcionista_or_none(request):
+    """Devuelve el recepcionista autenticado según la cookie, o None si no hay sesión válida."""
+    from .models import Recepcionista
+
+    acceso = request.COOKIES.get("acceso")
+    if not acceso:
+        return None
+    try:
+        return Recepcionista.objects.get(DNI=acceso)
+    except Recepcionista.DoesNotExist:
+        return None
+
+
+def calcular_importe_reserva(reserva):
+    """Calcula el importe de una reserva según la tarifa y duración."""
+    from .models import Tarifa
+    from decimal import Decimal, InvalidOperation
+    from datetime import datetime
+
+    tarifa = (
+        Tarifa.objects.filter(
+            dia_semana=reserva.fecha.weekday(),
+            hora_inicio__lte=reserva.hora_inicio,
+            hora_fin__gte=reserva.hora_fin,
+        )
+        .order_by("hora_inicio")
+        .first()
+    )
+    if not tarifa or tarifa.precio in (None, ""):
+        return Decimal("0.00")
+    try:
+        precio_decimal = Decimal(str(tarifa.precio).replace(" ", "").replace(",", "."))
+        dt_inicio = datetime.combine(reserva.fecha, reserva.hora_inicio)
+        dt_fin = datetime.combine(reserva.fecha, reserva.hora_fin)
+        duracion_horas = Decimal(str((dt_fin - dt_inicio).total_seconds())) / Decimal(
+            "3600"
+        )
+        importe = precio_decimal * duracion_horas
+        if not importe.is_finite() or importe < 0:
+            return Decimal("0.00")
+        return importe.quantize(Decimal("0.01"))
+    except (InvalidOperation, Exception):
+        return Decimal("0.00")

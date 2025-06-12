@@ -25,6 +25,8 @@ from .utils import (
     get_reserva_or_404,
     handle_view_errors,
     validate_required_fields,
+    get_recepcionista_or_none,
+    calcular_importe_reserva,
 )
 
 
@@ -412,51 +414,27 @@ def obtener_datos_cobro_formulario(request):
 
 def registrar_cobro_util(reserva, jugador, data, request):
     """Centraliza la lógica de cálculo, validación y registro de cobros. Devuelve (cobrament, importe_final, error_message)"""
-    acceso = request.COOKIES.get("acceso")
-    if not acceso:
-        return None, None, "No hay sesión de recepcionista activa."
-    try:
-        rec = Recepcionista.objects.get(DNI=acceso)
-    except Recepcionista.DoesNotExist:
+    rec = get_recepcionista_or_none(request)
+    if not rec:
         return None, None, "Recepcionista no encontrado. Inicie sesión nuevamente."
     # Calcular importe según tarifa y duración
-    tarifa = obtener_tarifa_para_reserva(
-        reserva.fecha, reserva.hora_inicio, reserva.hora_fin
-    )
+    importe = calcular_importe_reserva(reserva)
     try:
-        if not tarifa or tarifa.precio in (None, ""):
-            importe = Decimal("0.00")
-        else:
-            precio_str = str(tarifa.precio).replace(" ", "").replace(",", ".")
-            precio_decimal = Decimal(precio_str)
-            dt_inicio = datetime.combine(reserva.fecha, reserva.hora_inicio)
-            dt_fin = datetime.combine(reserva.fecha, reserva.hora_fin)
-            duracion_horas = Decimal(
-                str((dt_fin - dt_inicio).total_seconds())
-            ) / Decimal("3600")
-            importe = precio_decimal * duracion_horas
-            if not importe.is_finite() or importe < 0:
-                return (
-                    None,
-                    None,
-                    "Importe no válido (NaN/Infinito/Negativo). Verifique la tarifa.",
-                )
-            partes = str(importe).split(".")
-            if len(partes[0]) > 8:
-                return None, None, "Importe demasiado grande para el campo."
-            try:
-                importe = importe.quantize(Decimal("0.01"), rounding="ROUND_FLOOR")
-            except Exception:
-                return (
-                    None,
-                    None,
-                    "Error crítico al redondear el importe. No se pudo registrar el cobro.",
-                )
-    except (InvalidOperation, TypeError, ValueError) as e:
+        if not importe or importe == 0:
+            return (
+                None,
+                None,
+                "No se puede registrar el cobro porque el importe es 0. Verifique la tarifa configurada.",
+            )
+        partes = str(importe).split(".")
+        if len(partes[0]) > 8:
+            return None, None, "Importe demasiado grande para el campo."
+        importe = importe.quantize(Decimal("0.01"))
+    except Exception:
         return (
             None,
             None,
-            f"Error al calcular el importe: {str(e)}. Verifique la tarifa configurada.",
+            "Error crítico al redondear el importe. No se pudo registrar el cobro.",
         )
     if abs(importe) >= Decimal("1000000.01"):
         return (
@@ -464,19 +442,10 @@ def registrar_cobro_util(reserva, jugador, data, request):
             None,
             f"El importe final ({importe}) excede el máximo permitido de 1,000,000.00.",
         )
-    if importe == Decimal("0.00"):
-        return (
-            None,
-            None,
-            "No se puede registrar el cobro porque el importe es 0. Verifique la tarifa configurada.",
-        )
-    # Limite de 4 personas por reserva (si aplica)
     if Cobrament.objects.filter(reserva=reserva).count() >= 4:
         return None, None, "Limite de 4 persones en la cancha."
-    # Ya pagó
     if Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists():
         return None, None, "El jugador ya pagó esta reserva."
-    # Registrar cobro y en histórico
     try:
         cobrament = Cobrament.objects.create(
             reserva=reserva,
@@ -907,12 +876,8 @@ def crear_reserva_util(
 
 def editar_cobro_util(cobrament, nuevo_importe, request):
     """Centraliza la lógica de validación y edición de cobros. Devuelve (cobrament_editado, error_message)"""
-    acceso = request.COOKIES.get("acceso")
-    if not acceso:
-        return None, "No hay sesión de recepcionista activa."
-    try:
-        rec = Recepcionista.objects.get(DNI=acceso)
-    except Recepcionista.DoesNotExist:
+    rec = get_recepcionista_or_none(request)
+    if not rec:
         return None, "Recepcionista no encontrado. Inicie sesión nuevamente."
     try:
         nuevo_importe = Decimal(str(nuevo_importe))
@@ -936,7 +901,7 @@ def editar_cobro_util(cobrament, nuevo_importe, request):
             jugador=cobrament.jugador,
             accion="edicion_pago",
             importe=nuevo_importe,
-            detalles=f"Edición de cobro: de {importe_anterior} a {nuevo_importe} por {rec.nombre if hasattr(rec, 'nombre') else rec.DNI}",
+            detalles=f"Edición de cobro: de {importe_anterior} a {nuevo_importe} por {rec.nom if hasattr(rec, 'nom') else rec.DNI}",
         )
         return cobrament, None
     except Exception as e:
@@ -945,12 +910,8 @@ def editar_cobro_util(cobrament, nuevo_importe, request):
 
 def eliminar_cobro_util(cobrament, request):
     """Centraliza la lógica de eliminación de cobros y registro en histórico. Devuelve (True, error_message)"""
-    acceso = request.COOKIES.get("acceso")
-    if not acceso:
-        return False, "No hay sesión de recepcionista activa."
-    try:
-        rec = Recepcionista.objects.get(DNI=acceso)
-    except Recepcionista.DoesNotExist:
+    rec = get_recepcionista_or_none(request)
+    if not rec:
         return False, "Recepcionista no encontrado. Inicie sesión nuevamente."
     try:
         registrar_historico_reserva(
@@ -958,7 +919,7 @@ def eliminar_cobro_util(cobrament, request):
             jugador=cobrament.jugador,
             accion="eliminacion_pago",
             importe=cobrament.importe,
-            detalles=f"Cobro eliminado por {rec.nombre if hasattr(rec, 'nombre') else rec.DNI}",
+            detalles=f"Cobro eliminado por {rec.nom if hasattr(rec, 'nom') else rec.DNI}",
         )
         cobrament.delete()
         return True, None
