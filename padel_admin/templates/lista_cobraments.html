@@ -50,7 +50,12 @@
         <i class="fas fa-check-circle mr-2"></i>
         El jugador ya realizó el pago de esta reserva.
       </div>
-      <button class="ui primary button" type="button" disabled>Pagado</button>
+      <form method="POST" class="ui form">
+        {% csrf_token %}
+        <button class="ui orange button" type="submit" name="devolucion" value="1">
+          <i class="fas fa-undo mr-1"></i> Devolución
+        </button>
+      </form>
     {% else %}
       <form method="POST" class="ui form">
         {% csrf_token %}

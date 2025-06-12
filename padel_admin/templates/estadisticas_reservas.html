@@ -25,6 +25,16 @@
   </ul>
 </div>
 <div class="mb-4">
+  <strong>Jugadores con devolución:</strong>
+  <ul>
+    {% for nom, cognom, reserva_id in jugadores_devolvieron %}
+      <li>{{ nom }} {{ cognom }} (Reserva ID: {{ reserva_id }})</li>
+    {% empty %}
+      <li>No hay devoluciones registradas.</li>
+    {% endfor %}
+  </ul>
+</div>
+<div class="mb-4">
   <strong>Histórico de acciones recientes:</strong>
   <table class="ui celled table">
     <thead>

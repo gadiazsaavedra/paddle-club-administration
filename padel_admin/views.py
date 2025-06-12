@@ -145,6 +145,20 @@ def lista_reserves(request):
                 # Registrar histórico de cancelación antes de borrar
                 from .models import HistoricoReserva
 
+                # Si la reserva tiene cobros asociados, eliminarlos y registrar devolución
+                from .models import HistoricoReserva, Cobrament
+
+                cobros = Cobrament.objects.filter(reserva=reserva)
+                for cobro in cobros:
+                    HistoricoReserva.objects.create(
+                        reserva=reserva,
+                        jugador=cobro.jugador,
+                        accion="devolucion",
+                        importe=cobro.importe,
+                        detalles="Devolución automática por cancelación de reserva pagada",
+                    )
+                    cobro.delete()
+                # Registrar histórico de cancelación antes de borrar
                 HistoricoReserva.objects.create(
                     reserva=reserva,
                     jugador=jugador,
@@ -467,6 +481,35 @@ def lista_cobraments(request, data, id_jugador):
         return render(request, "lista_cobraments.html")
     ya_pago = Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists()
     if request.method == "POST":
+        if request.POST.get("devolucion") == "1":
+            # Devolución: eliminar cobro, registrar devolución, eliminar reserva
+            cobros = Cobrament.objects.filter(reserva=reserva)
+            for cobro in cobros:
+                from .models import HistoricoReserva
+
+                HistoricoReserva.objects.create(
+                    reserva=reserva,
+                    jugador=cobro.jugador,
+                    accion="devolucion",
+                    importe=cobro.importe,
+                    detalles="Devolución automática por cancelación de reserva pagada desde gestión de cobros",
+                )
+                cobro.delete()
+            # Registrar histórico de cancelación antes de borrar
+            from .models import HistoricoReserva
+
+            HistoricoReserva.objects.create(
+                reserva=reserva,
+                jugador=jugador,
+                accion="cancelacion",
+                importe=None,
+                detalles="Reserva cancelada y devuelta desde gestión de cobros",
+            )
+            reserva.delete()
+            messages.success(
+                request, "Reserva cancelada, cobro devuelto y turno liberado."
+            )
+            return redirect("lista_reserves")
         cobrament, importe_final, error = registrar_cobro_util(
             reserva, jugador, data, request
         )

@@ -20,6 +20,13 @@ def estadisticas_reservas(request):
     jugadores_cancelaron = cancelaciones.values_list(
         "jugador__nom", "jugador__cognom", "reserva__id"
     ).distinct()
+    # Jugadores con devolución
+    devoluciones = HistoricoReserva.objects.filter(accion="devolucion").select_related(
+        "jugador", "reserva"
+    )
+    jugadores_devolvieron = devoluciones.values_list(
+        "jugador__nom", "jugador__cognom", "reserva__id"
+    ).distinct()
     # Histórico completo
     historico = HistoricoReserva.objects.select_related("jugador", "reserva").order_by(
         "-fecha"
@@ -31,6 +38,7 @@ def estadisticas_reservas(request):
             "jugadores_pagaron": jugadores_pagaron,
             "total_cobrado": total_cobrado,
             "jugadores_cancelaron": jugadores_cancelaron,
+            "jugadores_devolvieron": jugadores_devolvieron,
             "historico": historico,
         },
     )
