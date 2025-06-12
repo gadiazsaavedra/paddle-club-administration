@@ -217,8 +217,8 @@ def lista_reserves(request):
                 },
             )
         messages.success(request, "Reserva creada exitosamente.")
-        day, reserves = obtener_fecha_y_reservas()
-        return render_lista_reserves(request, {"reserves": reserves, "day": day})
+        # Redirigir al calendario semanal tras crear la reserva
+        return redirect("calendario_canchas")
 
     fecha = request.GET.get("fecha")
     day, reserves = obtener_fecha_y_reservas(fecha)
