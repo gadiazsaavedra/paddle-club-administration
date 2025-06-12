@@ -82,8 +82,11 @@ def lista_reserves(request):
         else:
             fecha_obj = date.today()
         day = fecha_obj.strftime("%Y-%m-%d")
-        reserves = Reserva.objects.filter(fecha=fecha_obj).order_by(
-            "hora_inicio", "hora_inicio", "cancha"
+        # select_related para evitar N+1
+        reserves = (
+            Reserva.objects.filter(fecha=fecha_obj)
+            .select_related("jugador", "cancha")
+            .order_by("hora_inicio", "hora_inicio", "cancha")
         )
         return day, reserves
 
@@ -110,7 +113,7 @@ def lista_reserves(request):
                 reservas = Reserva.objects.filter(
                     jugador=jugador, fecha=fecha
                 ).order_by("hora_inicio")
-                if reservas.count() == 0:
+                if not reservas.exists():
                     messages.error(request, "No se encontró el jugador o la reserva.")
                     day, reserves = obtener_fecha_y_reservas(fecha)
                     return render_lista_reserves(
@@ -524,10 +527,12 @@ def lista_cobraments(request, data, id_jugador):
         messages.error(request, "Acceso Denegado: no hay sesión activa.")
         return render(request, "landing.html")
     jugador = get_jugador_or_404(id_jugador)
-    reservas = Reserva.objects.filter(fecha=data, jugador=jugador).order_by(
-        "hora_inicio"
+    reservas = (
+        Reserva.objects.filter(fecha=data, jugador=jugador)
+        .select_related("cancha")
+        .order_by("hora_inicio")
     )
-    if reservas.count() == 0:
+    if not reservas.exists():
         messages.error(request, "No se encontró el jugador o la reserva.")
         return render(request, "lista_cobraments.html")
     elif reservas.count() == 1:
@@ -719,7 +724,7 @@ def calendario_canchas(request):
     # Obtener todas las reservas para la semana
     reservas = Reserva.objects.filter(
         fecha__gte=fechas_semana[0], fecha__lte=fechas_semana[6]
-    )
+    ).select_related("jugador", "cancha")
     # Obtener todos los cobros de reservas de la semana
     cobros = Cobrament.objects.filter(reserva__in=reservas)
     reservas_pagadas_ids = set(cobros.values_list("reserva_id", flat=True))
