@@ -30,6 +30,7 @@ from .utils import (
     registrar_historico_reserva,  # Asegurar import correcto
 )
 from .services import ReservaService, CobroService
+from django.http import JsonResponse
 
 
 def landing(request):
@@ -793,6 +794,38 @@ def reservar_cancha(request):
         else:
             messages.success(request, "Reserva creada exitosamente.")
     return redirect("calendario_canchas")
+
+
+@csrf_exempt
+def ajax_reservar_cancha(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            datos = {
+                "jugador_nom": data.get("jugador_nom", "Anonimo"),
+                "jugador_cognom": data.get("jugador_cognom", ""),
+                "fecha": data.get("fecha"),
+                "hora_inicio_str": data.get("hora"),
+                "duracion": data.get("duracion", "60"),
+                "type_cancha": data.get("tipo"),
+                "cancha_numero": data.get("cancha"),
+            }
+            reserva, error = ReservaService.crear_reserva(
+                **datos, request=request, recepcionista_required=False
+            )
+            if error:
+                return JsonResponse({"success": False, "error": error})
+            return JsonResponse(
+                {
+                    "success": True,
+                    "estado": "ocupado",
+                    "jugador_nom": reserva.jugador.nom,
+                    "jugador_cognom": reserva.jugador.cognom,
+                }
+            )
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Método no permitido"})
 
 
 def crear_reserva(request):

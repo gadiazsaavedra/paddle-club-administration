@@ -10,4 +10,5 @@ urlpatterns += [
     path("estadisticas/", estadisticas_reservas, name="estadisticas_reservas"),
     path("editar-cobro/<int:id_cobro>/", views.editar_cobro, name="editar_cobro"),
     path("eliminar-cobro/<int:id_cobro>/", views.eliminar_cobro, name="eliminar_cobro"),
+    path("ajax/reservar/", views.ajax_reservar_cancha, name="ajax_reservar_cancha"),
 ]

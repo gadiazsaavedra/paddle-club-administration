@@ -2,13 +2,13 @@
 {% block content %}
 <h2>Estadísticas de Reservas</h2>
 <div class="mb-4">
-  <strong>Total cobrado:</strong> ${{ total_cobrado }}
+  <strong>Total cobrado:</strong> <span class="ui teal label" style="font-size:1.2em;">${{ total_cobrado }}</span>
 </div>
 <div class="mb-4">
   <strong>Jugadores que pagaron:</strong>
-  <ul>
+  <ul class="ui list">
     {% for nom, cognom, reserva_id in jugadores_pagaron %}
-      <li>{{ nom }} {{ cognom }} (Reserva ID: {{ reserva_id }})</li>
+      <li><i class="money bill alternate outline icon green" title="Pagó"></i> <span class="ui green text">{{ nom }} {{ cognom }}</span> <span class="ui mini label">Reserva ID: {{ reserva_id }}</span></li>
     {% empty %}
       <li>No hay pagos registrados.</li>
     {% endfor %}
@@ -16,9 +16,9 @@
 </div>
 <div class="mb-4">
   <strong>Jugadores que cancelaron:</strong>
-  <ul>
+  <ul class="ui list">
     {% for nom, cognom, reserva_id in jugadores_cancelaron %}
-      <li>{{ nom }} {{ cognom }} (Reserva ID: {{ reserva_id }})</li>
+      <li><i class="ban icon orange" title="Canceló"></i> <span class="ui orange text">{{ nom }} {{ cognom }}</span> <span class="ui mini label">Reserva ID: {{ reserva_id }}</span></li>
     {% empty %}
       <li>No hay cancelaciones registradas.</li>
     {% endfor %}
@@ -26,9 +26,9 @@
 </div>
 <div class="mb-4">
   <strong>Jugadores con devolución:</strong>
-  <ul>
+  <ul class="ui list">
     {% for nom, cognom, reserva_id in jugadores_devolvieron %}
-      <li>{{ nom }} {{ cognom }} (Reserva ID: {{ reserva_id }})</li>
+      <li><i class="undo icon blue" title="Devolución"></i> <span class="ui blue text">{{ nom }} {{ cognom }}</span> <span class="ui mini label">Reserva ID: {{ reserva_id }}</span></li>
     {% empty %}
       <li>No hay devoluciones registradas.</li>
     {% endfor %}
@@ -48,14 +48,29 @@
       </tr>
     </thead>
     <tbody>
-      {% for h in historico %}
-      <tr>
+    {% for h in historico %}
+      <tr class="{% if h.accion == 'pago' %}positive{% elif h.accion == 'devolucion' %}blue{% elif h.accion == 'cancelacion' %}warning{% endif %}">
         <td>{{ h.fecha|date:'d/m/Y H:i' }}</td>
         <td>{{ h.jugador.nom }} {{ h.jugador.cognom }}</td>
         <td>{{ h.reserva.id }}</td>
-        <td>{{ h.get_accion_display }}</td>
-        <td>{% if h.importe %}${{ h.importe }}{% else %}-{% endif %}</td>
-        <td>{{ h.detalles }}</td>
+        <td>
+          {% if h.accion == 'pago' %}
+            <span class="ui green label"><i class="money bill alternate outline icon"></i> Pago</span>
+          {% elif h.accion == 'devolucion' %}
+            <span class="ui blue label"><i class="undo icon"></i> Devolución</span>
+          {% elif h.accion == 'cancelacion' %}
+            <span class="ui orange label"><i class="ban icon"></i> Cancelación</span>
+          {% else %}
+            <span class="ui label">{{ h.get_accion_display }}</span>
+          {% endif %}
+        </td>
+        <td>{% if h.importe %}<span class="ui mini label">${{ h.importe }}</span>{% else %}-{% endif %}</td>
+        <td>
+          {% if h.detalles %}
+            <span data-tooltip="{{ h.detalles }}" data-inverted="" class="ui info circle icon"></span>
+            <span style="font-size:0.95em;">{{ h.detalles }}</span>
+          {% else %}-{% endif %}
+        </td>
       </tr>
       {% empty %}
         <tr><td colspan="6">No hay acciones registradas.</td></tr>
@@ -63,4 +78,10 @@
     </tbody>
   </table>
 </div>
+<script>
+// Activar tooltips Semantic UI si está disponible
+if (window.jQuery && $('.ui.icon[data-tooltip]').length) {
+  $('.ui.icon[data-tooltip]').popup();
+}
+</script>
 {% endblock %}
