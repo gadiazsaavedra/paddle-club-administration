@@ -2,6 +2,8 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import transaction
 from datetime import timedelta, date
+from django.core.exceptions import ValidationError
+from .managers import ReservaManager, CobramentManager
 
 
 class Jugadors(models.Model):
@@ -26,6 +28,20 @@ class Jugadors(models.Model):
             self.email,
             self.contrasenya,
         )
+
+    def clean(self):
+        # Validar duplicado por nombre y apellido (case-insensitive, ignora espacios)
+        nom_normalizado = self.nom.strip().lower()
+        cognom_normalizado = self.cognom.strip().lower()
+        qs = Jugadors.objects.filter(
+            nom__iexact=nom_normalizado, cognom__iexact=cognom_normalizado
+        )
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        if qs.exists():
+            raise ValidationError(
+                "Ya existe un jugador con el mismo nombre y apellido."
+            )
 
 
 class Soci(Jugadors):
@@ -88,6 +104,8 @@ class Reserva(models.Model):
         Recepcionista, on_delete=models.CASCADE, null=True, blank=True
     )
 
+    objects = ReservaManager()
+
     class Meta:
         unique_together = ("cancha", "fecha", "hora_inicio")
         indexes = [
@@ -99,6 +117,46 @@ class Reserva(models.Model):
     def __str__(self):
         return f"{self.jugador} - {self.fecha} - {self.hora_inicio} - Cancha {self.cancha.numero}"
 
+    def clean(self):
+        # Validar solapamiento de reservas para la misma cancha
+        solapadas = Reserva.objects.filter(
+            cancha=self.cancha,
+            fecha=self.fecha,
+            hora_inicio__lt=self.hora_fin,
+            hora_fin__gt=self.hora_inicio,
+        )
+        if self.pk:
+            solapadas = solapadas.exclude(pk=self.pk)
+        if solapadas.exists():
+            raise ValidationError("La cancha ya está reservada en ese horario.")
+        # Validar que el jugador no tenga otra reserva solapada
+        jugador_solapadas = Reserva.objects.filter(
+            jugador=self.jugador,
+            fecha=self.fecha,
+            hora_inicio__lt=self.hora_fin,
+            hora_fin__gt=self.hora_inicio,
+        )
+        if self.pk:
+            jugador_solapadas = jugador_solapadas.exclude(pk=self.pk)
+        if jugador_solapadas.exists():
+            raise ValidationError(
+                "El jugador ya tiene una reserva que se solapa con este horario."
+            )
+        # Validar duplicado exacto
+        duplicada = Reserva.objects.filter(
+            jugador=self.jugador,
+            cancha=self.cancha,
+            fecha=self.fecha,
+            hora_inicio=self.hora_inicio,
+            hora_fin=self.hora_fin,
+        )
+        if self.pk:
+            duplicada = duplicada.exclude(pk=self.pk)
+        if duplicada.exists():
+            raise ValidationError(
+                "Ya existe una reserva idéntica para este jugador, cancha y horario."
+            )
+
 
 class Cobrament(models.Model):
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE)
@@ -106,6 +164,8 @@ class Cobrament(models.Model):
     data = models.DateField()
     importe = models.DecimalField(max_digits=9, decimal_places=2)
     recepcionista = models.ForeignKey(Recepcionista, on_delete=models.CASCADE)
+
+    objects = CobramentManager()
 
     class Meta:
         unique_together = ("reserva", "jugador")
@@ -118,6 +178,21 @@ class Cobrament(models.Model):
         return "{} , {} , {}, {}, {}".format(
             self.reserva, self.jugador, self.data, self.importe, self.recepcionista
         )
+
+    def clean(self):
+        # Validar máximo de 4 cobros por reserva
+        count = (
+            Cobrament.objects.filter(reserva=self.reserva).exclude(pk=self.pk).count()
+        )
+        if count >= 4:
+            raise ValidationError("Límite de 4 cobros por reserva.")
+        # Validar que no se repita el jugador en la misma reserva
+        if (
+            Cobrament.objects.filter(reserva=self.reserva, jugador=self.jugador)
+            .exclude(pk=self.pk)
+            .exists()
+        ):
+            raise ValidationError("El jugador ya pagó esta reserva.")
 
 
 class ReservaRecurrente(models.Model):

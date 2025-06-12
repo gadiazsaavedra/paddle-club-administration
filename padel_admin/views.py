@@ -262,12 +262,22 @@ def lista_reserves(request):
         except Exception as e:
             logging.exception(e)
             importe_estimado = None
+
+    # --- NUEVO: calcular estado de cobro del titular para cada reserva ---
+    titular_pagado_dict = {}
+    for reserva in reserves:
+        # True si existe un cobro para el titular de la reserva
+        titular_pagado_dict[reserva.id] = reserva.cobrament_set.filter(
+            jugador=reserva.jugador
+        ).exists()
+
     return render_lista_reserves(
         request,
         {
             "reserves": reserves,
             "day": day,
             "importe_estimado": importe_estimado,
+            "titular_pagado_dict": titular_pagado_dict,
         },
     )
 

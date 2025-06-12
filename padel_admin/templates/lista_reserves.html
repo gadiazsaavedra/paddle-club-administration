@@ -57,14 +57,26 @@
             </div>
           </td>
           <td>
-            {% if reserva.cobrament_set.all %}
-              {% if reserva.cobrament_set.count == 4 %}
+            {# Mostrar 'Pagado' si el titular ya pagó #}
+            {% if titular_pagado_dict %}
+              {% if titular_pagado_dict.reserva.id %}
+                <span class="ui green label"><i class="fas fa-check-circle"></i> Pagado</span>
+              {% elif reserva.cobrament_set.count == 4 %}
                 <span class="ui green label"><i class="fas fa-check-circle"></i> Pagado (4/4)</span>
+              {% elif reserva.cobrament_set.count > 0 %}
+                <span class="ui yellow label"><i class="fas fa-user-check"></i> Pagado</span>
               {% else %}
-                <span class="ui yellow label"><i class="fas fa-user-check"></i> Parcial ({{ reserva.cobrament_set.count }}/4)</span>
+                <span class="ui red label"><i class="fas fa-times-circle"></i> Sin pago</span>
               {% endif %}
             {% else %}
-              <span class="ui red label"><i class="fas fa-times-circle"></i> Sin pago</span>
+              {# Fallback por si no se pasa el dict #}
+              {% if reserva.cobrament_set.count == 4 %}
+                <span class="ui green label"><i class="fas fa-check-circle"></i> Pagado (4/4)</span>
+              {% elif reserva.cobrament_set.count > 0 %}
+                <span class="ui yellow label"><i class="fas fa-user-check"></i> Pagado</span>
+              {% else %}
+                <span class="ui red label"><i class="fas fa-times-circle"></i> Sin pago</span>
+              {% endif %}
             {% endif %}
           </td>
           <td>
