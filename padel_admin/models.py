@@ -90,6 +90,11 @@ class Reserva(models.Model):
 
     class Meta:
         unique_together = ("cancha", "fecha", "hora_inicio")
+        indexes = [
+            models.Index(fields=["fecha"]),
+            models.Index(fields=["jugador"]),
+            models.Index(fields=["cancha"]),
+        ]
 
     def __str__(self):
         return f"{self.jugador} - {self.fecha} - {self.hora_inicio} - Cancha {self.cancha.numero}"
@@ -104,6 +109,10 @@ class Cobrament(models.Model):
 
     class Meta:
         unique_together = ("reserva", "jugador")
+        indexes = [
+            models.Index(fields=["reserva"]),
+            models.Index(fields=["jugador"]),
+        ]
 
     def __str__(self):
         return "{} , {} , {}, {}, {}".format(
@@ -210,6 +219,13 @@ class HistoricoReserva(models.Model):
     accion = models.CharField(max_length=20, choices=ACCION_CHOICES)
     importe = models.DecimalField(max_digits=9, decimal_places=2, null=True, blank=True)
     detalles = models.TextField(blank=True, null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["reserva"]),
+            models.Index(fields=["jugador"]),
+            models.Index(fields=["fecha"]),
+        ]
 
     def __str__(self):
         return f"{self.jugador} - {self.reserva} - {self.accion} - {self.fecha} - {self.importe}"

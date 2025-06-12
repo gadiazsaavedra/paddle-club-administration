@@ -57,11 +57,20 @@
             </div>
           </td>
           <td>
+            {% if reserva.cobrament_set.all %}
+              {% if reserva.cobrament_set.count == 4 %}
+                <span class="ui green label"><i class="fas fa-check-circle"></i> Pagado (4/4)</span>
+              {% else %}
+                <span class="ui yellow label"><i class="fas fa-user-check"></i> Parcial ({{ reserva.cobrament_set.count }}/4)</span>
+              {% endif %}
+            {% else %}
+              <span class="ui red label"><i class="fas fa-times-circle"></i> Sin pago</span>
+            {% endif %}
+          </td>
+          <td>
             <a href="{% url 'lista_cobraments' data=reserva.fecha|date:'Y-m-d' id_jugador=reserva.jugador.id_jugador %}" class="ui teal button">
               <i class="fas fa-dollar-sign"></i> Cobrar
             </a>
-          </td>
-          <td>
             <a class="ui red button eliminar-reserva" data-info="{{ reserva.jugador.id_jugador }}">
               <i class="fas fa-trash"></i> Eliminar
             </a>

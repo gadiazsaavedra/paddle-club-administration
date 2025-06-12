@@ -87,6 +87,7 @@ def lista_reserves(request):
         reserves = (
             Reserva.objects.filter(fecha=fecha_obj)
             .select_related("jugador", "cancha")
+            .prefetch_related("cobrament_set")
             .order_by("hora_inicio", "hora_inicio", "cancha")
         )
         return day, reserves
@@ -399,6 +400,7 @@ def perfil_jugador(request):
     reservas = (
         Reserva.objects.filter(jugador=jugador)
         .select_related("cancha", "recepcionista")
+        .prefetch_related("cobrament_set")
         .order_by("-fecha", "-hora_inicio")
     )
     total_reservas = reservas.count()
@@ -532,6 +534,7 @@ def lista_cobraments(request, data, id_jugador):
     reservas = (
         Reserva.objects.filter(fecha=data, jugador=jugador)
         .select_related("cancha", "jugador")
+        .prefetch_related("cobrament_set")
         .order_by("hora_inicio")
     )
     if not reservas.exists():
@@ -549,9 +552,7 @@ def lista_cobraments(request, data, id_jugador):
             "lista_cobraments.html",
             {"jugador": jugador, "reservas": reservas, "multiple_reservas": True},
         )
-    cobros = Cobrament.objects.filter(reserva=reserva).select_related(
-        "jugador", "recepcionista"
-    )
+    cobros = reserva.cobrament_set.all().select_related("jugador", "recepcionista")
     ya_pago = cobros.filter(jugador=jugador).exists()
     if request.method == "POST":
         if request.POST.get("devolucion") == "1":
