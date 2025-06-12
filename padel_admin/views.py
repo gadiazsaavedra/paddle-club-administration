@@ -19,6 +19,13 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 import logging
 from decimal import Decimal, InvalidOperation, localcontext
 from django.urls import reverse
+from .utils import (
+    require_recepcionista,
+    get_jugador_or_404,
+    get_reserva_or_404,
+    handle_view_errors,
+    validate_required_fields,
+)
 
 
 def landing(request):
@@ -43,6 +50,7 @@ def landing(request):
         return render(request, "landing.html")
 
 
+@handle_view_errors
 def lista_reserves(request):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
@@ -94,7 +102,7 @@ def lista_reserves(request):
             fecha = request.POST.get("data")
             hora_inicio = request.POST.get("hora_inicio")
             try:
-                jugador = Jugadors.objects.get(id_jugador=jugador_id)
+                jugador = get_jugador_or_404(jugador_id)
                 reservas = Reserva.objects.filter(
                     jugador=jugador, fecha=fecha
                 ).order_by("hora_inicio")
@@ -180,16 +188,15 @@ def lista_reserves(request):
             day, reserves = obtener_fecha_y_reservas(fecha)
             return render_lista_reserves(request, {"reserves": reserves, "day": day})
         # AFEGIR RESERVA
-        # Validar campos obligatorios
         required_fields = [
-            ("fecha-2", request.POST.get("fecha-2")),
-            ("horaInici", request.POST.get("horaInici")),
-            ("horaFinalitzacio", request.POST.get("horaFinalitzacio")),
-            ("Pista", request.POST.get("Pista")),
-            ("cancha_numero", request.POST.get("cancha_numero")),
-            ("jugador_select", request.POST.get("jugador_select")),
+            "fecha-2",
+            "horaInici",
+            "horaFinalitzacio",
+            "Pista",
+            "cancha_numero",
+            "jugador_select",
         ]
-        missing = [name for name, value in required_fields if not value]
+        missing = validate_required_fields(request, required_fields)
         if missing:
             messages.error(
                 request, f"Faltan campos obligatorios: {', '.join(missing)}."
@@ -256,6 +263,7 @@ def lista_reserves(request):
     )
 
 
+@handle_view_errors
 def lista_jugadors(request):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
@@ -266,44 +274,57 @@ def lista_jugadors(request):
     if request.method == "POST":
         if request.POST.get("_method") == "DELETE":
             jugador_id = request.POST.get("jugador_id")
-            jugador = Jugadors.objects.filter(id_jugador=jugador_id)
+            jugador = get_jugador_or_404(jugador_id)
             jugador.delete()
             return redirect("lista_jugadors")
 
-        if request.POST.get("_method") == "PATCH":
+        elif request.POST.get("_method") == "PATCH":
             jugador_id = request.POST.get("id_jugador")
+            jugador = get_jugador_or_404(jugador_id)
+            required_fields = ["nom", "cognom", "email", "telefon", "nivell"]
+            missing = validate_required_fields(request, required_fields)
+            if missing:
+                campos = [
+                    campo if campo != "cognom" else "apellido" for campo in missing
+                ]
+                messages.error(
+                    request, f"Faltan campos obligatorios: {', '.join(campos)}."
+                )
+                return redirect("lista_jugadors")
+            jugador.nom = request.POST.get("nom")
+            jugador.cognom = request.POST.get("cognom")
+            jugador.email = request.POST.get("email")
+            jugador.telefon = request.POST.get("telefon")
+            jugador.nivell = request.POST.get("nivell")
+            if request.FILES.get("foto"):
+                jugador.foto = request.FILES.get("foto")
+            jugador.save()
+            messages.success(request, "Jugador actualizado correctamente.")
+            return redirect("lista_jugadors")
+
+        else:
+            # Procesar los datos del formulario (alta jugador)
+            required_fields = ["nom", "cognom", "email", "telefon", "nivell"]
+            missing = validate_required_fields(request, required_fields)
+            if missing:
+                campos = [
+                    campo if campo != "cognom" else "apellido" for campo in missing
+                ]
+                messages.error(
+                    request, f"Faltan campos obligatorios: {', '.join(campos)}."
+                )
+                return redirect("lista_jugadors")
             nom = request.POST.get("nom")
             cognom = request.POST.get("cognom")
             email = request.POST.get("email")
             telefon = request.POST.get("telefon")
             nivell = request.POST.get("nivell")
-
-            jugador = Jugadors.objects.get(id_jugador=jugador_id)
-            # actualitzem valors necessaris
-            if nom:
-                jugador.nom = nom
-            if cognom:
-                jugador.cognom = cognom
-            if email:
-                jugador.email = email
-            if telefon:
-                jugador.telefon = telefon
-            if nivell:
-                jugador.nivell = nivell
-            jugador.save()
-
-        # Procesar los datos del formulario
-        nom = request.POST.get("nom")
-        cognom = request.POST.get("cognom")
-        email = request.POST.get("email")
-        telefon = request.POST.get("telefon")
-        nivell = request.POST.get("nivell")
-        contrasenya = str(nom)
-        foto = request.FILES.get("foto")
-        id_jugador = random.randrange(10000, 100000)
-        try:
-            player = Jugadors.objects.get(id_jugador=id_jugador)
+            contrasenya = str(nom)
+            foto = request.FILES.get("foto")
             id_jugador = random.randrange(10000, 100000)
+            # Evitar duplicados por id_jugador
+            while Jugadors.objects.filter(id_jugador=id_jugador).exists():
+                id_jugador = random.randrange(10000, 100000)
             jugador = Jugadors(
                 id_jugador=id_jugador,
                 nom=nom,
@@ -315,36 +336,72 @@ def lista_jugadors(request):
                 foto=foto,
             )
             jugador.save()
-        except Jugadors.DoesNotExist:
-            jugador = Jugadors(
-                id_jugador=id_jugador,
-                nom=nom,
-                cognom=cognom,
-                email=email,
-                telefon=telefon,
-                nivell=nivell,
-                contrasenya=contrasenya,
-                foto=foto,
-            )
-            jugador.save()
+            messages.success(request, "Jugador creado correctamente.")
+            return redirect("lista_jugadors")
 
     jugadors_list = Jugadors.objects.all()
-
     if search_query:
         jugadors_list = jugadors_list.filter(
             nom__icontains=search_query
         ) | jugadors_list.filter(cognom__icontains=search_query)
-
     paginator = Paginator(jugadors_list, 100)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
-
     context = {
         "page_obj": page_obj,
         "search_query": search_query,
     }
-
     return render(request, "lista_jugadors.html", context)
+
+
+@handle_view_errors
+def perfil_jugador(request):
+    jugador_id = request.COOKIES.get("jugador_id")
+    if not jugador_id:
+        return redirect("landing")
+    jugador = get_jugador_or_404(jugador_id)
+    reservas = Reserva.objects.filter(jugador=jugador).order_by(
+        "-fecha", "-hora_inicio"
+    )
+    total_reservas = reservas.count()
+    total_horas = sum(
+        [
+            (
+                datetime.combine(r.fecha, r.hora_fin)
+                - datetime.combine(r.fecha, r.hora_inicio)
+            ).total_seconds()
+            / 3600
+            for r in reservas
+        ]
+    )
+    canchas_usadas = (
+        reservas.values("cancha__numero", "cancha__tipo").distinct().count()
+    )
+    if request.method == "POST":
+        required_fields = ["nom", "cognom", "email", "telefon", "nivell"]
+        missing = validate_required_fields(request, required_fields)
+        if missing:
+            messages.error(
+                request, f"Faltan campos obligatorios: {', '.join(missing)}."
+            )
+        else:
+            jugador.nom = request.POST.get("nom")
+            jugador.cognom = request.POST.get("cognom")
+            jugador.email = request.POST.get("email")
+            jugador.telefon = request.POST.get("telefon")
+            jugador.nivell = request.POST.get("nivell")
+            if request.FILES.get("foto"):
+                jugador.foto = request.FILES.get("foto")
+            jugador.save()
+            messages.success(request, "Perfil actualizado correctamente.")
+    context = {
+        "jugador": jugador,
+        "reservas": reservas,
+        "total_reservas": total_reservas,
+        "total_horas": total_horas,
+        "canchas_usadas": canchas_usadas,
+    }
+    return render(request, "perfil_jugador.html", context)
 
 
 def obtener_datos_cobro_formulario(request):
@@ -444,43 +501,38 @@ def registrar_cobro_util(reserva, jugador, data, request):
         )
 
 
+@handle_view_errors
 def lista_cobraments(request, data, id_jugador):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
         messages.error(request, "Acceso Denegado: no hay sesión activa.")
         return render(request, "landing.html")
-    try:
-        jugador = Jugadors.objects.get(id_jugador=id_jugador)
-        reservas = Reserva.objects.filter(fecha=data, jugador=jugador).order_by(
-            "hora_inicio"
-        )
-        if reservas.count() == 0:
-            messages.error(request, "No se encontró el jugador o la reserva.")
-            return render(request, "lista_cobraments.html")
-        elif reservas.count() == 1:
-            reserva = reservas.first()
-        else:
-            # Hay más de una reserva, mostrar lista para elegir
-            messages.warning(
-                request,
-                "Hay más de una reserva para este jugador y fecha. Selecciona la reserva deseada.",
-            )
-            return render(
-                request,
-                "lista_cobraments.html",
-                {
-                    "jugador": jugador,
-                    "reservas": reservas,
-                    "multiple_reservas": True,
-                },
-            )
-    except Jugadors.DoesNotExist:
-        messages.error(request, "No se encontró el jugador.")
+    jugador = get_jugador_or_404(id_jugador)
+    reservas = Reserva.objects.filter(fecha=data, jugador=jugador).order_by(
+        "hora_inicio"
+    )
+    if reservas.count() == 0:
+        messages.error(request, "No se encontró el jugador o la reserva.")
         return render(request, "lista_cobraments.html")
+    elif reservas.count() == 1:
+        reserva = reservas.first()
+    else:
+        messages.warning(
+            request,
+            "Hay más de una reserva para este jugador y fecha. Selecciona la reserva deseada.",
+        )
+        return render(
+            request,
+            "lista_cobraments.html",
+            {
+                "jugador": jugador,
+                "reservas": reservas,
+                "multiple_reservas": True,
+            },
+        )
     ya_pago = Cobrament.objects.filter(reserva=reserva, jugador=jugador).exists()
     if request.method == "POST":
         if request.POST.get("devolucion") == "1":
-            # Devolución: eliminar cobro, registrar devolución, eliminar reserva
             cobros = Cobrament.objects.filter(reserva=reserva)
             for cobro in cobros:
                 registrar_historico_reserva(
@@ -491,7 +543,6 @@ def lista_cobraments(request, data, id_jugador):
                     detalles="Devolución automática por cancelación de reserva pagada desde gestión de cobros",
                 )
                 cobro.delete()
-            # Registrar histórico de cancelación antes de borrar
             registrar_historico_reserva(
                 reserva=reserva,
                 jugador=jugador,
@@ -533,7 +584,6 @@ def lista_cobraments(request, data, id_jugador):
                 "ya_pago": True,
             },
         )
-    # GET: mostrar importe estimado (sin registrar cobro)
     tarifa = obtener_tarifa_para_reserva(
         reserva.fecha, reserva.hora_inicio, reserva.hora_fin
     )
@@ -565,6 +615,53 @@ def lista_cobraments(request, data, id_jugador):
             "ya_pago": ya_pago,
         },
     )
+
+
+@handle_view_errors
+def editar_cobro(request, id_cobro):
+    cobrament = get_reserva_or_404(id_cobro, model_class=Cobrament)
+    if request.method == "POST":
+        nuevo_importe = request.POST.get("nuevo_importe")
+        cobrament_editado, error = editar_cobro_util(cobrament, nuevo_importe, request)
+        if error:
+            messages.error(request, error)
+            return render(request, "editar_cobro.html", {"cobrament": cobrament})
+        messages.success(request, "Cobro editado correctamente.")
+        return redirect(
+            reverse(
+                "lista_cobraments",
+                kwargs={
+                    "data": cobrament.reserva.fecha,
+                    "id_jugador": cobrament.jugador.id_jugador,
+                },
+            )
+        )
+    return render(request, "editar_cobro.html", {"cobrament": cobrament})
+
+
+@handle_view_errors
+def eliminar_cobro(request, id_cobro):
+    cobrament = get_reserva_or_404(id_cobro, model_class=Cobrament)
+    if request.method == "POST":
+        ok, error = eliminar_cobro_util(cobrament, request)
+        if error:
+            messages.error(request, error)
+            return render(
+                request,
+                "eliminar_cobro.html",
+                {"cobrament": cobrament},
+            )
+        messages.success(request, "Cobro eliminado correctamente.")
+        return redirect(
+            reverse(
+                "lista_cobraments",
+                kwargs={
+                    "data": cobrament.reserva.fecha,
+                    "id_jugador": cobrament.jugador.id_jugador,
+                },
+            )
+        )
+    return render(request, "eliminar_cobro.html", {"cobrament": cobrament})
 
 
 def logout(request):
@@ -678,53 +775,6 @@ def crear_reserva(request):
         else:
             messages.success(request, "Reserva creada exitosamente.")
     return redirect("calendario_canchas")
-
-
-def perfil_jugador(request):
-    jugador_id = request.COOKIES.get("jugador_id")
-    if not jugador_id:
-        return redirect("landing")
-    try:
-        jugador = Jugadors.objects.get(id_jugador=jugador_id)
-    except Jugadors.DoesNotExist:
-        messages.error(
-            request, "El jugador no existe o no ha iniciado sesión correctamente."
-        )
-        return redirect("landing")
-    reservas = Reserva.objects.filter(jugador=jugador).order_by(
-        "-fecha", "-hora_inicio"
-    )
-    total_reservas = reservas.count()
-    total_horas = sum(
-        [
-            (
-                datetime.combine(r.fecha, r.hora_fin)
-                - datetime.combine(r.fecha, r.hora_inicio)
-            ).total_seconds()
-            / 3600
-            for r in reservas
-        ]
-    )
-    canchas_usadas = (
-        reservas.values("cancha__numero", "cancha__tipo").distinct().count()
-    )
-    if request.method == "POST":
-        jugador.nom = request.POST.get("nom")
-        jugador.cognom = request.POST.get("cognom")
-        jugador.email = request.POST.get("email")
-        jugador.telefon = request.POST.get("telefon")
-        jugador.nivell = request.POST.get("nivell")
-        if request.FILES.get("foto"):
-            jugador.foto = request.FILES.get("foto")
-        jugador.save()
-    context = {
-        "jugador": jugador,
-        "reservas": reservas,
-        "total_reservas": total_reservas,
-        "total_horas": total_horas,
-        "canchas_usadas": canchas_usadas,
-    }
-    return render(request, "perfil_jugador.html", context)
 
 
 def obtener_tarifa_para_reserva(fecha, hora_inicio, hora_fin):
@@ -914,59 +964,6 @@ def eliminar_cobro_util(cobrament, request):
         return True, None
     except Exception as e:
         return False, f"Error al eliminar el cobro: {str(e)}."
-
-
-def editar_cobro(request, id_cobro):
-    try:
-        cobrament = Cobrament.objects.get(id=id_cobro)
-    except Cobrament.DoesNotExist:
-        messages.error(request, "Cobro no encontrado.")
-        return render(request, "lista_cobraments.html")
-    if request.method == "POST":
-        nuevo_importe = request.POST.get("nuevo_importe")
-        cobrament_editado, error = editar_cobro_util(cobrament, nuevo_importe, request)
-        if error:
-            messages.error(request, error)
-            return render(request, "editar_cobro.html", {"cobrament": cobrament})
-        messages.success(request, "Cobro editado correctamente.")
-        return redirect(
-            reverse(
-                "lista_cobraments",
-                kwargs={
-                    "data": cobrament.reserva.fecha,
-                    "id_jugador": cobrament.jugador.id_jugador,
-                },
-            )
-        )
-    return render(request, "editar_cobro.html", {"cobrament": cobrament})
-
-
-def eliminar_cobro(request, id_cobro):
-    try:
-        cobrament = Cobrament.objects.get(id=id_cobro)
-    except Cobrament.DoesNotExist:
-        messages.error(request, "Cobro no encontrado.")
-        return render(request, "lista_cobraments.html")
-    if request.method == "POST":
-        ok, error = eliminar_cobro_util(cobrament, request)
-        if error:
-            messages.error(request, error)
-            return render(
-                request,
-                "eliminar_cobro.html",
-                {"cobrament": cobrament},
-            )
-        messages.success(request, "Cobro eliminado correctamente.")
-        return redirect(
-            reverse(
-                "lista_cobraments",
-                kwargs={
-                    "data": cobrament.reserva.fecha,
-                    "id_jugador": cobrament.jugador.id_jugador,
-                },
-            )
-        )
-    return render(request, "eliminar_cobro.html", {"cobrament": cobrament})
 
 
 def registrar_historico_reserva(reserva, jugador, accion, importe=None, detalles=None):

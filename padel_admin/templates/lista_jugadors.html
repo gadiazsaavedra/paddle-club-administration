@@ -152,25 +152,26 @@
 </div>
 
 <!-- AVÍS ELIMINACIÓ DE JUGADOR -->
-<div class="ui basic modal eliminar-jugador-popup">
-  <div class="ui icon header">
-    <i class="trash alternate outline icon"></i>
-    Confirmar Eliminación
+<div class="ui basic modal eliminar-jugador-popup fade-in" style="border-radius: 16px; overflow: hidden;">
+  <div class="ui icon header" style="background: #fff3f3; border-bottom: 1px solid #f5c6cb; padding: 24px 24px 12px 24px; display: flex; align-items: center; gap: 16px;">
+    <i class="fas fa-user-times" style="font-size: 2.5rem; color: #e74c3c;"></i>
+    <span style="font-size: 1.5rem; font-weight: 700; color: #c0392b;">Confirmar Eliminación de Jugador</span>
   </div>
-  <div class="content text-center">
-    <p class="text-lg">¿Estás seguro que querés eliminar al jugador <span id="nombre-jugador-eliminar" class="font-bold"></span>?</p>
-    <p class="text-sm text-gray-500">Esta acción eliminará también todos sus turnos asociados.</p>
+  <div class="content text-center" style="padding: 28px 24px 16px 24px;">
+    <p class="text-xl font-bold mb-4" style="font-size: 1.35rem; color: #e74c3c; text-align: center;">¿Estás seguro que deseas eliminar al jugador <span id="nombre-jugador-eliminar" class="font-bold"></span>?</p>
+    <p class="text-lg font-bold mb-2" style="font-size: 1.1rem; color: #e67e22; text-align: center;">Esta acción eliminará también todos sus turnos y cobros asociados.</p>
+    <p class="text-base text-gray-600 mb-0" style="font-size: 1rem; color: #555;">Esta acción <b>no se puede deshacer</b>.</p>
   </div>
-  <div class="actions flex justify-center">
-    <div class="ui red cancel button">
+  <div class="actions flex justify-center gap-4 pb-6">
+    <div class="ui red cancel button" style="min-width: 120px; font-size: 1.1rem; border-radius: 8px;">
       <i class="remove icon"></i>
       Cancelar
     </div>
-    <form id="eliminar-jugador-form" method="POST" action="{% url 'lista_jugadors' %}">
+    <form id="eliminar-jugador-form" method="POST" action="{% url 'lista_jugadors' %}" style="display:inline;">
       {% csrf_token %}
       <input type="hidden" name="_method" value="DELETE">
       <input type="hidden" name="jugador_id" value="">
-      <button type="submit" class="ui green ok button">
+      <button type="submit" class="ui green ok button" style="min-width: 120px; font-size: 1.1rem; border-radius: 8px;">
         <i class="checkmark icon"></i>
         Confirmar
       </button>
