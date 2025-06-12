@@ -96,3 +96,16 @@ def calcular_importe_reserva(reserva):
         return importe.quantize(Decimal("0.01"))
     except (InvalidOperation, Exception):
         return Decimal("0.00")
+
+
+def registrar_historico_reserva(reserva, jugador, accion, importe=None, detalles=None):
+    """Registra una acción en el histórico de reservas de forma centralizada."""
+    from .models import HistoricoReserva
+
+    return HistoricoReserva.objects.create(
+        reserva=reserva,
+        jugador=jugador,
+        accion=accion,
+        importe=importe,
+        detalles=detalles,
+    )

@@ -27,7 +27,9 @@ from .utils import (
     validate_required_fields,
     get_recepcionista_or_none,
     calcular_importe_reserva,
+    registrar_historico_reserva,  # Asegurar import correcto
 )
+from .services import ReservaService, CobroService
 
 
 def landing(request):
@@ -212,7 +214,7 @@ def lista_reserves(request):
                 },
             )
         datos = obtener_datos_reserva_formulario(request, modo="recepcionista")
-        reserva, error = crear_reserva_util(
+        reserva, error = ReservaService.crear_reserva(
             **datos, request=request, recepcionista_required=True
         )
         if error:
@@ -569,7 +571,7 @@ def lista_cobraments(request, data, id_jugador):
                 request, "Reserva cancelada, cobro devuelto y turno liberado."
             )
             return redirect("lista_reserves")
-        cobrament, importe_final, error = registrar_cobro_util(
+        cobrament, importe_final, error = CobroService.registrar_cobro(
             reserva, jugador, data, request
         )
         if error:
@@ -636,7 +638,9 @@ def editar_cobro(request, id_cobro):
     cobrament = get_reserva_or_404(id_cobro, model_class=Cobrament)
     if request.method == "POST":
         nuevo_importe = request.POST.get("nuevo_importe")
-        cobrament_editado, error = editar_cobro_util(cobrament, nuevo_importe, request)
+        cobrament_editado, error = CobroService.editar_cobro(
+            cobrament, nuevo_importe, request
+        )
         if error:
             messages.error(request, error)
             return render(request, "editar_cobro.html", {"cobrament": cobrament})
@@ -657,7 +661,7 @@ def editar_cobro(request, id_cobro):
 def eliminar_cobro(request, id_cobro):
     cobrament = get_reserva_or_404(id_cobro, model_class=Cobrament)
     if request.method == "POST":
-        ok, error = eliminar_cobro_util(cobrament, request)
+        ok, error = CobroService.eliminar_cobro(cobrament, request)
         if error:
             messages.error(request, error)
             return render(
@@ -768,7 +772,7 @@ def calendario_canchas(request):
 def reservar_cancha(request):
     if request.method == "POST":
         datos = obtener_datos_reserva_formulario(request, modo="jugador")
-        reserva, error = crear_reserva_util(
+        reserva, error = ReservaService.crear_reserva(
             **datos, request=request, recepcionista_required=False
         )
         if error:
@@ -781,7 +785,7 @@ def reservar_cancha(request):
 def crear_reserva(request):
     if request.method == "POST":
         datos = obtener_datos_reserva_formulario(request, modo="jugador")
-        reserva, error = crear_reserva_util(
+        reserva, error = ReservaService.crear_reserva(
             **datos, request=request, recepcionista_required=True
         )
         if error:
@@ -856,142 +860,3 @@ def obtener_datos_reserva_formulario(request, modo="recepcionista"):
         "type_cancha": type_cancha,
         "cancha_numero": cancha_numero,
     }
-
-
-def crear_reserva_util(
-    jugador_nom,
-    jugador_cognom,
-    fecha,
-    hora_inicio_str,
-    duracion,
-    type_cancha,
-    cancha_numero,
-    request,
-    recepcionista_required=True,
-):
-    """Centraliza la lógica de validación y creación de reservas. Devuelve (reserva, error_message)"""
-    try:
-        jugador = Jugadors.objects.get(nom=jugador_nom, cognom=jugador_cognom)
-    except Jugadors.DoesNotExist:
-        return None, "El jugador no existe."
-    try:
-        hora_inicio = datetime.strptime(hora_inicio_str, "%H:%M").time()
-    except Exception:
-        return None, "Hora de inicio inválida."
-    hora_fin = calcular_hora_fin(hora_inicio, duracion)
-    try:
-        cancha = Pistes.objects.get(numero=cancha_numero, tipo=type_cancha)
-    except Pistes.DoesNotExist:
-        return None, "La cancha seleccionada no existe o no es del tipo elegido."
-    # Validar solapamiento robusto y duplicados
-    if Reserva.objects.filter(
-        cancha=cancha,
-        fecha=fecha,
-        hora_inicio__lt=hora_fin,
-        hora_fin__gt=hora_inicio,
-    ).exists():
-        return None, "La cancha ya está reservada en ese horario."
-    if Reserva.objects.filter(
-        jugador=jugador,
-        fecha=fecha,
-        hora_inicio__lt=hora_fin,
-        hora_fin__gt=hora_inicio,
-    ).exists():
-        return None, "El jugador ya tiene una reserva que se solapa con este horario."
-    # Validar duplicado exacto (jugador/cancha/fecha/hora)
-    if Reserva.objects.filter(
-        jugador=jugador,
-        cancha=cancha,
-        fecha=fecha,
-        hora_inicio=hora_inicio,
-        hora_fin=hora_fin,
-    ).exists():
-        return (
-            None,
-            "Ya existe una reserva idéntica para este jugador, cancha y horario.",
-        )
-    recepcionista = None
-    if recepcionista_required:
-        acceso = request.COOKIES.get("acceso")
-        if not acceso:
-            return None, "No hay sesión de recepcionista activa."
-        try:
-            recepcionista = Recepcionista.objects.get(DNI=acceso)
-        except Recepcionista.DoesNotExist:
-            return None, "Recepcionista no encontrado. Inicie sesión nuevamente."
-    reserva = Reserva(
-        jugador=jugador,
-        fecha=fecha,
-        cancha=cancha,
-        hora_inicio=hora_inicio,
-        hora_fin=hora_fin,
-        recepcionista=recepcionista,
-    )
-    reserva.save()
-    return reserva, None
-
-
-def editar_cobro_util(cobrament, nuevo_importe, request):
-    """Centraliza la lógica de validación y edición de cobros. Devuelve (cobrament_editado, error_message)"""
-    rec = get_recepcionista_or_none(request)
-    if not rec:
-        return None, "Recepcionista no encontrado. Inicie sesión nuevamente."
-    try:
-        nuevo_importe = Decimal(str(nuevo_importe))
-        if not nuevo_importe.is_finite() or nuevo_importe < 0:
-            return None, "Importe no válido (NaN/Infinito/Negativo)."
-        if abs(nuevo_importe) >= Decimal("1000000.01"):
-            return (
-                None,
-                f"El importe final ({nuevo_importe}) excede el máximo permitido de 1,000,000.00.",
-            )
-        nuevo_importe = nuevo_importe.quantize(Decimal("0.01"), rounding="ROUND_FLOOR")
-    except Exception as e:
-        return None, f"Error al validar el importe: {str(e)}."
-    try:
-        importe_anterior = cobrament.importe
-        cobrament.importe = nuevo_importe
-        cobrament.recepcionista = rec
-        cobrament.save()
-        registrar_historico_reserva(
-            reserva=cobrament.reserva,
-            jugador=cobrament.jugador,
-            accion="edicion_pago",
-            importe=nuevo_importe,
-            detalles=f"Edición de cobro: de {importe_anterior} a {nuevo_importe} por {rec.nom if hasattr(rec, 'nom') else rec.DNI}",
-        )
-        return cobrament, None
-    except Exception as e:
-        return None, f"Error al editar el cobro: {str(e)}."
-
-
-def eliminar_cobro_util(cobrament, request):
-    """Centraliza la lógica de eliminación de cobros y registro en histórico. Devuelve (True, error_message)"""
-    rec = get_recepcionista_or_none(request)
-    if not rec:
-        return False, "Recepcionista no encontrado. Inicie sesión nuevamente."
-    try:
-        registrar_historico_reserva(
-            reserva=cobrament.reserva,
-            jugador=cobrament.jugador,
-            accion="eliminacion_pago",
-            importe=cobrament.importe,
-            detalles=f"Cobro eliminado por {rec.nom if hasattr(rec, 'nom') else rec.DNI}",
-        )
-        cobrament.delete()
-        return True, None
-    except Exception as e:
-        return False, f"Error al eliminar el cobro: {str(e)}."
-
-
-def registrar_historico_reserva(reserva, jugador, accion, importe=None, detalles=None):
-    """Registra una acción en el histórico de reservas de forma centralizada."""
-    from .models import HistoricoReserva
-
-    return HistoricoReserva.objects.create(
-        reserva=reserva,
-        jugador=jugador,
-        accion=accion,
-        importe=importe,
-        detalles=detalles,
-    )
