@@ -293,8 +293,25 @@ def lista_jugadors(request):
                     request, f"Faltan campos obligatorios: {', '.join(campos)}."
                 )
                 return redirect("lista_jugadors")
-            jugador.nom = request.POST.get("nom")
-            jugador.cognom = request.POST.get("cognom")
+            nom = request.POST.get("nom")
+            cognom = request.POST.get("cognom")
+            # Normalización para evitar duplicados en edición
+            nom_normalizado = nom.strip().lower()
+            cognom_normalizado = cognom.strip().lower()
+            if (
+                Jugadors.objects.filter(
+                    nom__iexact=nom_normalizado, cognom__iexact=cognom_normalizado
+                )
+                .exclude(id_jugador=jugador_id)
+                .exists()
+            ):
+                messages.warning(
+                    request,
+                    f"Ya existe un jugador con el nombre '{nom}' y apellido '{cognom}'. No se puede actualizar con datos duplicados.",
+                )
+                return redirect("lista_jugadors")
+            jugador.nom = nom
+            jugador.cognom = cognom
             jugador.email = request.POST.get("email")
             jugador.telefon = request.POST.get("telefon")
             jugador.nivell = request.POST.get("nivell")
@@ -323,6 +340,17 @@ def lista_jugadors(request):
             nivell = request.POST.get("nivell")
             contrasenya = str(nom)
             foto = request.FILES.get("foto")
+            # Validar duplicado por nombre y apellido (case-insensitive, ignora espacios)
+            nom_normalizado = nom.strip().lower()
+            cognom_normalizado = cognom.strip().lower()
+            if Jugadors.objects.filter(
+                nom__iexact=nom_normalizado, cognom__iexact=cognom_normalizado
+            ).exists():
+                messages.warning(
+                    request,
+                    f"Ya existe un jugador con el nombre '{nom}' y apellido '{cognom}'. No se creó el jugador.",
+                )
+                return redirect("lista_jugadors")
             id_jugador = random.randrange(10000, 100000)
             # Evitar duplicados por id_jugador
             while Jugadors.objects.filter(id_jugador=id_jugador).exists():
@@ -387,15 +415,32 @@ def perfil_jugador(request):
                 request, f"Faltan campos obligatorios: {', '.join(missing)}."
             )
         else:
-            jugador.nom = request.POST.get("nom")
-            jugador.cognom = request.POST.get("cognom")
-            jugador.email = request.POST.get("email")
-            jugador.telefon = request.POST.get("telefon")
-            jugador.nivell = request.POST.get("nivell")
-            if request.FILES.get("foto"):
-                jugador.foto = request.FILES.get("foto")
-            jugador.save()
-            messages.success(request, "Perfil actualizado correctamente.")
+            nom = request.POST.get("nom")
+            cognom = request.POST.get("cognom")
+            # Normalización para evitar duplicados en edición de perfil
+            nom_normalizado = nom.strip().lower()
+            cognom_normalizado = cognom.strip().lower()
+            if (
+                Jugadors.objects.filter(
+                    nom__iexact=nom_normalizado, cognom__iexact=cognom_normalizado
+                )
+                .exclude(id_jugador=jugador.id_jugador)
+                .exists()
+            ):
+                messages.warning(
+                    request,
+                    f"Ya existe un jugador con el nombre '{nom}' y apellido '{cognom}'. No se puede actualizar con datos duplicados.",
+                )
+            else:
+                jugador.nom = nom
+                jugador.cognom = cognom
+                jugador.email = request.POST.get("email")
+                jugador.telefon = request.POST.get("telefon")
+                jugador.nivell = request.POST.get("nivell")
+                if request.FILES.get("foto"):
+                    jugador.foto = request.FILES.get("foto")
+                jugador.save()
+                messages.success(request, "Perfil actualizado correctamente.")
     context = {
         "jugador": jugador,
         "reservas": reservas,
@@ -838,7 +883,7 @@ def crear_reserva_util(
         cancha = Pistes.objects.get(numero=cancha_numero, tipo=type_cancha)
     except Pistes.DoesNotExist:
         return None, "La cancha seleccionada no existe o no es del tipo elegido."
-    # Validar solapamiento
+    # Validar solapamiento robusto y duplicados
     if Reserva.objects.filter(
         cancha=cancha,
         fecha=fecha,
@@ -853,6 +898,18 @@ def crear_reserva_util(
         hora_fin__gt=hora_inicio,
     ).exists():
         return None, "El jugador ya tiene una reserva que se solapa con este horario."
+    # Validar duplicado exacto (jugador/cancha/fecha/hora)
+    if Reserva.objects.filter(
+        jugador=jugador,
+        cancha=cancha,
+        fecha=fecha,
+        hora_inicio=hora_inicio,
+        hora_fin=hora_fin,
+    ).exists():
+        return (
+            None,
+            "Ya existe una reserva idéntica para este jugador, cancha y horario.",
+        )
     recepcionista = None
     if recepcionista_required:
         acceso = request.COOKIES.get("acceso")
