@@ -4,6 +4,62 @@
 <div class="mb-4">
   <strong>Total cobrado:</strong> <span class="ui teal label" style="font-size:1.2em;">${{ total_cobrado }}</span>
 </div>
+
+<div class="mb-8">
+  <h3 class="text-lg font-semibold mb-2">Resumen de jugadores, cobros, devoluciones, cancelaciones y cancha</h3>
+  <form method="get" class="flex flex-col md:flex-row gap-2 mb-4">
+    <select name="jugador" class="ui dropdown w-full md:w-auto">
+      <option value="">Todos los jugadores</option>
+      {% for j in jugadores %}
+        <option value="{{ j.id_jugador }}" {% if jugador_filtro == j.id_jugador %}selected{% endif %}>{{ j.nom }} {{ j.cognom }}</option>
+      {% endfor %}
+    </select>
+    <select name="cancha" class="ui dropdown w-full md:w-auto">
+      <option value="">Todas las canchas</option>
+      {% for c in canchas %}
+        <option value="{{ c.numero }}" {% if cancha_filtro == c.numero|stringformat:'s' %}selected{% endif %}>Cancha {{ c.numero }}</option>
+      {% endfor %}
+    </select>
+    <select name="tipo" class="ui dropdown w-full md:w-auto">
+      <option value="">Todos los tipos</option>
+      {% for t in tipos %}
+        <option value="{{ t }}" {% if tipo_filtro == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="ui primary button w-full md:w-auto">Filtrar</button>
+    {% if jugador_filtro or cancha_filtro or tipo_filtro %}
+      <a href="?" class="ui button w-full md:w-auto">Limpiar</a>
+    {% endif %}
+  </form>
+  <div class="overflow-x-auto">
+    <table class="ui celled table">
+      <thead>
+        <tr>
+          <th>Jugador</th>
+          <th>Cancha</th>
+          <th>Tipo</th>
+          <th>Cobros</th>
+          <th>Devoluciones</th>
+          <th>Cancelaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in resumen %}
+        <tr>
+          <td>{{ r.jugador__nom }} {{ r.jugador__cognom }}</td>
+          <td>{{ r.cancha__numero }}</td>
+          <td>{{ r.cancha__tipo }}</td>
+          <td>{{ r.cobros }}</td>
+          <td>{{ r.devoluciones }}</td>
+          <td>{{ r.cancelaciones }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No hay datos para mostrar.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 <div class="mb-4">
   <strong>Jugadores que pagaron:</strong>
   <ul class="ui list">

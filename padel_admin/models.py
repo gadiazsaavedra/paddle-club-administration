@@ -17,6 +17,7 @@ class Jugadors(models.Model):
     email = models.EmailField(max_length=50)
     contrasenya = models.CharField(max_length=30)
     foto = models.ImageField(upload_to="fotos_jugadores/", blank=True, null=True)
+    fecha_alta = models.DateField(auto_now_add=True)  # Fecha de alta del jugador
 
     def __str__(self):
         return "{} , {} , {} , {} , {}, {}, {}".format(

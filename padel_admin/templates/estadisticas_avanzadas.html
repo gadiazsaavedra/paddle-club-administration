@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas Avanzadas - Paddle Club{% endblock %}
+{% block content %}
+<h1 class="text-2xl md:text-4xl font-bold mb-6 text-center">Estadísticas Avanzadas</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Ranking de jugadores más activos</h2>
+    <ul class="list-disc ml-6">
+      {% for j in ranking_activos %}
+        <li>{{ j.jugador__nom }} {{ j.jugador__cognom }} ({{ j.total }} reservas)</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Ranking de jugadores con más cancelaciones</h2>
+    <ul class="list-disc ml-6">
+      {% for j in ranking_cancelaciones %}
+        <li>{{ j.jugador__nom }} {{ j.jugador__cognom }} ({{ j.total }} cancelaciones)</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Porcentaje de ocupación de cada cancha</h2>
+    <ul class="list-disc ml-6">
+      {% for c in ocupacion_canchas %}
+        <li>Cancha {{ c.numero }} ({{ c.tipo }}): {{ c.reservas }} reservas, {{ c.porcentaje|floatformat:2 }}%</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Horarios con mayor demanda</h2>
+    <ul class="list-disc ml-6">
+      {% for h in demanda_horarios %}
+        <li>{{ h.hora_inicio }} ({{ h.total }} reservas)</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+    <h2 class="text-xl font-semibold mt-4 mb-2">Días con mayor demanda</h2>
+    <ul class="list-disc ml-6">
+      {% for d in demanda_dias %}
+        <li>{{ d.fecha }} ({{ d.total }} reservas)</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Ingresos por mes</h2>
+    <ul class="list-disc ml-6">
+      {% for i in ingresos_mes %}
+        <li>{{ i.anio }}/{{ i.mes }}: ${{ i.total }}</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Promedio de duración de reservas</h2>
+    <p>{{ promedio_duracion|default:"No disponible" }}</p>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Jugadores que nunca cancelaron</h2>
+    <ul class="list-disc ml-6">
+      {% for j in jugadores_nunca_cancelaron %}
+        <li>{{ j.nom }} {{ j.cognom }}</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Jugadores nuevos por mes</h2>
+    <ul class="list-disc ml-6">
+      {% for j in jugadores_nuevos_mes %}
+        <li>{{ j.anio }}/{{ j.mes }}: {{ j.total }} jugadores</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Pagos pendientes</h2>
+    <ul class="list-disc ml-6">
+      {% for r in pagos_pendientes %}
+        <li>Reserva ID {{ r.id }} - Jugador: {{ r.jugador.nom }} {{ r.jugador.cognom }} (Pagos: {{ r.pagos }})</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Comparativa de uso entre canchas</h2>
+    <ul class="list-disc ml-6">
+      {% for c in uso_canchas %}
+        <li>{{ c.cancha__tipo }}: {{ c.total }} reservas</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Tasa de cancelación</h2>
+    <p>{{ tasa_cancelacion|floatformat:2 }}%</p>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Evolución de ingresos</h2>
+    <ul class="list-disc ml-6">
+      {% for i in ingresos_tiempo %}
+        <li>{{ i.fecha__date }}: ${{ i.total }}</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Reservas recurrentes vs únicas</h2>
+    <p>Recurrentes: {{ total_recurrentes }} | Únicas: {{ total_unicas }}</p>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Jugadores con mayor gasto acumulado</h2>
+    <ul class="list-disc ml-6">
+      {% for j in ranking_gasto %}
+        <li>{{ j.jugador__nom }} {{ j.jugador__cognom }}: ${{ j.total }}</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Estadísticas de reservas por tipo de cancha</h2>
+    <ul class="list-disc ml-6">
+      {% for c in estadisticas_tipo_cancha %}
+        <li>{{ c.cancha__tipo }}: {{ c.total }} reservas</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

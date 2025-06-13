@@ -1,39 +1,17 @@
 from django.shortcuts import render
-from .models import HistoricoReserva, Jugadors, Reserva, Cobrament, Pistes
+from .models import (
+    HistoricoReserva,
+    Jugadors,
+    Reserva,
+    Cobrament,
+    Pistes,
+    ReservaRecurrente,
+)
 from django.db.models import Sum, Count, Q, F, Min, Max, DurationField
-from datetime import datetime, timedelta
 from django.db.models import ExpressionWrapper
 
 
-def estadisticas_reservas(request):
-    # Jugadores que pagaron
-    pagos = HistoricoReserva.objects.filter(accion="pago").select_related(
-        "jugador", "reserva"
-    )
-    jugadores_pagaron = pagos.values_list(
-        "jugador__nom", "jugador__cognom", "reserva__id"
-    ).distinct()
-    # Total cobrado
-    total_cobrado = pagos.aggregate(total=Sum("importe"))["total"] or 0
-    # Jugadores que cancelaron
-    cancelaciones = HistoricoReserva.objects.filter(
-        accion="cancelacion"
-    ).select_related("jugador", "reserva")
-    jugadores_cancelaron = cancelaciones.values_list(
-        "jugador__nom", "jugador__cognom", "reserva__id"
-    ).distinct()
-    # Jugadores con devolución
-    devoluciones = HistoricoReserva.objects.filter(accion="devolucion").select_related(
-        "jugador", "reserva"
-    )
-    jugadores_devolvieron = devoluciones.values_list(
-        "jugador__nom", "jugador__cognom", "reserva__id"
-    ).distinct()
-    # Histórico completo
-    historico = HistoricoReserva.objects.select_related("jugador", "reserva").order_by(
-        "-fecha"
-    )[:100]
-
+def estadisticas_avanzadas(request):
     # 1. Ranking de jugadores más activos
     ranking_activos = (
         Reserva.objects.values("jugador__nom", "jugador__cognom")
@@ -126,8 +104,6 @@ def estadisticas_reservas(request):
         .order_by("fecha__date")
     )
     # 13. Reservas recurrentes vs únicas
-    from .models import ReservaRecurrente
-
     total_recurrentes = ReservaRecurrente.objects.count()
     total_unicas = Reserva.objects.count() - total_recurrentes
     # 14. Jugadores con mayor gasto acumulado
@@ -143,60 +119,26 @@ def estadisticas_reservas(request):
         .annotate(total=Count("id"))
         .order_by("-total")
     )
-    # Tabla resumen de jugadores, cobros, devoluciones, cancelaciones y cancha
-    jugadores = Jugadors.objects.all().order_by("nom", "cognom")
-    canchas = Pistes.objects.all().order_by("numero")
-    tipos = Pistes.objects.values_list("tipo", flat=True).distinct()
-
-    jugador_filtro = request.GET.get("jugador", "")
-    cancha_filtro = request.GET.get("cancha", "")
-    tipo_filtro = request.GET.get("tipo", "")
-
-    resumen_qs = Reserva.objects.select_related("jugador", "cancha")
-    if jugador_filtro:
-        resumen_qs = resumen_qs.filter(jugador__id_jugador=jugador_filtro)
-    if cancha_filtro:
-        resumen_qs = resumen_qs.filter(cancha__numero=cancha_filtro)
-    if tipo_filtro:
-        resumen_qs = resumen_qs.filter(cancha__tipo=tipo_filtro)
-
-    resumen = (
-        resumen_qs.annotate(
-            cobros=Count("cobrament", filter=Q(cobrament__isnull=False)),
-            devoluciones=Count(
-                "historicoreserva", filter=Q(historicoreserva__accion="devolucion")
-            ),
-            cancelaciones=Count(
-                "historicoreserva", filter=Q(historicoreserva__accion="cancelacion")
-            ),
-        )
-        .values(
-            "jugador__nom",
-            "jugador__cognom",
-            "cancha__numero",
-            "cancha__tipo",
-            "cobros",
-            "devoluciones",
-            "cancelaciones",
-        )
-        .order_by("jugador__nom", "cancha__numero")
-    )
-
     return render(
         request,
-        "estadisticas_reservas.html",
+        "estadisticas_avanzadas.html",
         {
-            "jugadores_pagaron": jugadores_pagaron,
-            "total_cobrado": total_cobrado,
-            "jugadores_cancelaron": jugadores_cancelaron,
-            "jugadores_devolvieron": jugadores_devolvieron,
-            "historico": historico,
-            "resumen": resumen,
-            "jugadores": jugadores,
-            "canchas": canchas,
-            "tipos": tipos,
-            "jugador_filtro": jugador_filtro,
-            "cancha_filtro": cancha_filtro,
-            "tipo_filtro": tipo_filtro,
+            "ranking_activos": ranking_activos,
+            "ranking_cancelaciones": ranking_cancelaciones,
+            "ocupacion_canchas": ocupacion_canchas,
+            "demanda_horarios": demanda_horarios,
+            "demanda_dias": demanda_dias,
+            "ingresos_mes": ingresos_mes,
+            "promedio_duracion": promedio_duracion,
+            "jugadores_nunca_cancelaron": jugadores_nunca_cancelaron,
+            "jugadores_nuevos_mes": jugadores_nuevos_mes,
+            "pagos_pendientes": pagos_pendientes,
+            "uso_canchas": uso_canchas,
+            "tasa_cancelacion": tasa_cancelacion,
+            "ingresos_tiempo": ingresos_tiempo,
+            "total_recurrentes": total_recurrentes,
+            "total_unicas": total_unicas,
+            "ranking_gasto": ranking_gasto,
+            "estadisticas_tipo_cancha": estadisticas_tipo_cancha,
         },
     )
