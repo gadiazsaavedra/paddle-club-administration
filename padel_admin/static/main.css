@@ -12,6 +12,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: var(--text-color);
   background-color: var(--light-bg);
+  padding-top: 72px; /* Ajusta según la altura del header */
 }
 
 /* Navbar mejorado */
@@ -29,6 +30,15 @@ nav a {
 nav a:hover {
   transform: translateY(-2px);
   color: #f8f9fa !important;
+}
+
+/* Mantener el menú principal fijo arriba */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
 }
 
 /* Contenedores y tarjetas */
