@@ -2,12 +2,44 @@
 {% block title %}Estadísticas Avanzadas - Paddle Club{% endblock %}
 {% block content %}
 <h1 class="text-2xl md:text-4xl font-bold mb-6 text-center">Estadísticas Avanzadas</h1>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
   <div>
     <h2 class="text-xl font-semibold mb-2">Ranking de jugadores más activos</h2>
+    <canvas id="rankingActivosChart" height="200"></canvas>
     <ul class="list-disc ml-6">
       {% for j in ranking_activos %}
         <li>{{ j.jugador__nom }} {{ j.jugador__cognom }} ({{ j.total }} reservas)</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Ingresos por mes</h2>
+    <canvas id="ingresosMesChart" height="200"></canvas>
+    <ul class="list-disc ml-6">
+      {% for i in ingresos_mes %}
+        <li>{{ i.anio }}/{{ i.mes }}: ${{ i.total }}</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Evolución de ingresos</h2>
+    <canvas id="ingresosTiempoChart" height="200"></canvas>
+    <ul class="list-disc ml-6">
+      {% for i in ingresos_tiempo %}
+        <li>{{ i.fecha__date }}: ${{ i.total }}</li>
+      {% empty %}<li>No hay datos.</li>{% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Comparativa de uso entre canchas</h2>
+    <canvas id="usoCanchasChart" height="200"></canvas>
+    <ul class="list-disc ml-6">
+      {% for c in uso_canchas %}
+        <li>{{ c.cancha__tipo }}: {{ c.total }} reservas</li>
       {% empty %}<li>No hay datos.</li>{% endfor %}
     </ul>
   </div>
@@ -42,14 +74,6 @@
     </ul>
   </div>
   <div>
-    <h2 class="text-xl font-semibold mb-2">Ingresos por mes</h2>
-    <ul class="list-disc ml-6">
-      {% for i in ingresos_mes %}
-        <li>{{ i.anio }}/{{ i.mes }}: ${{ i.total }}</li>
-      {% empty %}<li>No hay datos.</li>{% endfor %}
-    </ul>
-  </div>
-  <div>
     <h2 class="text-xl font-semibold mb-2">Promedio de duración de reservas</h2>
     <p>{{ promedio_duracion|default:"No disponible" }}</p>
   </div>
@@ -78,24 +102,8 @@
     </ul>
   </div>
   <div>
-    <h2 class="text-xl font-semibold mb-2">Comparativa de uso entre canchas</h2>
-    <ul class="list-disc ml-6">
-      {% for c in uso_canchas %}
-        <li>{{ c.cancha__tipo }}: {{ c.total }} reservas</li>
-      {% empty %}<li>No hay datos.</li>{% endfor %}
-    </ul>
-  </div>
-  <div>
     <h2 class="text-xl font-semibold mb-2">Tasa de cancelación</h2>
     <p>{{ tasa_cancelacion|floatformat:2 }}%</p>
-  </div>
-  <div>
-    <h2 class="text-xl font-semibold mb-2">Evolución de ingresos</h2>
-    <ul class="list-disc ml-6">
-      {% for i in ingresos_tiempo %}
-        <li>{{ i.fecha__date }}: ${{ i.total }}</li>
-      {% empty %}<li>No hay datos.</li>{% endfor %}
-    </ul>
   </div>
   <div>
     <h2 class="text-xl font-semibold mb-2">Reservas recurrentes vs únicas</h2>
@@ -118,4 +126,41 @@
     </ul>
   </div>
 </div>
+
+{% block extra_js %}
+<script>
+// Ranking de jugadores más activos
+const rankingLabels = [{% for j in ranking_activos %}'{{ j.jugador__nom }} {{ j.jugador__cognom }}',{% endfor %}];
+const rankingData = [{% for j in ranking_activos %}{{ j.total }},{% endfor %}];
+new Chart(document.getElementById('rankingActivosChart'), {
+  type: 'bar',
+  data: { labels: rankingLabels, datasets: [{ label: 'Reservas', data: rankingData, backgroundColor: '#3498db' }] },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+// Ingresos por mes
+const ingresosMesLabels = [{% for i in ingresos_mes %}'{{ i.anio }}/{{ i.mes }}',{% endfor %}];
+const ingresosMesData = [{% for i in ingresos_mes %}{{ i.total }},{% endfor %}];
+new Chart(document.getElementById('ingresosMesChart'), {
+  type: 'bar',
+  data: { labels: ingresosMesLabels, datasets: [{ label: 'Ingresos', data: ingresosMesData, backgroundColor: '#2ecc71' }] },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+// Evolución de ingresos
+const ingresosTiempoLabels = [{% for i in ingresos_tiempo %}'{{ i.fecha__date }}',{% endfor %}];
+const ingresosTiempoData = [{% for i in ingresos_tiempo %}{{ i.total }},{% endfor %}];
+new Chart(document.getElementById('ingresosTiempoChart'), {
+  type: 'line',
+  data: { labels: ingresosTiempoLabels, datasets: [{ label: 'Ingresos', data: ingresosTiempoData, borderColor: '#e67e22', backgroundColor: 'rgba(230,126,34,0.1)', fill: true }] },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+// Comparativa de uso entre canchas
+const usoCanchasLabels = [{% for c in uso_canchas %}'{{ c.cancha__tipo }}',{% endfor %}];
+const usoCanchasData = [{% for c in uso_canchas %}{{ c.total }},{% endfor %}];
+new Chart(document.getElementById('usoCanchasChart'), {
+  type: 'bar',
+  data: { labels: usoCanchasLabels, datasets: [{ label: 'Reservas', data: usoCanchasData, backgroundColor: '#9b59b6' }] },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+</script>
+{% endblock %}
 {% endblock %}
