@@ -30,15 +30,15 @@
 {% block content %}
 <!-- Hero con video de fondo de partido de pádel real y parallax -->
 <section class="hero-section flex flex-col items-center justify-center text-white text-center" style="position:relative;min-height:100vh;overflow:hidden;">
-  <div class="hero-video-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;overflow:hidden;">
-    <video autoplay loop muted playsinline style="width:100vw;height:100vh;object-fit:cover;">
+  <div class="hero-video-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;overflow:hidden;pointer-events:none;">
+    <video autoplay loop muted playsinline style="width:100vw;height:100vh;object-fit:cover;display:block;" poster="{% static 'logo3.png' %}">
       <source src="{% static 'video-fondo.mp4' %}" type="video/mp4">
       Tu navegador no soporta video HTML5.
     </video>
   </div>
-  <div class="hero-overlay flex flex-col items-center justify-center h-full w-full py-24" style="position:relative;z-index:1;background:rgba(10,20,40,0.65);backdrop-filter:blur(2px);min-height:100vh;">
-    <h1 class="text-5xl md:text-7xl font-extrabold mb-4 animate-fade-in" style="color:#fff;background:rgba(0,0,0,0.55);padding:0.5em 1em;border-radius:0.5em;box-shadow:0 4px 32px 0 rgba(0,0,0,0.7),0 1.5px 0 #fff;letter-spacing:2px;text-shadow:0 4px 24px #000,0 2px 0 #fff;">¡Vive el Pádel!</h1>
-    <p class="text-xl md:text-2xl mb-8 animate-fade-in delay-200" style="color:#fff;background:rgba(0,0,0,0.35);padding:0.3em 1em;border-radius:0.5em;text-shadow:0 2px 8px #000;">El club más moderno de [Ciudad]. Canchas premium, comunidad activa y pasión por el deporte.</p>
+  <div class="hero-overlay flex flex-col items-center justify-center h-full w-full py-24" style="position:relative;z-index:1;min-height:100vh;background:linear-gradient(120deg,rgba(0,200,255,0.65),rgba(0,255,150,0.65));backdrop-filter:blur(2px);">
+    <h1 class="text-5xl md:text-7xl font-extrabold mb-4 animate-fade-in" style="color:#fff;background:rgba(0,0,0,0.45);padding:0.5em 1em;border-radius:0.5em;box-shadow:0 4px 32px 0 rgba(0,0,0,0.7),0 1.5px 0 #fff;letter-spacing:2px;text-shadow:0 4px 24px #000,0 2px 0 #fff;">¡Vive el Pádel!</h1>
+    <p class="text-xl md:text-2xl mb-8 animate-fade-in delay-200" style="color:#fff;background:rgba(0,0,0,0.25);padding:0.3em 1em;border-radius:0.5em;text-shadow:0 2px 8px #000;">El club más moderno de [Ciudad]. Canchas premium, comunidad activa y pasión por el deporte.</p>
     <a href="/reservar/" class="ui primary button text-lg animate-bounce mb-4">Reserva tu cancha ahora</a>
     <div class="flex flex-wrap gap-8 justify-center mt-8">
       <div class="text-center">
@@ -56,6 +56,22 @@
     </div>
   </div>
 </section>
+<style>
+@media (max-width: 767px) {
+  .hero-video-bg video {
+    width: 100vw !important;
+    height: 100vh !important;
+    min-width: 100vw;
+    min-height: 100vh;
+    object-fit: cover;
+    display: block;
+  }
+  .hero-overlay {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+</style>
 
 <!-- Testimonios -->
 <section class="py-12 bg-white">
