@@ -147,15 +147,55 @@ header {
   padding: 25px !important;
 }
 
-/* Animaciones */
-@keyframes fadeIn {
+/* Animaciones suaves y transiciones globales */
+@keyframes fade-in {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
+.animate-fade-in {
+  animation: fade-in 0.7s cubic-bezier(0.4,0,0.2,1);
 }
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in {
+  animation: slide-in 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+
+.transition-all {
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Botones modernos */
+button, .ui.button, a.button, .btn, .ui.primary.button {
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+button:hover, .ui.button:hover, a.button:hover, .btn:hover, .ui.primary.button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+
+/* Cards y bloques */
+.card, .event-card, .bg-white.rounded-lg, .testimonios-slider .slide, .gallery-slider img {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.card:hover, .event-card:hover, .bg-white.rounded-lg:hover, .testimonios-slider .slide:hover, .gallery-slider img:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* Secciones animadas al entrar */
+section, .fade-in {
+  opacity: 0;
+  animation: fade-in 0.7s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+section:nth-of-type(1) { animation-delay: 0.1s; }
+section:nth-of-type(2) { animation-delay: 0.3s; }
+section:nth-of-type(3) { animation-delay: 0.5s; }
+section:nth-of-type(4) { animation-delay: 0.7s; }
 
 /* Responsive */
 @media (max-width: 768px) {
