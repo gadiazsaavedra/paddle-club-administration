@@ -55,6 +55,11 @@ def landing(request):
         return render(request, "landing.html")
 
 
+def home(request):
+    """Vista principal (home) que muestra la página de bienvenida."""
+    return render(request, "bienvenida.html")
+
+
 @handle_view_errors
 def lista_reserves(request):
     acceso = request.COOKIES.get("acceso")
@@ -286,7 +291,7 @@ def lista_reserves(request):
 def lista_jugadors(request):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
-        messages.error(request, "Accés denegat: no hay sesión activa.")
+        messages.error(request, "Acceso denegado: no hay sesión activa.")
         return render(request, "landing.html")
     search_query = request.GET.get("search")
 
@@ -405,7 +410,7 @@ def lista_jugadors(request):
 def perfil_jugador(request):
     jugador_id = request.COOKIES.get("jugador_id")
     if not jugador_id:
-        return redirect("landing")
+        return redirect("login")
     jugador = get_jugador_or_404(jugador_id)
     reservas = (
         Reserva.objects.filter(jugador=jugador)
@@ -701,8 +706,8 @@ def eliminar_cobro(request, id_cobro):
 
 def logout(request):
     response = redirect(
-        "landing"
-    )  # Redirige a la página de inicio de sesión o cualquier otra página después de hacer logout
+        "login"
+    )  # Redirige a la página de inicio de sesión después de hacer logout
     response.delete_cookie("acceso")  # Elimina la cookie 'recepcionista_id'
     return response
 

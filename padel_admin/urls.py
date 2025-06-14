@@ -4,6 +4,7 @@ from padel_admin.views_estadisticas_avanzadas import estadisticas_avanzadas
 from padel_admin import views
 
 urlpatterns = [
+    path("", views.home, name="home"),
     # ...existing url patterns...
 ]
 

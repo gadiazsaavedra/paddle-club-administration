@@ -23,7 +23,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", views.landing, name="landing"),
+    path("", views.home, name="home"),  # Home pública SIEMPRE visible
+    path("login/", views.landing, name="login"),  # Login solo en /login
     path("reserves/", views.lista_reserves, name="lista_reserves"),
     path("jugadors/", views.lista_jugadors, name="lista_jugadors"),
     path(

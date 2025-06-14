@@ -76,12 +76,20 @@
 <body>
     <div class="login-container">
         <div class="logo-container">
+            <img src="{% static 'logo3.png' %}" alt="Logo Club de Paddle">
+        </div>
+        <div class="mb-4 text-center">
+            <a href="/" class="text-blue-600 hover:underline font-semibold text-lg">
+                <i class="fas fa-home"></i> Ir a la página de bienvenida
+            </a>
+        </div>
+        <div class="logo-container">
             <h1 class="text-3xl font-bold text-gray-800">La cancha de German</h1>
             <h2 class="text-2xl font-bold mt-4 text-gray-800">Iniciar Sesión</h2>
             <p class="text-gray-600 mt-2">Accedé al sistema de administración</p>
         </div>
         
-        <form class="ui form" method="POST" action="{% url 'landing' %}">
+        <form class="ui form" method="POST" action="{% url 'login' %}">
             {% csrf_token %}
             <div class="field">
                 <label class="text-gray-700">DNI</label>
