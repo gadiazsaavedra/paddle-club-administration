@@ -1,79 +1,192 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Club de Pádel | Canchas, Clases y Torneos en [Ciudad]{% endblock %}
+{% block title %}Club de Pádel | Canchas, Clases, Torneos y Comunidad en [Ciudad]{% endblock %}
 {% block extra_css %}
-<meta name="description" content="Club de pádel con canchas techadas y al aire libre, clases para todos los niveles, torneos, tienda y la mejor experiencia deportiva en [Ciudad]. ¡Reserva tu cancha hoy!">
-<meta name="keywords" content="pádel, club de pádel, canchas de pádel, reservar pádel, clases de pádel, torneos de pádel, tienda pádel, profesores pádel, [Ciudad]">
-<meta property="og:title" content="Club de Pádel | Canchas, Clases y Torneos en [Ciudad]">
-<meta property="og:description" content="Disfruta de las mejores canchas de pádel, clases para todos los niveles, torneos y tienda especializada en [Ciudad]. ¡Visítanos y vive el pádel!">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80">
-<meta property="og:url" content="https://tusitio.com/">
-<link rel="canonical" href="https://tusitio.com/">
+<meta name="description" content="Club de pádel líder en [Ciudad]: canchas techadas y al aire libre, clases, torneos, tienda, comunidad, noticias y respuestas a tus dudas. ¡Reserva tu cancha y vive el pádel!">
+<meta name="keywords" content="pádel, club de pádel, canchas de pádel, reservar pádel, clases de pádel, torneos de pádel, tienda pádel, profesores pádel, comunidad pádel, noticias pádel, preguntas frecuentes, FAQ, blog pádel, tips pádel, [Ciudad]">
 <link href="{% static 'bienvenida-extra.css' %}" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsClub",
+  "name": "Club de Pádel [Ciudad]",
+  "description": "Club de pádel líder en [Ciudad] con canchas, clases, torneos, tienda, comunidad y noticias.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Calle Ejemplo 123",
+    "addressLocality": "[Ciudad]",
+    "addressRegion": "[Provincia]",
+    "addressCountry": "AR"
+  },
+  "telephone": "+34 123 456 789",
+  "url": "https://tusitio.com/",
+  "sameAs": [
+    "https://www.instagram.com/clubpadel",
+    "https://www.facebook.com/clubpadel"
+  ]
+}
+</script>
 {% endblock %}
 {% block content %}
-<!-- Hero Section con animación y fondo dinámico -->
-<section class="relative bg-gradient-to-br from-blue-700 to-green-400 text-white py-20 px-4 flex flex-col items-center justify-center min-h-[70vh] overflow-hidden">
-  <div class="absolute inset-0 hero-bg bg-cover bg-center opacity-40" style="background-image: url('https://images.unsplash.com/photo-1508780709619-79562169bc64?auto=format&fit=crop&w=1200&q=80');"></div>
-  <div class="absolute top-10 left-10 floating-ball" style="width:60px;height:60px;background:radial-gradient(circle at 30% 30%,#fff 60%,#3498db 100%);"></div>
-  <div class="absolute bottom-16 right-16 floating-ball" style="width:40px;height:40px;background:radial-gradient(circle at 60% 60%,#fff 60%,#2ecc71 100%);"></div>
-  <div class="relative z-10 text-center fade-in-up">
-    <h1 class="text-5xl md:text-7xl font-extrabold mb-4 drop-shadow-lg">¡Vive el Pádel!</h1>
-    <p class="text-xl md:text-2xl mb-8">El club más moderno de [Ciudad]. Canchas premium, comunidad activa y pasión por el deporte.</p>
-    <a href="#galeria" class="ui primary button text-lg animate-bounce">Ver galería</a>
+<!-- Hero con video de fondo de partido de pádel real y parallax -->
+<section class="hero-section flex flex-col items-center justify-center text-white text-center" style="position:relative;min-height:100vh;overflow:hidden;">
+  <div class="hero-video-bg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;overflow:hidden;">
+    <video autoplay loop muted playsinline style="width:100vw;height:100vh;object-fit:cover;">
+      <source src="{% static 'video-fondo.mp4' %}" type="video/mp4">
+      Tu navegador no soporta video HTML5.
+    </video>
   </div>
-</section>
-
-<!-- Galería de gente jugando pádel -->
-<section id="galeria" class="py-16 bg-white">
-  <div class="container mx-auto px-4">
-    <h2 class="text-3xl font-bold text-center mb-8">Momentos de Pádel</h2>
-    <div class="gallery-padel">
-      <img src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80" alt="Jugadores de pádel celebrando">
-      <img src="https://images.unsplash.com/photo-1508780709619-79562169bc64?auto=format&fit=crop&w=600&q=80" alt="Partido de pádel en acción">
-      <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80" alt="Golpe de revés en pádel">
-      <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80" alt="Jugadores en la red de pádel">
-      <img src="https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=600&q=80" alt="Entrenamiento de pádel">
-      <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80" alt="Equipo de pádel celebrando">
+  <div class="hero-overlay flex flex-col items-center justify-center h-full w-full py-24" style="position:relative;z-index:1;background:rgba(10,20,40,0.65);backdrop-filter:blur(2px);min-height:100vh;">
+    <h1 class="text-5xl md:text-7xl font-extrabold mb-4 animate-fade-in" style="color:#fff;background:rgba(0,0,0,0.55);padding:0.5em 1em;border-radius:0.5em;box-shadow:0 4px 32px 0 rgba(0,0,0,0.7),0 1.5px 0 #fff;letter-spacing:2px;text-shadow:0 4px 24px #000,0 2px 0 #fff;">¡Vive el Pádel!</h1>
+    <p class="text-xl md:text-2xl mb-8 animate-fade-in delay-200" style="color:#fff;background:rgba(0,0,0,0.35);padding:0.3em 1em;border-radius:0.5em;text-shadow:0 2px 8px #000;">El club más moderno de [Ciudad]. Canchas premium, comunidad activa y pasión por el deporte.</p>
+    <a href="/reservar/" class="ui primary button text-lg animate-bounce mb-4">Reserva tu cancha ahora</a>
+    <div class="flex flex-wrap gap-8 justify-center mt-8">
+      <div class="text-center">
+        <div id="counter-socios" class="stats-animated">0</div>
+        <div class="text-white text-lg">Socios</div>
+      </div>
+      <div class="text-center">
+        <div id="counter-partidos" class="stats-animated">0</div>
+        <div class="text-white text-lg">Partidos jugados</div>
+      </div>
+      <div class="text-center">
+        <div id="counter-torneos" class="stats-animated">0</div>
+        <div class="text-white text-lg">Torneos realizados</div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Sección de cualidades y animaciones -->
+<!-- Testimonios -->
+<section class="py-12 bg-white">
+  <div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-8">Testimonios</h2>
+    <div class="testimonios-slider">
+      <div class="slide active flex flex-col items-center">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-full w-20 h-20 mb-2" alt="Testimonio 1">
+        <p class="text-lg italic mb-2">“El mejor club de pádel de la ciudad, ambiente increíble y canchas impecables.”</p>
+        <div class="text-yellow-400 text-xl mb-1">★★★★★</div>
+        <div class="font-semibold">Juan Pérez</div>
+      </div>
+      <div class="slide flex flex-col items-center">
+        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-full w-20 h-20 mb-2" alt="Testimonio 2">
+        <p class="text-lg italic mb-2">“Las clases para principiantes me ayudaron a mejorar mucho. ¡Recomendado!”</p>
+        <div class="text-yellow-400 text-xl mb-1">★★★★★</div>
+        <div class="font-semibold">María López</div>
+      </div>
+      <div class="slide flex flex-col items-center">
+        <img src="https://randomuser.me/api/portraits/men/65.jpg" class="rounded-full w-20 h-20 mb-2" alt="Testimonio 3">
+        <p class="text-lg italic mb-2">“Los torneos son súper organizados y divertidos. ¡Gran comunidad!”</p>
+        <div class="text-yellow-400 text-xl mb-1">★★★★★</div>
+        <div class="font-semibold">Carlos Gómez</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Galería interactiva -->
 <section class="py-12 bg-gradient-to-br from-green-100 to-blue-50">
   <div class="container mx-auto px-4">
-    <h2 class="text-3xl font-bold text-center mb-8">¿Por qué elegirnos?</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center hover:scale-105 transition-transform fade-in-up">
-        <img src="https://cdn-icons-png.flaticon.com/512/861/861512.png" alt="Canchas premium" class="w-20 h-20 mb-4 animate-bounce">
-        <h3 class="text-xl font-semibold mb-2">Canchas Premium</h3>
-        <p class="text-gray-700 text-center">Superficie profesional, techadas y outdoor, césped sintético y excelente iluminación.</p>
+    <h2 class="text-3xl font-bold text-center mb-8">Galería</h2>
+    <div class="gallery-slider grid grid-cols-1 md:grid-cols-3 gap-6">
+      <img class="slide active" src="https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=600&q=80" alt="Jugadores de pádel celebrando">
+      <img class="slide" src="https://images.unsplash.com/photo-1508780709619-79562169bc64?auto=format&fit=crop&w=600&q=80" alt="Partido de pádel en acción">
+      <img class="slide" src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80" alt="Golpe de revés en pádel">
+      <img class="slide" src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80" alt="Jugadores en la red de pádel">
+      <img class="slide" src="https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=600&q=80" alt="Entrenamiento de pádel">
+      <img class="slide" src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80" alt="Equipo de pádel celebrando">
+    </div>
+    <div class="text-center mt-4 text-gray-500 text-sm">Haz clic en una imagen para ampliarla</div>
+  </div>
+</section>
+
+<!-- Próximos torneos/eventos -->
+<section class="py-12 bg-white">
+  <div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-8">Próximos Torneos y Eventos</h2>
+    <div class="flex flex-wrap justify-center gap-6">
+      <div class="event-card">
+        <div class="font-bold text-lg mb-1">Torneo de Verano</div>
+        <div class="text-gray-600 mb-1">15 de Julio, 2025</div>
+        <div class="text-gray-700">Inscripción abierta para todos los niveles. ¡Premios y sorteos!</div>
       </div>
-      <div class="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center hover:scale-105 transition-transform fade-in-up" style="animation-delay:0.2s;">
-        <img src="https://cdn-icons-png.flaticon.com/512/861/861511.png" alt="Comunidad activa" class="w-20 h-20 mb-4 animate-bounce">
-        <h3 class="text-xl font-semibold mb-2">Comunidad Activa</h3>
-        <p class="text-gray-700 text-center">Torneos, rankings, clases grupales y eventos para todos los niveles y edades.</p>
+      <div class="event-card">
+        <div class="font-bold text-lg mb-1">Clínica de Pádel con Pro</div>
+        <div class="text-gray-600 mb-1">22 de Julio, 2025</div>
+        <div class="text-gray-700">Entrena con un jugador profesional. Cupos limitados.</div>
       </div>
-      <div class="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center hover:scale-105 transition-transform fade-in-up" style="animation-delay:0.4s;">
-        <img src="https://cdn-icons-png.flaticon.com/512/861/861510.png" alt="Tienda especializada" class="w-20 h-20 mb-4 animate-bounce">
-        <h3 class="text-xl font-semibold mb-2">Tienda Especializada</h3>
-        <p class="text-gray-700 text-center">Todo el equipamiento de pádel: palas, ropa, accesorios y asesoramiento profesional.</p>
+      <div class="event-card">
+        <div class="font-bold text-lg mb-1">Torneo Nocturno</div>
+        <div class="text-gray-600 mb-1">5 de Agosto, 2025</div>
+        <div class="text-gray-700">¡Vive la experiencia pádel bajo las estrellas!</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Sección de contacto y ubicación -->
-<section class="py-12 bg-white">
+<!-- Mapa interactivo -->
+<section class="py-12 bg-gradient-to-br from-blue-50 to-green-100">
   <div class="container mx-auto px-4 text-center">
-    <h2 class="text-2xl font-bold mb-4">Visítanos en [Ciudad]</h2>
-    <p class="text-gray-700 text-lg mb-2">Dirección: Calle Ejemplo 123, [Ciudad], [Provincia]</p>
-    <p class="text-gray-700 text-lg mb-2">Teléfono: <a href="tel:+34123456789" class="text-blue-600 hover:underline">+34 123 456 789</a></p>
-    <p class="text-gray-700 text-lg mb-2">Email: <a href="mailto:info@tusitio.com" class="text-blue-600 hover:underline">info@tusitio.com</a></p>
+    <h2 class="text-2xl font-bold mb-4">¿Dónde estamos?</h2>
     <div class="mt-6 flex justify-center">
       <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3151.835434509374!2d144.9537353159042!3d-37.8162797420217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6ad65d43f1f1f1f1%3A0x5045675218ce6e0!2sPista%20de%20P%C3%A1del!5e0!3m2!1ses!2sar!4v1620000000000!5m2!1ses!2sar" width="350" height="200" style="border:0;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.12);" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
   </div>
 </section>
+
+<!-- FAQ: Preguntas frecuentes -->
+<section class="py-12 bg-white">
+  <div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-8">Preguntas Frecuentes</h2>
+    <div class="max-w-2xl mx-auto">
+      <details class="mb-4"><summary class="font-semibold cursor-pointer">¿Cómo reservo una cancha?</summary><div class="mt-2 text-gray-700">Puedes reservar online desde el botón “Reserva tu cancha ahora” o llamando al club.</div></details>
+      <details class="mb-4"><summary class="font-semibold cursor-pointer">¿Qué necesito para empezar a jugar pádel?</summary><div class="mt-2 text-gray-700">Solo ropa deportiva y ganas de divertirte. Si no tienes pala, te prestamos una.</div></details>
+      <details class="mb-4"><summary class="font-semibold cursor-pointer">¿Ofrecen clases para principiantes?</summary><div class="mt-2 text-gray-700">Sí, tenemos clases para todos los niveles y edades, con profesores certificados.</div></details>
+      <details class="mb-4"><summary class="font-semibold cursor-pointer">¿Puedo organizar un torneo privado?</summary><div class="mt-2 text-gray-700">¡Por supuesto! Contáctanos y te ayudamos a organizar tu evento.</div></details>
+      <details class="mb-4"><summary class="font-semibold cursor-pointer">¿Tienen tienda de artículos de pádel?</summary><div class="mt-2 text-gray-700">Sí, contamos con tienda física y asesoramiento profesional.</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- Noticias / Blog -->
+<section class="py-12 bg-gradient-to-br from-blue-50 to-green-100">
+  <div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-8">Noticias y Tips de Pádel</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col">
+        <div class="font-bold text-lg mb-2">¡Nuevo torneo de verano!</div>
+        <div class="text-gray-600 text-sm mb-2">Publicado el 10/06/2025</div>
+        <div class="text-gray-700 flex-1">Ya están abiertas las inscripciones para el torneo más esperado del año. ¡No te quedes afuera!</div>
+        <a href="#" class="text-blue-600 hover:underline mt-2">Leer más</a>
+      </div>
+      <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col">
+        <div class="font-bold text-lg mb-2">Tip: Cómo mejorar tu volea</div>
+        <div class="text-gray-600 text-sm mb-2">Publicado el 05/06/2025</div>
+        <div class="text-gray-700 flex-1">Descubre ejercicios y consejos para dominar la volea y ganar más puntos en tus partidos.</div>
+        <a href="#" class="text-blue-600 hover:underline mt-2">Leer más</a>
+      </div>
+      <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col">
+        <div class="font-bold text-lg mb-2">¡Bienvenida a nuevos socios!</div>
+        <div class="text-gray-600 text-sm mb-2">Publicado el 01/06/2025</div>
+        <div class="text-gray-700 flex-1">Damos la bienvenida a los nuevos miembros de la comunidad. ¡Gracias por elegirnos!</div>
+        <a href="#" class="text-blue-600 hover:underline mt-2">Leer más</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Redes sociales -->
+<section class="py-8 bg-white">
+  <div class="container mx-auto px-4 text-center">
+    <h2 class="text-2xl font-bold mb-4">Síguenos en redes sociales</h2>
+    <div class="flex justify-center gap-6 text-3xl">
+      <a href="https://www.instagram.com/clubpadel" target="_blank" class="text-pink-500 hover:text-pink-700"><i class="fab fa-instagram"></i></a>
+      <a href="https://www.facebook.com/clubpadel" target="_blank" class="text-blue-600 hover:text-blue-800"><i class="fab fa-facebook"></i></a>
+      <a href="https://wa.me/34123456789" target="_blank" class="text-green-500 hover:text-green-700"><i class="fab fa-whatsapp"></i></a>
+    </div>
+    <div class="mt-4 text-gray-600">¡Entérate de novedades, torneos y tips siguiéndonos en Instagram, Facebook y WhatsApp!</div>
+  </div>
+</section>
+
+<script src="{% static 'bienvenida-animaciones.js' %}"></script>
 {% endblock %}
