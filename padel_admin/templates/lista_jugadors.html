@@ -31,7 +31,7 @@
             {% if jugador.foto %}
               <img class="ui avatar image mr-3" src="{{ jugador.foto.url }}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;">
             {% else %}
-              <img class="ui avatar image mr-3" src="https://ui-avatars.com/api/?name={{ jugador.nom|first|capfirst }}+{{ jugador.cognom|first|capfirst }}&background=random&size=64" style="width:64px;height:64px;object-fit:cover;border-radius:50%;">
+              <img class="ui avatar image mr-3" src="{% static 'avatar-padel.svg' %}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;background:#e0f7fa;">
             {% endif %}
             <div>
               <h3 class="text-lg font-semibold popup" data-content="Nivel: {{ jugador.nivell }}">
