@@ -17,11 +17,20 @@
     <header>
         <nav class="bg-gray-300">
             <div class="mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
+                <div class="flex justify-between h-16 items-center">
                     <div class="flex items-center">
                         <h1 class="text-2xl font-bold text-gray-800">La cancha de German</h1>
                     </div>
-                    <div class="flex items-center">
+                    <!-- Botón hamburguesa solo en móvil -->
+                    <div class="md:hidden flex items-center">
+                        <button id="menu-toggle" class="text-gray-800 focus:outline-none" aria-label="Abrir menú">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Menú principal -->
+                    <div id="main-menu" class="hidden md:flex items-center transition-all duration-300 ease-in-out">
                         <a href="/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
                             <i class="fas fa-home"></i> Inicio
                         </a>
@@ -115,6 +124,48 @@
         });
     </script>
     
+    <script>
+    // Menú hamburguesa responsive
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const mainMenu = document.getElementById('main-menu');
+        menuToggle.addEventListener('click', function() {
+            mainMenu.classList.toggle('hidden');
+            mainMenu.classList.toggle('flex');
+            mainMenu.classList.toggle('animate-slide-down');
+        });
+    });
+    </script>
+    <style>
+    @media (max-width: 767px) {
+        #main-menu {
+            position: absolute;
+            top: 64px;
+            left: 0;
+            width: 100vw;
+            background: #e5e7eb;
+            flex-direction: column;
+            align-items: flex-start;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            z-index: 50;
+            padding-bottom: 1em;
+        }
+        #main-menu a {
+            width: 100%;
+            padding-left: 2em;
+            padding-right: 2em;
+            margin-bottom: 0.5em;
+        }
+    }
+    @keyframes slide-down {
+        0% { opacity: 0; transform: translateY(-20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-down {
+        animation: slide-down 0.3s ease;
+    }
+    </style>
+
     {% block extra_js %}{% endblock %}
 
 </body>
