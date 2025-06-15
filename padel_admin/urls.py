@@ -16,4 +16,9 @@ urlpatterns += [
     path(
         "estadisticas_avanzadas/", estadisticas_avanzadas, name="estadisticas_avanzadas"
     ),
+    path("ventas/", views.ventas_lista, name="ventas_lista"),
+    path("ventas/nueva/", views.venta_nueva, name="venta_nueva"),
+    path("stock/", views.stock_lista, name="stock_lista"),
+    path("stock/ingreso/", views.ingreso_stock, name="ingreso_stock"),
+    path("resumen-caja/", views.resumen_caja, name="resumen_caja"),
 ]

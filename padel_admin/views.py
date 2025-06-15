@@ -12,6 +12,11 @@ from .models import (
     Pistes,
     Recepcionista,
     Tarifa,
+    Proveedor,
+    Producto,
+    IngresoStock,
+    Venta,
+    VentaDetalle,
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
@@ -31,6 +36,18 @@ from .utils import (
 )
 from .services import ReservaService, CobroService
 from django.http import JsonResponse
+from .forms import (
+    ProveedorForm,
+    ProductoForm,
+    IngresoStockForm,
+    VentaForm,
+    VentaDetalleForm,
+)
+from django.forms import modelformset_factory
+from django.forms import formset_factory
+from django.db.models import Sum
+from django.utils import timezone
+from django.db import transaction
 
 
 def landing(request):
@@ -922,3 +939,141 @@ def obtener_datos_reserva_formulario(request, modo="recepcionista"):
         "type_cancha": type_cancha,
         "cancha_numero": cancha_numero,
     }
+
+
+# Lista de ventas
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def ventas_lista(request):
+    ventas = Venta.objects.prefetch_related("detalles", "jugador").order_by("-fecha")
+    return render(request, "ventas_lista.html", {"ventas": ventas})
+
+
+# Registrar nueva venta
+@login_required
+def venta_nueva(request):
+    VentaDetalleFormSet = formset_factory(VentaDetalleForm, extra=3)
+    if request.method == "POST":
+        venta_form = VentaForm(request.POST)
+        detalle_forms = VentaDetalleFormSet(request.POST)
+        errores = []
+        detalles_validos = []
+        total = 0
+        detalles_completos = False
+        if venta_form.is_valid() and detalle_forms.is_valid():
+            for form in detalle_forms:
+                producto = form.cleaned_data.get("producto")
+                cantidad = form.cleaned_data.get("cantidad")
+                if producto or cantidad:
+                    detalles_completos = True
+                if producto and cantidad:
+                    if cantidad <= 0:
+                        errores.append(
+                            f"La cantidad del producto '{producto}' debe ser mayor a cero."
+                        )
+                        continue
+                    if producto.stock_actual < cantidad:
+                        errores.append(
+                            f"Stock insuficiente para '{producto}'. Disponible: {producto.stock_actual}, solicitado: {cantidad}."
+                        )
+                        continue
+                    detalles_validos.append(form)
+                    total += cantidad * form.cleaned_data.get("precio_unitario", 0)
+            if not detalles_completos:
+                errores.append(
+                    "Debes completar al menos un producto y cantidad para registrar la venta."
+                )
+            elif not detalles_validos:
+                errores.append(
+                    "Debes ingresar al menos un producto con cantidad válida y stock suficiente."
+                )
+            if errores:
+                for error in errores:
+                    messages.error(request, error)
+            else:
+                with transaction.atomic():
+                    venta = venta_form.save(commit=False)
+                    venta.total = total
+                    venta.save()
+                    for form in detalles_validos:
+                        detalle = form.save(commit=False)
+                        detalle.venta = venta
+                        detalle.save()
+                messages.success(request, "Venta registrada correctamente.")
+                return redirect("ventas_lista")
+        else:
+            # Mostrar errores de validación de los formularios
+            if not venta_form.is_valid():
+                for field, errors in venta_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
+            if not detalle_forms.is_valid():
+                for form in detalle_forms:
+                    for field, errors in form.errors.items():
+                        for error in errors:
+                            messages.error(request, f"Detalle - {field}: {error}")
+    else:
+        venta_form = VentaForm()
+        detalle_forms = VentaDetalleFormSet()
+    return render(
+        request,
+        "venta_nueva.html",
+        {"venta_form": venta_form, "detalle_forms": detalle_forms},
+    )
+
+
+# Lista de stock
+@login_required
+def stock_lista(request):
+    productos = Producto.objects.all().order_by("nombre")
+    return render(request, "stock_lista.html", {"productos": productos})
+
+
+# Registrar ingreso de stock
+@login_required
+def ingreso_stock(request):
+    if request.method == "POST":
+        form = IngresoStockForm(request.POST)
+        if form.is_valid():
+            cantidad = form.cleaned_data.get("cantidad")
+            precio_compra = form.cleaned_data.get("precio_compra")
+            errores = []
+            if cantidad is None or cantidad <= 0:
+                errores.append("La cantidad debe ser mayor a cero.")
+            if precio_compra is None or precio_compra <= 0:
+                errores.append("El precio de compra debe ser mayor a cero.")
+            if errores:
+                for error in errores:
+                    messages.error(request, error)
+            else:
+                form.save()
+                messages.success(request, "Ingreso de stock registrado correctamente.")
+                return redirect("stock_lista")
+    else:
+        form = IngresoStockForm()
+    return render(request, "ingreso_stock.html", {"form": form})
+
+
+@login_required
+def resumen_caja(request):
+    hoy = timezone.localdate()
+    ventas = Venta.objects.filter(fecha__date=hoy)
+    total_ventas = ventas.aggregate(total=Sum("total"))["total"] or 0
+    detalles = VentaDetalle.objects.filter(venta__in=ventas)
+    productos_vendidos = (
+        detalles.values("producto__nombre")
+        .annotate(cantidad=Sum("cantidad"), total=Sum("precio_unitario"))
+        .order_by("-cantidad")
+    )
+    return render(
+        request,
+        "resumen_caja.html",
+        {
+            "ventas": ventas,
+            "total_ventas": total_ventas,
+            "productos_vendidos": productos_vendidos,
+            "fecha": hoy,
+        },
+    )

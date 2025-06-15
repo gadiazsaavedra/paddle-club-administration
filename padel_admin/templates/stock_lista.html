@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Stock de Productos - Paddle Club{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Stock de Productos</h1>
+<a href="{% url 'ingreso_stock' %}" class="ui primary button mb-4">Registrar ingreso de stock</a>
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th>Producto</th>
+      <th>Categoría</th>
+      <th>Stock actual</th>
+      <th>Precio de venta</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for producto in productos %}
+    <tr>
+      <td>{{ producto.nombre }}</td>
+      <td>{{ producto.get_categoria_display }}</td>
+      <td>{{ producto.stock_actual }}</td>
+      <td>${{ producto.precio_venta }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">No hay productos registrados.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

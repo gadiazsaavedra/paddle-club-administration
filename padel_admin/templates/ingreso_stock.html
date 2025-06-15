@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Ingreso de Stock - Paddle Club{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Registrar ingreso de stock</h1>
+<form method="post" id="stock-form">
+  {% csrf_token %}
+  <div class="bg-gray-50 p-4 rounded shadow animate-fade-in">
+    {{ form.as_p }}
+  </div>
+  <button type="submit" class="ui primary button mt-4">Guardar ingreso</button>
+  <a href="{% url 'stock_lista' %}" class="ui button mt-4">Cancelar</a>
+</form>
+<script src="{% static 'autocomplete.js' %}"></script>
+<script>
+// Validación visual de campos
+const form = document.getElementById('stock-form');
+form.addEventListener('submit', function(e) {
+  let valido = true;
+  form.querySelectorAll('input[type=number]').forEach(function(input) {
+    if (parseFloat(input.value) <= 0) {
+      input.style.borderColor = 'red';
+      valido = false;
+    } else {
+      input.style.borderColor = '';
+    }
+  });
+  if (!valido) {
+    e.preventDefault();
+    alert('Por favor, ingresa valores mayores a cero en cantidad y precio.');
+  }
+});
+</script>
+<style>
+.bg-gray-50 { transition: box-shadow 0.2s, background 0.2s; }
+.bg-gray-50:focus-within { box-shadow: 0 0 0 2px #00bcd4; background: #e0f7fa; }
+</style>
+{% endblock %}

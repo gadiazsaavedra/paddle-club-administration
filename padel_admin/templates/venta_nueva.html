@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Registrar Venta - Paddle Club{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Registrar nueva venta</h1>
+
+{% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+      <div class="p-3 mb-2 rounded shadow text-base font-semibold animate-fade-in
+        {% if message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% else %}bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700{% endif %}">
+        <i class="exclamation circle icon"></i> {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<form method="post" id="venta-form">
+  {% csrf_token %}
+  <div class="mb-4">
+    {{ venta_form.as_p }}
+  </div>
+  <h2 class="text-xl font-semibold mb-2">Productos vendidos</h2>
+  {{ detalle_forms.management_form }}
+  <div id="detalles">
+    {% for form in detalle_forms %}
+      <div class="mb-2 border p-2 rounded bg-gray-50 animate-fade-in detalle-item">
+        {{ form.as_p }}
+      </div>
+    {% endfor %}
+  </div>
+  <button type="button" class="ui button mb-4" id="agregar-producto">+ Agregar producto</button>
+  <div class="mb-4 text-xl font-bold">Total: $<span id="total-venta">0.00</span></div>
+  <button type="submit" class="ui primary button">Guardar venta</button>
+  <a href="{% url 'ventas_lista' %}" class="ui button">Cancelar</a>
+</form>
+<script src="{% static 'autocomplete.js' %}"></script>
+<script>
+// Generar datalist de productos para autocompletar
+const productos = [
+  {% for producto in venta_form.fields.producto.queryset.all %}
+    "{{ producto.nombre }}",
+  {% endfor %}
+];
+document.addEventListener('DOMContentLoaded', function() {
+  const inputsProducto = document.querySelectorAll('input[name$="-producto"]');
+  inputsProducto.forEach(function(input) {
+    const datalist = document.createElement('datalist');
+    datalist.id = 'productos-list';
+    document.body.appendChild(datalist);
+    productos.forEach(function(producto) {
+      const option = document.createElement('option');
+      option.value = producto;
+      datalist.appendChild(option);
+    });
+    input.setAttribute('list', 'productos-list');
+  });
+});
+
+// Calcular total en tiempo real
+function calcularTotal() {
+  let total = 0;
+  document.querySelectorAll('.detalle-item').forEach(function(item) {
+    const cantidad = parseFloat(item.querySelector('input[name$="-cantidad"]').value) || 0;
+    const precio = parseFloat(item.querySelector('input[name$="-precio_unitario"]').value) || 0;
+    total += cantidad * precio;
+  });
+  document.getElementById('total-venta').textContent = total.toFixed(2);
+}
+document.querySelectorAll('.detalle-item input').forEach(function(input) {
+  input.addEventListener('input', calcularTotal);
+});
+// Agregar producto dinámicamente
+const agregarBtn = document.getElementById('agregar-producto');
+agregarBtn.addEventListener('click', function() {
+  const detalles = document.getElementById('detalles');
+  const forms = detalles.querySelectorAll('.detalle-item');
+  const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+  if (forms.length > 0) {
+    const nuevo = forms[0].cloneNode(true);
+    // Limpiar valores
+    nuevo.querySelectorAll('input').forEach(function(input) { input.value = ''; });
+    // Actualizar los atributos name y id de los inputs
+    const formIdx = forms.length;
+    nuevo.querySelectorAll('input,select,textarea').forEach(function(input) {
+      if (input.name) {
+        input.name = input.name.replace(/-\d+-/, '-' + formIdx + '-');
+      }
+      if (input.id) {
+        input.id = input.id.replace(/_\d+_/, '_' + formIdx + '_');
+      }
+    });
+    detalles.appendChild(nuevo);
+    nuevo.querySelectorAll('input').forEach(function(input) {
+      input.addEventListener('input', calcularTotal);
+    });
+    // Actualizar el TOTAL_FORMS
+    totalForms.value = formIdx + 1;
+  }
+});
+// Inicializar total
+calcularTotal();
+</script>
+<style>
+.detalle-item { transition: box-shadow 0.2s, background 0.2s; }
+.detalle-item:focus-within { box-shadow: 0 0 0 2px #00bcd4; background: #e0f7fa; }
+</style>
+{% endblock %}

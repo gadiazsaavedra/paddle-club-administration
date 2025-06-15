@@ -100,9 +100,12 @@
             </div>
             <div class="field">
                 <label class="text-gray-700">Contraseña</label>
-                <div class="ui left icon input">
+                <div class="ui left icon input" style="position:relative;">
                     <i class="lock icon"></i>
-                    <input type="password" placeholder="Ingresá tu contraseña" name="contrasenya">
+                    <input type="password" placeholder="Ingresá tu contraseña" name="contrasenya" id="password-field">
+                    <span onclick="togglePassword()" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
+                        <i id="eye-icon" class="eye slash icon"></i>
+                    </span>
                 </div>
             </div>
             <button type="submit" class="ui primary button">
@@ -122,5 +125,18 @@
             <p class="mt-2">Sistema de gestión para clubes de paddle</p>
         </div>
     </div>
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password-field');
+            const eye = document.getElementById('eye-icon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                eye.classList.remove('slash');
+            } else {
+                pwd.type = 'password';
+                eye.classList.add('slash');
+            }
+        }
+    </script>
 </body>
 </html>

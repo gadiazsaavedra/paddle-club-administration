@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Ventas - Paddle Club{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Ventas realizadas</h1>
+<a href="{% url 'venta_nueva' %}" class="ui primary button mb-4">Registrar nueva venta</a>
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Fecha</th>
+      <th>Jugador</th>
+      <th>Total</th>
+      <th>Detalle</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for venta in ventas %}
+    <tr>
+      <td>{{ venta.id }}</td>
+      <td>{{ venta.fecha|date:'d/m/Y H:i' }}</td>
+      <td>{{ venta.jugador }}</td>
+      <td>${{ venta.total }}</td>
+      <td>
+        <ul>
+        {% for det in venta.detalles.all %}
+          <li>{{ det.cantidad }} x {{ det.producto.nombre }} (${{ det.precio_unitario }})</li>
+        {% endfor %}
+        </ul>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No hay ventas registradas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

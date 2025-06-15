@@ -10,6 +10,11 @@ from .models import (
     ReservaRecurrente,
     Tarifa,
     HistoricoReserva,
+    Proveedor,
+    Producto,
+    IngresoStock,
+    Venta,
+    VentaDetalle,
 )
 
 # Register your models here.
@@ -56,3 +61,53 @@ class ReservaRecurrenteAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(Proveedor)
+class ProveedorAdmin(admin.ModelAdmin):
+    list_display = ("nombre", "contacto", "email", "telefono", "activo")
+    search_fields = ("nombre", "contacto", "email", "telefono")
+    list_filter = ("activo",)
+
+
+@admin.register(Producto)
+class ProductoAdmin(admin.ModelAdmin):
+    list_display = (
+        "nombre",
+        "categoria",
+        "precio_venta",
+        "stock_actual",
+        "unidad_medida",
+        "activo",
+    )
+    search_fields = ("nombre",)
+    list_filter = ("categoria", "activo")
+
+
+@admin.register(IngresoStock)
+class IngresoStockAdmin(admin.ModelAdmin):
+    list_display = ("producto", "proveedor", "fecha", "cantidad", "precio_compra")
+    search_fields = ("producto__nombre", "proveedor__nombre")
+    list_filter = ("producto", "proveedor", "fecha")
+    date_hierarchy = "fecha"
+
+
+class VentaDetalleInline(admin.TabularInline):
+    model = VentaDetalle
+    extra = 1
+
+
+@admin.register(Venta)
+class VentaAdmin(admin.ModelAdmin):
+    list_display = ("id", "fecha", "jugador", "total")
+    search_fields = ("jugador__nom", "jugador__cognom")
+    list_filter = ("fecha",)
+    date_hierarchy = "fecha"
+    inlines = [VentaDetalleInline]
+
+
+@admin.register(VentaDetalle)
+class VentaDetalleAdmin(admin.ModelAdmin):
+    list_display = ("venta", "producto", "cantidad", "precio_unitario", "subtotal")
+    search_fields = ("producto__nombre",)
+    list_filter = ("producto",)

@@ -305,3 +305,97 @@ class HistoricoReserva(models.Model):
 
     def __str__(self):
         return f"{self.jugador} - {self.reserva} - {self.accion} - {self.fecha} - {self.importe}"
+
+
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=100)
+    contacto = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    telefono = models.CharField(max_length=30, blank=True, null=True)
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Producto(models.Model):
+    CATEGORIAS = [
+        ("bebida", "Bebida"),
+        ("snack", "Snack"),
+        ("otro", "Otro"),
+    ]
+    nombre = models.CharField(max_length=100)
+    categoria = models.CharField(max_length=20, choices=CATEGORIAS, default="otro")
+    precio_venta = models.DecimalField(max_digits=8, decimal_places=2)
+    stock_actual = models.PositiveIntegerField(default=0)
+    unidad_medida = models.CharField(max_length=20, default="unidad")
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.nombre} ({self.categoria})"
+
+
+class IngresoStock(models.Model):
+    producto = models.ForeignKey(
+        Producto, on_delete=models.CASCADE, related_name="ingresos"
+    )
+    proveedor = models.ForeignKey(
+        Proveedor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ingresos",
+    )
+    fecha = models.DateField(auto_now_add=True)
+    cantidad = models.PositiveIntegerField()
+    precio_compra = models.DecimalField(max_digits=8, decimal_places=2)
+    observaciones = models.TextField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Sumar al stock actual del producto
+        self.producto.stock_actual += self.cantidad
+        self.producto.save()
+
+    def __str__(self):
+        return f"Ingreso {self.cantidad} x {self.producto} de {self.proveedor}"
+
+
+class Venta(models.Model):
+    fecha = models.DateTimeField(auto_now_add=True)
+    jugador = models.ForeignKey(
+        Jugadors,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ventas",
+    )
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def calcular_total(self):
+        total = sum([detalle.subtotal() for detalle in self.detalles.all()])
+        self.total = total
+        self.save()
+        return total
+
+    def __str__(self):
+        return f"Venta #{self.id} - {self.fecha.date()} - Total: ${self.total}"
+
+
+class VentaDetalle(models.Model):
+    venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name="detalles")
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    cantidad = models.PositiveIntegerField()
+    precio_unitario = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def subtotal(self):
+        return self.cantidad * self.precio_unitario
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Descontar del stock del producto
+        self.producto.stock_actual = max(0, self.producto.stock_actual - self.cantidad)
+        self.producto.save()
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre} a ${self.precio_unitario}"
