@@ -27,6 +27,12 @@ class VentaDetalleForm(forms.ModelForm):
 
 
 class VentaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["jugador"].label_from_instance = (
+            lambda obj: f"{obj.nom} {obj.cognom}".strip()
+        )
+
     class Meta:
         model = Venta
         fields = ["jugador"]
