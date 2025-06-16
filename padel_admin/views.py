@@ -77,6 +77,7 @@ def home(request):
     return render(request, "bienvenida.html")
 
 
+@require_recepcionista
 @handle_view_errors
 def lista_reserves(request):
     acceso = request.COOKIES.get("acceso")
@@ -304,6 +305,7 @@ def lista_reserves(request):
     )
 
 
+@require_recepcionista
 @handle_view_errors
 def lista_jugadors(request):
     acceso = request.COOKIES.get("acceso")
@@ -729,7 +731,14 @@ def logout(request):
     return response
 
 
+@require_recepcionista
 def calendario_canchas(request):
+    # Permitir acceso a recepcionista o jugador logueado
+    jugador_id = request.COOKIES.get("jugador_id")
+    acceso = request.COOKIES.get("acceso")
+    if not jugador_id and not acceso:
+        return redirect("login")
+
     # Obtener fecha actual o la seleccionada
     fecha_str = request.GET.get("fecha")
     if fecha_str:
@@ -945,14 +954,14 @@ def obtener_datos_reserva_formulario(request, modo="recepcionista"):
 from django.contrib.auth.decorators import login_required
 
 
-@login_required
+@require_recepcionista
 def ventas_lista(request):
     ventas = Venta.objects.prefetch_related("detalles", "jugador").order_by("-fecha")
     return render(request, "ventas_lista.html", {"ventas": ventas})
 
 
 # Registrar nueva venta
-@login_required
+@require_recepcionista
 def venta_nueva(request):
     VentaDetalleFormSet = formset_factory(VentaDetalleForm, extra=3)
     if request.method == "POST":
@@ -1025,14 +1034,14 @@ def venta_nueva(request):
 
 
 # Lista de stock
-@login_required
+@require_recepcionista
 def stock_lista(request):
     productos = Producto.objects.all().order_by("nombre")
     return render(request, "stock_lista.html", {"productos": productos})
 
 
 # Registrar ingreso de stock
-@login_required
+@require_recepcionista
 def ingreso_stock(request):
     if request.method == "POST":
         form = IngresoStockForm(request.POST)
@@ -1056,7 +1065,7 @@ def ingreso_stock(request):
     return render(request, "ingreso_stock.html", {"form": form})
 
 
-@login_required
+@require_recepcionista
 def resumen_caja(request):
     hoy = timezone.localdate()
     ventas = Venta.objects.filter(fecha__date=hoy)

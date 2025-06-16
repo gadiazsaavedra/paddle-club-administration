@@ -324,12 +324,27 @@ class Producto(models.Model):
         ("snack", "Snack"),
         ("otro", "Otro"),
     ]
+    codigo = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="Código único de identificación",
+    )
     nombre = models.CharField(max_length=100)
     categoria = models.CharField(max_length=20, choices=CATEGORIAS, default="otro")
     precio_venta = models.DecimalField(max_digits=8, decimal_places=2)
     stock_actual = models.PositiveIntegerField(default=0)
     unidad_medida = models.CharField(max_length=20, default="unidad")
     activo = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.codigo:
+            # Generar un código único si no se proporciona
+            from uuid import uuid4
+
+            self.codigo = str(uuid4())[:8]
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nombre} ({self.categoria})"

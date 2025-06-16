@@ -18,7 +18,7 @@
     <tr>
       <td>{{ venta.id }}</td>
       <td>{{ venta.fecha|date:'d/m/Y H:i' }}</td>
-      <td>{{ venta.jugador }}</td>
+      <td>{% if venta.jugador %}{{ venta.jugador.nom }} {{ venta.jugador.cognom }}{% else %}-{% endif %}</td>
       <td>${{ venta.total }}</td>
       <td>
         <ul>

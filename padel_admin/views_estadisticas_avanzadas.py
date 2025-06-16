@@ -9,8 +9,10 @@ from .models import (
 )
 from django.db.models import Sum, Count, Q, F, Min, Max, DurationField
 from django.db.models import ExpressionWrapper
+from .utils import require_recepcionista
 
 
+@require_recepcionista
 def estadisticas_avanzadas(request):
     # 1. Ranking de jugadores más activos
     ranking_activos = (

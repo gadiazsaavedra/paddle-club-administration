@@ -73,6 +73,7 @@ class ProveedorAdmin(admin.ModelAdmin):
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = (
+        "codigo",  # Mostrar el código único en la lista
         "nombre",
         "categoria",
         "precio_venta",
@@ -80,7 +81,7 @@ class ProductoAdmin(admin.ModelAdmin):
         "unidad_medida",
         "activo",
     )
-    search_fields = ("nombre",)
+    search_fields = ("nombre", "codigo")
     list_filter = ("categoria", "activo")
 
 
