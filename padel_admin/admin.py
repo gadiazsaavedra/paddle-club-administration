@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from .models import (
     Jugadors,
     Soci,
@@ -15,6 +15,8 @@ from .models import (
     IngresoStock,
     Venta,
     VentaDetalle,
+    ConfiguracionSistema,
+    MatchJuego,
 )
 
 # Register your models here.
@@ -112,3 +114,53 @@ class VentaDetalleAdmin(admin.ModelAdmin):
     list_display = ("venta", "producto", "cantidad", "precio_unitario", "subtotal")
     search_fields = ("producto__nombre",)
     list_filter = ("producto",)
+
+
+@admin.register(ConfiguracionSistema)
+class ConfiguracionSistemaAdmin(admin.ModelAdmin):
+    list_display = ("matching_activo", "actualizado")
+    actions = ["activar_matching", "desactivar_matching"]
+
+    @admin.action(description="Activar matching automático")
+    def activar_matching(self, request, queryset):
+        queryset.update(matching_activo=True)
+        self.message_user(request, "Matching activado.")
+
+    @admin.action(description="Desactivar matching automático")
+    def desactivar_matching(self, request, queryset):
+        queryset.update(matching_activo=False)
+        self.message_user(request, "Matching desactivado.")
+
+
+@admin.register(MatchJuego)
+class MatchJuegoAdmin(admin.ModelAdmin):
+    list_display = (
+        "__str__",
+        "dia",
+        "franja_horaria_inicio",
+        "franja_horaria_fin",
+        "nivel",
+        "notificado",
+        "fecha_creacion",
+    )
+    list_filter = ("notificado", "dia", "nivel")
+    actions = ["notificar_jugadores"]
+
+    def changelist_view(self, request, extra_context=None):
+        pendientes = self.model.objects.filter(notificado=False).count()
+        if pendientes > 0:
+            messages.warning(
+                request,
+                f"¡Hay {pendientes} match(es) pendientes de notificación! Por favor, revisa y notifica a los jugadores.",
+            )
+        return super().changelist_view(request, extra_context=extra_context)
+
+    @admin.action(description="Notificar por email a los jugadores del match")
+    def notificar_jugadores(self, request, queryset):
+        from .models import notificar_jugadores_match
+
+        for match in queryset.filter(notificado=False):
+            notificar_jugadores_match(match)
+        self.message_user(
+            request, "Se notificó por email a los jugadores seleccionados."
+        )

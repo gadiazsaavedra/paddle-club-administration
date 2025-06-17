@@ -35,37 +35,50 @@
                             <i class="fas fa-home"></i> Inicio
                         </a>
                         {% if request.COOKIES.acceso %}
-                        <a href="/estadisticas/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-chart-bar"></i> Resumen
-                        </a>
-                        <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-calendar-alt"></i> Turnos
-                        </a>
-                        <a href="/calendario" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="far fa-calendar"></i> Calendario
-                        </a>
-                        <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-users"></i> Jugadores
-                        </a>
-                        <a href="/estadisticas_avanzadas/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-chart-pie"></i> Estadísticas avanzadas
-                        </a>
-                        <a href="/ventas/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-cash-register"></i> Ventas
-                        </a>
-                        <a href="/stock/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-boxes"></i> Stock
-                        </a>
-                        <a href="/resumen-caja/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
-                            <i class="fas fa-money-bill-wave"></i> Resumen Caja
-                        </a>
-                        <a href="/logout" class="text-gray-800 hover:text-black px-4 py-2 text-xl" title="Cerrar sesión">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </a>
+                            <a href="/estadisticas/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-chart-bar"></i> Resumen
+                            </a>
+                            <a href="/reserves" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-calendar-alt"></i> Turnos
+                            </a>
+                            <a href="/calendario" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="far fa-calendar"></i> Calendario
+                            </a>
+                            <a href="/jugadors" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-users"></i> Jugadores
+                            </a>
+                            <a href="/estadisticas_avanzadas/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-chart-pie"></i> Estadísticas avanzadas
+                            </a>
+                            <a href="/ventas/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-cash-register"></i> Ventas
+                            </a>
+                            <a href="/stock/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-boxes"></i> Stock
+                            </a>
+                            <a href="/resumen-caja/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-money-bill-wave"></i> Resumen Caja
+                            </a>
+                            <a href="/matches/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-random"></i> Matches jugadores
+                            </a>
+                            <a href="/logout" class="text-gray-800 hover:text-black px-4 py-2 text-xl" title="Cerrar sesión">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
+                        {% elif request.COOKIES.jugador_id %}
+                            <a href="/disponibilidad/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-user-clock"></i> Mi disponibilidad para jugar
+                            </a>
+                            <a href="/perfil/" class="text-gray-800 hover:text-black px-4 py-2 rounded-md text-lg font-medium">
+                                <i class="fas fa-user"></i> Mi perfil
+                            </a>
+                            <a href="/logout_jugador/" class="text-gray-800 hover:text-black px-4 py-2 text-xl" title="Cerrar sesión">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </a>
                         {% else %}
-                        <a href="/login/" class="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-lg font-semibold ml-2 transition-colors duration-200">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
+                            <a href="/login/" class="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-lg font-semibold ml-2 transition-colors duration-200">
+                                <i class="fas fa-sign-in-alt"></i> Login Hub
+                            </a>
                         {% endif %}
                     </div>
                 </div>

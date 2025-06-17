@@ -21,4 +21,11 @@ urlpatterns += [
     path("stock/", views.stock_lista, name="stock_lista"),
     path("stock/ingreso/", views.ingreso_stock, name="ingreso_stock"),
     path("resumen-caja/", views.resumen_caja, name="resumen_caja"),
+    path(
+        "disponibilidad/", views.disponibilidad_jugador, name="disponibilidad_jugador"
+    ),
+    path("jugadores/login/", views.login_jugador, name="login_jugador"), # Cambiada la URL para evitar conflicto
+    path("registro_jugador/", views.registro_jugador, name="registro_jugador"),
+    path("logout_jugador/", views.logout_jugador, name="logout_jugador"),
+    path("matches/", views.lista_matches, name="lista_matches"),
 ]

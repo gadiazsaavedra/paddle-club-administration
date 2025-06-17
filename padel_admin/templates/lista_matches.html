@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Matches de Jugadores{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Matches generados (Tinder de jugadores)</h1>
+<div class="bg-white p-6 rounded shadow">
+  <table class="ui celled table">
+    <thead>
+      <tr>
+        <th>Fecha creación</th>
+        <th>Día</th>
+        <th>Franja horaria</th>
+        <th>Nivel</th>
+        <th>Jugadores</th>
+        <th>Notificado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for match in matches %}
+      <tr {% if not match.notificado %}class="bg-yellow-50"{% endif %}>
+        <td>{{ match.fecha_creacion|date:'d/m/Y H:i' }}</td>
+        <td>{{ match.get_dia_display }}</td>
+        <td>{{ match.franja_horaria_inicio|time:'H:i' }} - {{ match.franja_horaria_fin|time:'H:i' }}</td>
+        <td>{{ match.get_nivel_display }}</td>
+        <td>
+          <ul>
+            {% for jugador in match.jugadores.all %}
+              <li>{{ jugador.nom }} {{ jugador.cognom }} ({{ jugador.id_jugador }})</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>
+          {% if match.notificado %}
+            <span class="ui green label"><i class="fas fa-check"></i> Sí</span>
+          {% else %}
+            <span class="ui yellow label"><i class="fas fa-exclamation"></i> No</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center">No hay matches generados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

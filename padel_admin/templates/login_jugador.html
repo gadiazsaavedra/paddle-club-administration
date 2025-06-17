@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Login Jugador{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Iniciar sesión como jugador</h1>
+<form method="post" class="max-w-md mx-auto bg-white p-6 rounded shadow">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="ui primary button w-full" {% if sesion_activa %}disabled{% endif %}>Entrar</button>
+</form>
+{% if messages %}
+  <ul class="mt-4">
+    {% for message in messages %}
+      <li class="text-red-600">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+<div class="mt-8 flex flex-col items-center">
+  <a href="{% url 'registro_jugador' %}" class="ui large green button flex items-center gap-2" style="font-size:1.2rem; min-width:260px;">
+    <i class="fas fa-user-plus"></i> Registrarse como jugador
+  </a>
+</div>
+{% if sesion_activa %}
+<div class="mt-8 flex flex-col items-center">
+  <div class="ui message info max-w-md">Ya tienes una sesión activa como jugador. Si deseas usar otra cuenta, primero cierra sesión.</div>
+</div>
+{% endif %}
+{% endblock %}

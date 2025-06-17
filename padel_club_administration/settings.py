@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "padel_admin",
     "crispy_forms",
+    "django_q",
 ]
 
 MIDDLEWARE = [
@@ -109,4 +110,24 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Redirección de login personalizada
-LOGIN_URL = "/login/"
+LOGIN_URL = "/login/"  # Apunta al nuevo login hub
+
+Q_CLUSTER = {
+    "name": "padel_q",
+    "workers": 2,
+    "recycle": 500,
+    "timeout": 60,
+    "retry": 120,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",
+}
+
+# Configuración del backend de email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"  # Cambia por tu proveedor
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "tucuenta@gmail.com"  # Cambia por tu email
+EMAIL_HOST_PASSWORD = "tu_contraseña"  # Cambia por tu contraseña o usa app password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

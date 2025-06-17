@@ -23,8 +23,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", views.home, name="home"),  # Home pública SIEMPRE visible
-    path("login/", views.landing, name="login"),  # Login solo en /login
+    path("", views.home, name="home"),  # Home pública
+    path("login/", views.login_hub, name="login"), # Nuevo Login Hub
+    path("recepcionista/login/", views.login_recepcionista, name="login_recepcionista"), # Login de recepcionista
     path("reserves/", views.lista_reserves, name="lista_reserves"),
     path("jugadors/", views.lista_jugadors, name="lista_jugadors"),
     path(
@@ -35,7 +36,6 @@ urlpatterns = [
     path("logout/", views.logout, name="logout"),
     path("calendario/", views.calendario_canchas, name="calendario_canchas"),
     path("reservar/", views.reservar_cancha, name="reservar_cancha"),
-    path("calendario/", views.calendario_canchas, name="calendario_canchas"),
     path("crear-reserva/", views.crear_reserva, name="crear_reserva"),
     path("perfil/", views.perfil_jugador, name="perfil_jugador"),
     path("", include("padel_admin.urls")),

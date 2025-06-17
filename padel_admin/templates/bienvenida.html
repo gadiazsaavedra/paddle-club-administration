@@ -54,6 +54,22 @@
         <div class="text-white text-lg">Torneos realizados</div>
       </div>
     </div>
+    {% if request.COOKIES.jugador_id %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+      <a href="/disponibilidad/" class="ui blue button w-full py-6 flex flex-col items-center" role="button">
+        <i class="fas fa-calendar-check fa-2x mb-2"></i>
+        Mi disponibilidad para jugar
+      </a>
+      <a href="/calendario/" class="ui green button w-full py-6 flex flex-col items-center" role="button">
+        <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+        Calendario y reservas
+      </a>
+      <a href="/perfil/" class="ui orange button w-full py-6 flex flex-col items-center" role="button">
+        <i class="fas fa-user fa-2x mb-2"></i>
+        Mi perfil
+      </a>
+    </div>
+    {% endif %}
   </div>
 </section>
 <style>

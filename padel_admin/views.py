@@ -17,6 +17,9 @@ from .models import (
     IngresoStock,
     Venta,
     VentaDetalle,
+    HistorialStock,
+    MatchJuego,
+    DisponibilidadJugador,  # <--- agregado
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
@@ -42,6 +45,9 @@ from .forms import (
     IngresoStockForm,
     VentaForm,
     VentaDetalleForm,
+    DisponibilidadJugadorForm,
+    JugadorLoginForm,
+    JugadorRegistroForm,
 )
 from django.forms import modelformset_factory
 from django.forms import formset_factory
@@ -50,26 +56,30 @@ from django.utils import timezone
 from django.db import transaction
 
 
-def landing(request):
+def login_recepcionista(request):
     if request.method == "POST":
         dni = request.POST.get("dni")
         contrasenya = request.POST.get("contrasenya")
         try:
-            recepcionista = Recepcionista.objects.get(DNI=dni, contrasenya=contrasenya)
-            response = redirect("lista_reserves")
-            response.set_cookie("acceso", str(recepcionista.DNI))
-            return response
+            recepcionista = Recepcionista.objects.get(DNI=dni)
         except Recepcionista.DoesNotExist:
-            messages.error(request, "El DNI o password son incorrectos")
-            return render(request, "landing.html")
+            messages.error(request, "El DNI no existe.")
+            return render(request, "login_recepcionista.html")
         except MultipleObjectsReturned:
             messages.error(
                 request,
                 "Error: hay múltiples recepcionistas con ese DNI. Contacte al administrador.",
             )
-            return render(request, "landing.html")
+            return render(request, "login_recepcionista.html")
+        else:
+            if recepcionista.contrasenya != contrasenya:
+                messages.error(request, "La contraseña es incorrecta.")
+                return render(request, "login_recepcionista.html")
+            response = redirect("lista_reserves")
+            response.set_cookie("acceso", str(recepcionista.DNI))
+            return response
     else:
-        return render(request, "landing.html")
+        return render(request, "login_recepcionista.html")
 
 
 def home(request):
@@ -82,7 +92,7 @@ def home(request):
 def lista_reserves(request):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
-        mensaje = "Acceso denegado: no hay sesión activa."
+        mensaje = "Acceso denegado: no hay sesión activa de recepcionista."
         return render(request, "landing.html", {"mensaje": mensaje})
 
     # hores disponibles
@@ -310,7 +320,9 @@ def lista_reserves(request):
 def lista_jugadors(request):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
-        messages.error(request, "Acceso denegado: no hay sesión activa.")
+        messages.error(
+            request, "Acceso denegado: no hay sesión activa de recepcionista."
+        )
         return render(request, "landing.html")
     search_query = request.GET.get("search")
 
@@ -425,11 +437,10 @@ def lista_jugadors(request):
     return render(request, "lista_jugadors.html", context)
 
 
-@handle_view_errors
 def perfil_jugador(request):
     jugador_id = request.COOKIES.get("jugador_id")
     if not jugador_id:
-        return redirect("login")
+        return redirect("login_jugador")  # Redirige al login de jugador
     jugador = get_jugador_or_404(jugador_id)
     reservas = (
         Reserva.objects.filter(jugador=jugador)
@@ -562,7 +573,9 @@ def registrar_cobro_util(reserva, jugador, data, request):
 def lista_cobraments(request, data, id_jugador):
     acceso = request.COOKIES.get("acceso")
     if not acceso:
-        messages.error(request, "Acceso Denegado: no hay sesión activa.")
+        messages.error(
+            request, "Acceso Denegado: no hay sesión activa de recepcionista."
+        )
         return render(request, "landing.html")
     jugador = get_jugador_or_404(id_jugador)
     reservas = (
@@ -724,19 +737,16 @@ def eliminar_cobro(request, id_cobro):
 
 
 def logout(request):
-    response = redirect(
-        "login"
-    )  # Redirige a la página de inicio de sesión después de hacer logout
+    response = redirect("login")  # Redirige al hub de login
     response.delete_cookie("acceso")  # Elimina la cookie 'recepcionista_id'
     return response
 
 
-@require_recepcionista
 def calendario_canchas(request):
     # Permitir acceso a recepcionista o jugador logueado
     jugador_id = request.COOKIES.get("jugador_id")
     acceso = request.COOKIES.get("acceso")
-    if not jugador_id and not acceso:
+    if not jugador_id and not acceso:  # Si no hay sesión de jugador ni recepcionista
         return redirect("login")
 
     # Obtener fecha actual o la seleccionada
@@ -1047,6 +1057,7 @@ def ingreso_stock(request):
         form = IngresoStockForm(request.POST)
         if form.is_valid():
             cantidad = form.cleaned_data.get("cantidad")
+            producto = form.cleaned_data.get("producto")
             precio_compra = form.cleaned_data.get("precio_compra")
             errores = []
             if cantidad is None or cantidad <= 0:
@@ -1057,7 +1068,16 @@ def ingreso_stock(request):
                 for error in errores:
                     messages.error(request, error)
             else:
-                form.save()
+                ingreso = form.save()
+                # Registrar movimiento en historial
+                usuario = request.COOKIES.get("acceso") or "sistema"
+                HistorialStock.objects.create(
+                    producto=producto,
+                    cantidad=cantidad,
+                    tipo="ingreso",
+                    motivo="Ingreso de stock",
+                    usuario=usuario,
+                )
                 messages.success(request, "Ingreso de stock registrado correctamente.")
                 return redirect("stock_lista")
     else:
@@ -1086,3 +1106,98 @@ def resumen_caja(request):
             "fecha": hoy,
         },
     )
+
+
+def disponibilidad_jugador(request):
+    jugador_id = request.COOKIES.get("jugador_id")
+    if not jugador_id:
+        return redirect("login_jugador")  # Redirige al login de jugador
+    disponibilidad, created = DisponibilidadJugador.objects.get_or_create(
+        jugador_id=jugador_id,
+        defaults={
+            "dias_disponibles": [],
+            "franja_horaria_inicio": "18:00",
+            "franja_horaria_fin": "19:00",
+            "busca_con": "ambos",
+            "nivel": "novato",
+            "disponible": True,
+        },
+    )
+    if request.method == "POST":
+        form = DisponibilidadJugadorForm(request.POST, instance=disponibilidad)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Disponibilidad guardada correctamente.")
+            return redirect("disponibilidad_jugador")
+    else:
+        form = DisponibilidadJugadorForm(instance=disponibilidad)
+    return render(request, "disponibilidad_jugador.html", {"form": form})
+
+
+def logout_jugador(request):
+    response = redirect("login_jugador")
+    response.delete_cookie("jugador_id")
+    messages.success(request, "Sesión cerrada correctamente.")
+    return response
+
+
+def login_jugador(request):
+    sesion_activa = bool(request.COOKIES.get("jugador_id"))
+    if sesion_activa:
+        messages.info(
+            request,
+            "Ya tienes una sesión activa como jugador. Si deseas usar otra cuenta, primero cierra sesión.",
+        )
+    if request.method == "POST" and not sesion_activa:
+        form = JugadorLoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            contrasenya = form.cleaned_data["contrasenya"]
+            try:
+                jugador = Jugadors.objects.get(email=email)
+            except Jugadors.DoesNotExist:
+                messages.error(request, "El email no existe.")
+            else:
+                if jugador.contrasenya != contrasenya:
+                    messages.error(request, "La contraseña es incorrecta.")
+                else:
+                    response = redirect("home")
+                    response.set_cookie("jugador_id", jugador.id_jugador)
+                    messages.success(request, f"¡Bienvenido, {jugador.nom}!")
+                    return response
+    else:
+        form = JugadorLoginForm()
+    return render(
+        request, "login_jugador.html", {"form": form, "sesion_activa": sesion_activa}
+    )
+
+
+def registro_jugador(request):
+    if request.COOKIES.get("jugador_id"):
+        messages.info(request, "Ya tienes una sesión activa.")
+        return redirect("home")
+    if request.method == "POST":
+        form = JugadorRegistroForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "¡Registro exitoso! Ya puedes iniciar sesión.")
+            return redirect("login_jugador")
+        else:
+            messages.error(request, "Por favor corrige los errores del formulario.")
+    else:
+        form = JugadorRegistroForm()
+    return render(request, "registro_jugador.html", {"form": form})
+
+
+@require_recepcionista
+@handle_view_errors
+def lista_matches(request):
+    matches = MatchJuego.objects.prefetch_related("jugadores").order_by(
+        "-fecha_creacion"
+    )
+    return render(request, "lista_matches.html", {"matches": matches})
+
+
+def login_hub(request):
+    return render(request, "login_hub.html")
+    return render(request, "lista_matches.html", {"matches": matches})

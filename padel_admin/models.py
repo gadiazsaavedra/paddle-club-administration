@@ -4,6 +4,10 @@ from django.db import transaction
 from datetime import timedelta, date
 from django.core.exceptions import ValidationError
 from .managers import ReservaManager, CobramentManager
+from django_q.tasks import schedule
+from django.core.mail import send_mail
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Jugadors(models.Model):
@@ -414,3 +418,186 @@ class VentaDetalle(models.Model):
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre} a ${self.precio_unitario}"
+
+
+class HistorialStock(models.Model):
+    TIPO_MOVIMIENTO = [
+        ("ingreso", "Ingreso"),
+        ("salida", "Salida"),
+        ("ajuste", "Ajuste"),
+        ("merma", "Merma"),
+    ]
+    producto = models.ForeignKey(
+        Producto, on_delete=models.CASCADE, related_name="historial_stock"
+    )
+    cantidad = models.IntegerField()
+    tipo = models.CharField(max_length=10, choices=TIPO_MOVIMIENTO)
+    fecha = models.DateTimeField(auto_now_add=True)
+    motivo = models.CharField(max_length=200, blank=True, null=True)
+    usuario = models.CharField(
+        max_length=50, blank=True, null=True
+    )  # nombre o identificador del responsable
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} de {self.cantidad} x {self.producto.nombre} el {self.fecha.strftime('%d/%m/%Y %H:%M')}"
+
+
+class DisponibilidadJugador(models.Model):
+    DIAS_SEMANA = [
+        ("lunes", "Lunes"),
+        ("martes", "Martes"),
+        ("miercoles", "Miércoles"),
+        ("jueves", "Jueves"),
+        ("viernes", "Viernes"),
+        ("sabado", "Sábado"),
+        ("domingo", "Domingo"),
+    ]
+    BUSCA_CON = [
+        ("hombre", "Hombre"),
+        ("mujer", "Mujer"),
+        ("ambos", "Ambos"),
+    ]
+    NIVELES = [
+        ("novato", "Novato"),
+        ("intermedio", "Intermedio"),
+        ("avanzado", "Avanzado"),
+    ]
+    jugador = models.ForeignKey(
+        Jugadors, on_delete=models.CASCADE, related_name="disponibilidades"
+    )
+    dias_disponibles = models.JSONField(
+        help_text="Lista de días disponibles, ej: ['lunes', 'miercoles', 'viernes']"
+    )
+    franja_horaria_inicio = models.TimeField()
+    franja_horaria_fin = models.TimeField()
+    busca_con = models.CharField(max_length=10, choices=BUSCA_CON, default="ambos")
+    nivel = models.CharField(max_length=10, choices=NIVELES)
+    disponible = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.jugador.nom} {self.jugador.cognom} - {self.nivel} - {self.dias_disponibles} {self.franja_horaria_inicio}-{self.franja_horaria_fin}"
+
+
+class MatchJuego(models.Model):
+    jugadores = models.ManyToManyField(Jugadors, related_name="matches")
+    dia = models.CharField(max_length=10, choices=DisponibilidadJugador.DIAS_SEMANA)
+    franja_horaria_inicio = models.TimeField()
+    franja_horaria_fin = models.TimeField()
+    nivel = models.CharField(max_length=10, choices=DisponibilidadJugador.NIVELES)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    notificado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Match {self.dia} {self.franja_horaria_inicio}-{self.franja_horaria_fin} ({self.nivel}) - {self.jugadores.count()} jugadores"
+
+
+class ConfiguracionSistema(models.Model):
+    matching_activo = models.BooleanField(default=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Matching {'activo' if self.matching_activo else 'inactivo'}"
+
+
+def buscar_y_crear_matches():
+    """
+    Busca coincidencias de jugadores disponibles y crea grupos de 4 para MatchJuego.
+    Coincidencia: mismo día, franja horaria compatible, nivel y disponibilidad.
+    """
+    for dia, _ in DisponibilidadJugador.DIAS_SEMANA:
+        for nivel, _ in DisponibilidadJugador.NIVELES:
+            # Buscar todos los jugadores disponibles para ese día y nivel
+            disponibles = DisponibilidadJugador.objects.filter(
+                dias_disponibles__contains=[dia],
+                nivel=nivel,
+                disponible=True,
+            ).order_by("franja_horaria_inicio")
+            # Agrupar por franja horaria compatible
+            grupos = []
+            usados = set()
+            for i, disp in enumerate(disponibles):
+                if disp.id in usados:
+                    continue
+                grupo = [disp]
+                usados.add(disp.id)
+                for j, otro in enumerate(disponibles):
+                    if i == j or otro.id in usados:
+                        continue
+                    # Chequear franja horaria compatible (intersección)
+                    inicio = max(disp.franja_horaria_inicio, otro.franja_horaria_inicio)
+                    fin = min(disp.franja_horaria_fin, otro.franja_horaria_fin)
+                    if inicio < fin and otro.busca_con in (
+                        disp.jugador.genero,
+                        "ambos",
+                    ):
+                        grupo.append(otro)
+                        usados.add(otro.id)
+                    if len(grupo) == 4:
+                        break
+                if len(grupo) == 4:
+                    # Crear el match si no existe uno igual
+                    jugadores_ids = [d.jugador.id_jugador for d in grupo]
+                    existe = (
+                        MatchJuego.objects.filter(
+                            dia=dia,
+                            nivel=nivel,
+                            franja_horaria_inicio=inicio,
+                            franja_horaria_fin=fin,
+                            jugadores__id_jugador__in=jugadores_ids,
+                        )
+                        .distinct()
+                        .count()
+                        > 0
+                    )
+                    if not existe:
+                        match = MatchJuego.objects.create(
+                            dia=dia,
+                            nivel=nivel,
+                            franja_horaria_inicio=inicio,
+                            franja_horaria_fin=fin,
+                        )
+                        match.jugadores.set([d.jugador for d in grupo])
+
+
+def notificar_jugadores_match(match):
+    asunto = "¡Tienes un partido armado!"
+    jugadores = match.jugadores.all()
+    emails = [j.email for j in jugadores if j.email]
+    mensaje = (
+        f"Se ha formado un partido para el día {match.dia} de {match.franja_horaria_inicio.strftime('%H:%M')} a {match.franja_horaria_fin.strftime('%H:%M')}\n"
+        f"Nivel: {match.nivel}\n"
+        f"Jugadores: " + ", ".join(f"{j.nom} {j.cognom}" for j in jugadores)
+    )
+    send_mail(
+        asunto,
+        mensaje,
+        "noreply@clubpaddle.com",  # Cambia por tu email real
+        emails,
+        fail_silently=True,
+    )
+    match.notificado = True
+    match.save()
+
+
+def agendar_matching_periodico():
+    # Agenda la función buscar_y_crear_matches cada 2 minutos si no existe ya
+    if not schedule.objects.filter(
+        func="padel_admin.models.buscar_y_crear_matches"
+    ).exists():
+        schedule(
+            "padel_admin.models.buscar_y_crear_matches",
+            schedule_type=schedule.MINUTES,
+            minutes=2,
+            repeats=-1,
+            name="Matching automático jugadores pádel",
+        )
+
+
+@receiver(post_save, sender=MatchJuego)
+def avisar_recepcionista_match(sender, instance, created, **kwargs):
+    if created and not instance.notificado:
+        # Aquí podrías enviar un email al recepcionista o dejar un flag para mostrar en el admin
+        # Ejemplo: print o log, o puedes implementar un email real si tienes el correo del recepcionista
+        print(
+            f"Nuevo match creado: {instance}. El recepcionista debe decidir si notifica por email o WhatsApp."
+        )

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Login Recepcionista{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded shadow mt-10">
+  <h1 class="text-2xl font-bold mb-6 text-center">Login Recepcionista</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label for="dni" class="block text-gray-700">DNI</label>
+      <input type="text" id="dni" name="dni" class="w-full border rounded px-3 py-2" required>
+    </div>
+    <div class="mb-4">
+      <label for="contrasenya" class="block text-gray-700">Contraseña</label>
+      <input type="password" id="contrasenya" name="contrasenya" class="w-full border rounded px-3 py-2" required>
+    </div>
+    <button type="submit" class="ui blue button w-full mt-4">Ingresar</button>
+  </form>
+  {% if messages %}
+    <ul class="mt-4">
+      {% for message in messages %}
+        <li class="text-red-600">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}

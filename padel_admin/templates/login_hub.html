@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded shadow mt-10">
+  <h1 class="text-2xl font-bold mb-6 text-center">Acceso al sistema</h1>
+  <div class="mb-8">
+    <a href="/recepcionista/login/" class="ui blue button w-full mb-4">
+      <i class="fas fa-user-tie"></i> Login Recepcionista
+    </a>
+    <a href="/jugadores/login/" class="ui green button w-full mb-4">
+      <i class="fas fa-user"></i> Login Jugador
+    </a>
+    <a href="/registro_jugador/" class="ui orange button w-full">
+      <i class="fas fa-user-plus"></i> Registrarse como jugador
+    </a>
+  </div>
+  <p class="text-center text-gray-600">Selecciona tu tipo de acceso o regístrate si eres un jugador nuevo.</p>
+</div>
+{% endblock %}
