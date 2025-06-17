@@ -1116,8 +1116,6 @@ def disponibilidad_jugador(request):
         jugador_id=jugador_id,
         defaults={
             "dias_disponibles": [],
-            "franja_horaria_inicio": "18:00",
-            "franja_horaria_fin": "19:00",
             "busca_con": "ambos",
             "nivel": "novato",
             "disponible": True,

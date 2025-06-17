@@ -465,17 +465,19 @@ class DisponibilidadJugador(models.Model):
     jugador = models.ForeignKey(
         Jugadors, on_delete=models.CASCADE, related_name="disponibilidades"
     )
+    # Ahora cada elemento es un dict: {"dia": "lunes", "inicio": "18:00", "fin": "20:00"}
     dias_disponibles = models.JSONField(
-        help_text="Lista de días disponibles, ej: ['lunes', 'miercoles', 'viernes']"
+        help_text="Lista de dicts: [{'dia': 'lunes', 'inicio': '18:00', 'fin': '20:00'}]"
     )
-    franja_horaria_inicio = models.TimeField()
-    franja_horaria_fin = models.TimeField()
     busca_con = models.CharField(max_length=10, choices=BUSCA_CON, default="ambos")
     nivel = models.CharField(max_length=10, choices=NIVELES)
     disponible = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.jugador.nom} {self.jugador.cognom} - {self.nivel} - {self.dias_disponibles} {self.franja_horaria_inicio}-{self.franja_horaria_fin}"
+        resumen = ", ".join(
+            [f"{d['dia']} {d['inicio']}-{d['fin']}" for d in self.dias_disponibles]
+        )
+        return f"{self.jugador.nom} {self.jugador.cognom} - {self.nivel} - {resumen}"
 
 
 class MatchJuego(models.Model):

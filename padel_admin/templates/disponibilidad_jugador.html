@@ -2,9 +2,67 @@
 {% block title %}Disponibilidad para jugar{% endblock %}
 {% block content %}
 <h1 class="text-2xl font-bold mb-4">Mi disponibilidad para jugar</h1>
+{% if messages %}
+  <div class="ui positive message">
+    {% for message in messages %}
+      {{ message }}
+    {% endfor %}
+  </div>
+{% endif %}
 <form method="post">
   {% csrf_token %}
-  {{ form.as_p }}
+  <table class="ui celled table">
+    <thead>
+      <tr>
+        <th>Día</th>
+        <th>Hora inicio</th>
+        <th>Hora fin</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dia in form.dias_widgets %}
+        <tr>
+          <td>{{ dia.label }}</td>
+          <td>
+            <select name="{{ dia.inicio.name }}" class="ui dropdown {% if dia.inicio.errors %}error{% endif %}">
+              <option value="">---</option>
+              {% for h in form.HORAS_INICIO %}
+                <option value="{{ h }}" {% if dia.inicio.value == h %}selected{% endif %}>{{ h }}</option>
+              {% endfor %}
+            </select>
+            {% if dia.inicio.errors %}<div class="ui red pointing label">{{ dia.inicio.errors.0 }}</div>{% endif %}
+          </td>
+          <td>
+            <select name="{{ dia.fin.name }}" class="ui dropdown {% if dia.fin.errors %}error{% endif %}">
+              <option value="">---</option>
+              {% for h in form.HORAS_FIN %}
+                <option value="{{ h }}" {% if dia.fin.value == h %}selected{% endif %}>{{ h }}</option>
+              {% endfor %}
+            </select>
+            {% if dia.fin.errors %}<div class="ui red pointing label">{{ dia.fin.errors.0 }}</div>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="mb-4">
+    {{ form.busca_con.label_tag }} {{ form.busca_con }}
+  </div>
+  <div class="mb-4">
+    {{ form.nivel.label_tag }} {{ form.nivel }}
+  </div>
+  <div class="mb-4">
+    {{ form.disponible.label_tag }} {{ form.disponible }}
+  </div>
   <button type="submit" class="ui primary button">Guardar</button>
 </form>
+<hr>
+<h2 class="text-xl font-semibold mt-6 mb-2">Resumen de tu disponibilidad</h2>
+<ul class="ui list">
+  {% for d in form.instance.dias_disponibles %}
+    <li>{{ d.dia|capfirst }}: {{ d.inicio }} - {{ d.fin }}</li>
+  {% empty %}
+    <li>No has seleccionado disponibilidad aún.</li>
+  {% endfor %}
+</ul>
 {% endblock %}
